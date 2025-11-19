@@ -1,0 +1,582 @@
+
+<div class="container mx-auto">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold">Task Management</h1>
+      <p class="opacity-60 mt-1">Organize, track, and prioritize your work.</p>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div role="tablist" class="tabs tabs-lifted mb-6">
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'board'" [class.font-bold]="activeTab() === 'board'" (click)="activeTab.set('board')">Boards</a>
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" [class.font-bold]="activeTab() === 'history'" (click)="activeTab.set('history')">History</a>
+  </div>
+
+  <!-- TAB 1: BOARDS & TASKS -->
+  @if (activeTab() === 'board') {
+
+    <!-- View Logic Switcher -->
+    @if (!selectedBoardId()) {
+        <!-- ====================== BOARD LIST VIEW ====================== -->
+        
+        <div class="flex flex-col lg:flex-row gap-4 p-6 border border-base-200 bg-base-100 rounded-xl mb-6 shadow-sm items-end">
+            <div class="form-control w-full lg:w-auto flex-1">
+                <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase tracking-wider">Client</span></label>
+                <select [ngModel]="boardFilterClientId()" (ngModelChange)="boardFilterClientId.set($any($event)); boardFilterProjectId.set(null); boardListPage.set(1)" class="select select-bordered select-sm w-full">
+                    <option [ngValue]="null">All Clients</option>
+                    @for(client of clients(); track client.id){
+                        <option [ngValue]="client.id">{{ client.name }}</option>
+                    }
+                </select>
+            </div>
+             <div class="form-control w-full lg:w-auto flex-1">
+                <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase tracking-wider">Project</span></label>
+                <select [ngModel]="boardFilterProjectId()" (ngModelChange)="boardFilterProjectId.set($any($event)); boardListPage.set(1)" class="select select-bordered select-sm w-full" [disabled]="!boardFilterClientId()">
+                    <option [ngValue]="null">All Projects</option>
+                    @for(project of availableProjectsForBoardFilter(); track project.id){
+                        <option [ngValue]="project.id">{{ project.name }}</option>
+                    }
+                </select>
+            </div>
+            <div class="flex items-end gap-2">
+               <button class="btn btn-ghost btn-sm" (click)="resetBoardFilters()">Reset</button>
+               <button class="btn btn-primary btn-sm shadow-md shadow-primary/20" (click)="openBoardModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                New Board
+               </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for(board of paginatedBoardsList(); track board.id){
+                <div class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group relative overflow-hidden" (click)="viewBoard(board.id)">
+                    <!-- Color Strip -->
+                    <div class="absolute left-0 top-0 bottom-0 w-2" [style.background-color]="board.clientColor"></div>
+                    
+                    <div class="card-body p-6 pl-8">
+                        <div class="flex justify-between items-start">
+                            <h2 class="card-title text-lg">{{ board.name }}</h2>
+                            <span class="badge badge-ghost font-mono">{{ board.taskCount }} tasks</span>
+                        </div>
+                        <div class="text-sm opacity-70 mt-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                <span class="font-medium" [style.color]="board.clientColor">{{ board.clientName }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                                <span>{{ board.projectName }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="card-actions justify-end mt-4 pt-4 border-t border-base-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button class="btn btn-sm btn-ghost text-primary" (click)="$event.stopPropagation(); openBoardModal(board)">
+                                Edit
+                             </button>
+                             <button class="btn btn-sm btn-ghost text-error" (click)="$event.stopPropagation(); deleteBoard(board.id)">
+                                Delete
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            } @empty {
+                <div class="col-span-full text-center py-16 opacity-50 bg-base-200/30 rounded-xl border border-dashed border-base-300">
+                    <p class="text-lg font-medium">No boards found.</p>
+                    <p class="text-sm">Try adjusting your filters or create a new board.</p>
+                </div>
+            }
+        </div>
+        
+        <!-- Board Pagination -->
+        @if(filteredBoards().length > boardListPerPage()){
+            <div class="flex justify-center mt-8">
+                <app-pagination 
+                [currentPage]="boardListPage()"
+                [totalItems]="filteredBoards().length"
+                [itemsPerPage]="boardListPerPage()"
+                (pageChange)="onBoardListPageChange($event)">
+                </app-pagination>
+            </div>
+        }
+
+    } @else {
+        <!-- ====================== BOARD DETAIL VIEW (KANBAN/LIST) ====================== -->
+        
+        <!-- Toolbar -->
+        <div class="flex flex-col xl:flex-row justify-between xl:items-center mb-6 gap-4 bg-base-100 shadow-sm p-4 rounded-xl border border-base-200">
+             <div class="flex items-center gap-4">
+                <button class="btn btn-circle btn-ghost btn-sm" (click)="backToBoards()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                </button>
+                <div>
+                    <h2 class="font-bold text-xl">{{ currentBoardName() }}</h2>
+                    <div class="text-xs opacity-60 breadcrumbs p-0">
+                        <ul>
+                            <li>Boards</li>
+                            <li>{{ currentBoardName() }}</li>
+                        </ul>
+                    </div>
+                </div>
+             </div>
+
+            <!-- Actions & View Switcher -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- View Switcher -->
+                <div class="join bg-base-200 p-1 rounded-lg">
+                    <button class="join-item btn btn-sm border-none hover:bg-base-100" [class.btn-active]="workViewMode() === 'kanban'" [class.bg-base-100]="workViewMode() === 'kanban'" [class.shadow-sm]="workViewMode() === 'kanban'" (click)="workViewMode.set('kanban')" title="Kanban View">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    </button>
+                    <button class="join-item btn btn-sm border-none hover:bg-base-100" [class.btn-active]="workViewMode() === 'list'" [class.bg-base-100]="workViewMode() === 'list'" [class.shadow-sm]="workViewMode() === 'list'" (click)="workViewMode.set('list')" title="List View">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                </div>
+                
+                <div class="divider divider-horizontal mx-2 hidden sm:flex"></div>
+
+                <button class="btn btn-primary btn-sm shadow-md shadow-primary/20" (click)="openAddTaskModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Add Task
+                </button>
+            </div>
+        </div>
+        
+        <!-- KANBAN VIEW -->
+        @if (workViewMode() === 'kanban') {
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-h-[calc(100vh-22rem)]">
+            <!-- Columns -->
+            @for (column of [
+                { title: 'To Do', tasks: tasksToDo(), status: 'To Do', borderClass: 'border-primary/50', bgClass: 'bg-base-200/30' },
+                { title: 'In Progress', tasks: tasksInProgress(), status: 'In Progress', borderClass: 'border-secondary/50', bgClass: 'bg-base-200/30' },
+                { title: 'On Hold', tasks: tasksOnHold(), status: 'On Hold', borderClass: 'border-accent/50', bgClass: 'bg-base-200/30' },
+                { title: 'Completed', tasks: tasksCompleted(), status: 'Completed', borderClass: 'border-success/50', bgClass: 'bg-base-200/30' }
+            ]; track column.title) {
+                <div class="flex flex-col h-full"
+                    (dragover)="onDragOver($event)" 
+                    (dragleave)="onDragLeave($event)" 
+                    (drop)="onDrop($event, $any(column.status))">
+                    
+                    <!-- Column Header -->
+                    <div class="flex justify-between items-center px-4 py-3 mb-3 bg-base-100 rounded-xl border-b-4 shadow-sm" [class]="column.borderClass">
+                        <h3 class="font-bold uppercase tracking-wider text-sm opacity-80">{{ column.title }}</h3>
+                        <span class="badge badge-sm bg-base-200 font-mono">{{ column.tasks.length }}</span>
+                    </div>
+
+                    <!-- Task List Container -->
+                    <div class="space-y-3 flex-grow overflow-y-auto p-2 rounded-xl" [class]="column.bgClass">
+                        @for(task of column.tasks; track task.id){
+                        @let project = getProjectById(task.projectId);
+                        
+                        <!-- Task Card -->
+                        <div class="card card-compact bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 cursor-grab active:cursor-grabbing group transition-all duration-200"
+                            draggable="true" 
+                            (dragstart)="onDragStart($event, task)"
+                            (click)="openEditTaskModal(task)">
+                            <div class="card-body p-4">
+                                <!-- Card Header -->
+                                <div class="flex justify-between items-start gap-2 mb-2">
+                                    <div class="badge badge-xs badge-ghost font-medium opacity-70 truncate max-w-[140px]">{{ project?.name }}</div>
+                                    <!-- Hover Actions -->
+                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                        <button tabindex="0" (click)="$event.stopPropagation(); openEditTaskModal(task)" class="btn btn-ghost btn-xs btn-circle h-6 w-6 min-h-0 text-base-content/60 hover:text-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        </button>
+                                        <div class="dropdown dropdown-end">
+                                            <button tabindex="0" (click)="$event.stopPropagation()" class="btn btn-ghost btn-xs btn-circle h-6 w-6 min-h-0 text-base-content/60 hover:text-error"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                            <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-40 z-10 border border-base-200">
+                                                <li><a (click)="deleteTask(task.id); $event.stopPropagation()" class="text-error">Delete Task</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <p class="font-semibold text-sm leading-snug text-base-content/90" [class.line-through]="task.status === 'Completed'" [class.opacity-50]="task.status === 'Completed'">{{ task.title }}</p>
+                                
+                                <!-- Card Footer -->
+                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-base-100">
+                                    <div class="flex items-center gap-2">
+                                        <span class="badge badge-xs border-none font-semibold" [class]="getPriorityBadgeClass(task.priority)">{{ task.priority }}</span>
+                                        @if(task.comments && task.comments.length > 0){
+                                            <span class="text-[10px] opacity-50 flex items-center gap-0.5" title="Comments">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                                                {{ task.comments.length }}
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (getMemberById(task.assignedMemberId); as member) {
+                                    <div class="tooltip tooltip-left" [attr.data-tip]="member.name">
+                                        <div class="avatar"><div class="w-6 rounded-full ring ring-1 ring-base-300"><img [src]="member.avatarUrl" [alt]="member.name" class="object-cover"></div></div>
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        } @empty {
+                        <div class="flex flex-col items-center justify-center h-32 opacity-40 border-2 border-dashed border-base-300 rounded-xl">
+                            <span class="text-xs font-medium">No tasks</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+            }
+            </div>
+        }
+
+        <!-- LIST VIEW -->
+        @if (workViewMode() === 'list') {
+            <div class="card bg-base-100 shadow-sm border border-base-200">
+                <div class="card-body p-0">
+                    <div class="overflow-x-auto rounded-lg">
+                        <table class="table table-sm w-full">
+                            <thead class="bg-base-200 text-base-content/70">
+                                <tr>
+                                    <th class="pl-4 py-3">Title</th>
+                                    <th>Project</th>
+                                    <th>Assigned To</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th class="text-right pr-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for(task of paginatedBoardTasks(); track task.id) {
+                                    @let project = getProjectById(task.projectId);
+                                    <tr class="hover:bg-base-100 cursor-pointer transition-colors" (click)="openEditTaskModal(task)">
+                                        <td class="pl-4 font-medium">
+                                            {{ task.title }}
+                                            @if(task.comments && task.comments.length > 0){
+                                                <span class="ml-2 text-xs opacity-50 align-middle inline-flex items-center gap-0.5" title="Comments">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                                                    {{ task.comments.length }}
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-xs opacity-75">{{ project?.name }}</td>
+                                        <td>
+                                            @if (getMemberById(task.assignedMemberId); as member) {
+                                                <div class="flex items-center gap-2">
+                                                    <div class="avatar"><div class="w-6 rounded-full"><img [src]="member.avatarUrl" class="object-cover"></div></div>
+                                                    <span class="text-xs">{{ member.name }}</span>
+                                                </div>
+                                            }
+                                        </td>
+                                        <td><span class="badge badge-xs border-none font-semibold" [class]="getPriorityBadgeClass(task.priority)">{{ task.priority }}</span></td>
+                                        <td (click)="$event.stopPropagation()">
+                                            <select [ngModel]="task.status" (ngModelChange)="updateTaskStatus(task, $event)" class="select select-bordered select-xs w-28">
+                                                <option value="To Do">To Do</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="On Hold">On Hold</option>
+                                                <option value="Completed">Completed</option>
+                                            </select>
+                                        </td>
+                                        <td class="text-xs opacity-60">{{ task.updatedAt | date:'shortDate' }}</td>
+                                        <td class="text-right pr-4">
+                                            <button class="btn btn-ghost btn-xs text-error" (click)="deleteTask(task.id); $event.stopPropagation()">Delete</button>
+                                        </td>
+                                    </tr>
+                                } @empty {
+                                    <tr><td colspan="7" class="text-center py-8 opacity-60 italic">No tasks found.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <!-- Pagination -->
+        @if(workViewMode() === 'list' && filteredBoardTasks().length > boardPerPage()){
+            <div class="flex justify-center mt-8">
+                <app-pagination 
+                [currentPage]="boardPage()"
+                [totalItems]="filteredBoardTasks().length"
+                [itemsPerPage]="boardPerPage()"
+                (pageChange)="onBoardPageChange($event)">
+                </app-pagination>
+            </div>
+        }
+    }
+
+  }
+
+  <!-- TAB 2: HISTORY -->
+  @if (activeTab() === 'history') {
+      <div class="card bg-base-100 shadow border border-base-200">
+          <div class="card-body p-0">
+             <!-- Filters -->
+             <div class="flex flex-col lg:flex-row gap-4 p-6 border-b border-base-200 bg-base-200/30">
+                 <div class="form-control w-full max-w-xs">
+                     <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase tracking-wider">Client</span></label>
+                     <select [ngModel]="historyFilterClientId()" (ngModelChange)="historyFilterClientId.set($any($event)); historyFilterProjectId.set(null); historyPage.set(1)" class="select select-bordered select-sm">
+                         <option [ngValue]="null">All Clients</option>
+                         @for(client of clients(); track client.id){
+                            <option [value]="client.id">{{ client.name }}</option>
+                         }
+                     </select>
+                 </div>
+                 <div class="form-control w-full max-w-xs">
+                    <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase tracking-wider">Project</span></label>
+                    <select [ngModel]="historyFilterProjectId()" (ngModelChange)="historyFilterProjectId.set($any($event)); historyPage.set(1)" class="select select-bordered select-sm" [disabled]="!historyFilterClientId()">
+                        <option [ngValue]="null">All Projects</option>
+                        @for(project of projectsForHistoryFilter(); track project.id){
+                           <option [value]="project.id">{{ project.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-control w-full max-w-xs">
+                    <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase tracking-wider">Status</span></label>
+                    <select [ngModel]="historyFilterStatus()" (ngModelChange)="historyFilterStatus.set($event); historyPage.set(1)" class="select select-bordered select-sm">
+                        <option value="All">All Statuses</option>
+                        <option value="To Do">To Do</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                 <div class="form-control self-end">
+                     <button class="btn btn-ghost btn-sm" (click)="resetHistoryFilters()">Reset Filters</button>
+                 </div>
+             </div>
+
+             <!-- Table -->
+             <div class="overflow-x-auto">
+                 <table class="table table-sm w-full">
+                     <thead class="bg-base-100 text-base-content/70">
+                         <tr>
+                             <th class="pl-6 py-3">Task</th>
+                             <th>Client / Project</th>
+                             <th>Assigned To</th>
+                             <th>Priority</th>
+                             <th class="text-center pr-6">Status</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         @for(task of paginatedHistoryTasks(); track task.id){
+                             @let project = getProjectById(task.projectId);
+                             @let client = getClientById(project?.clientId || 0);
+                             @let member = getMemberById(task.assignedMemberId);
+                             <tr class="hover:bg-base-100">
+                                 <td class="pl-6 font-medium text-base-content/90">{{ task.title }}</td>
+                                 <td>
+                                     <div class="text-xs opacity-50 font-bold uppercase">{{ client?.name }}</div>
+                                     <div class="opacity-80">{{ project?.name }}</div>
+                                 </td>
+                                 <td>
+                                     <div class="flex items-center gap-2">
+                                         @if(member){
+                                            <div class="avatar"><div class="w-6 rounded-full"><img [src]="member.avatarUrl" class="object-cover"></div></div>
+                                            <span class="text-xs">{{ member.name }}</span>
+                                         }
+                                     </div>
+                                 </td>
+                                 <td><span class="badge badge-xs border-none font-semibold" [class]="getPriorityBadgeClass(task.priority)">{{ task.priority }}</span></td>
+                                 <td class="text-center pr-6"><span class="badge badge-sm badge-ghost">{{ task.status }}</span></td>
+                             </tr>
+                         } @empty {
+                             <tr><td colspan="5" class="text-center py-12 opacity-50 italic">No task history found.</td></tr>
+                         }
+                     </tbody>
+                 </table>
+             </div>
+              @if(filteredHistoryTasks().length > historyPerPage()){
+                <div class="p-4 flex justify-center border-t border-base-200">
+                <app-pagination 
+                    [currentPage]="historyPage()"
+                    [totalItems]="filteredHistoryTasks().length"
+                    [itemsPerPage]="historyPerPage()"
+                    (pageChange)="onHistoryPageChange($event)">
+                </app-pagination>
+                </div>
+            }
+          </div>
+      </div>
+  }
+</div>
+
+<!-- Task Details Modal -->
+@if(isModalOpen()){
+  <dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-3xl shadow-2xl border border-base-200">
+      <form method="dialog">
+          <button (click)="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      </form>
+      
+      <h3 class="font-bold text-xl mb-6 pb-2 border-b border-base-200">{{ isEditMode() ? 'Task Details' : 'Create New Task' }}</h3>
+      
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Left/Top Side: Task Form -->
+        <div class="flex-1 space-y-5">
+           <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Title</span></label>
+                <input type="text" [ngModel]="taskTitle()" (ngModelChange)="taskTitle.set($event)" name="taskTitle" class="input input-bordered w-full focus:input-primary" placeholder="Enter task title">
+            </div>
+            
+             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Status</span></label>
+                    <select [ngModel]="taskStatus()" (ngModelChange)="taskStatus.set($event)" class="select select-bordered select-sm w-full">
+                        <option value="To Do">To Do</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Priority</span></label>
+                    <select [ngModel]="taskPriority()" (ngModelChange)="taskPriority.set($event)" class="select select-bordered select-sm w-full">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+             </div>
+
+             <div class="form-control">
+                <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Assignee</span></label>
+                <select [ngModel]="taskAssignedMemberId()" (ngModelChange)="taskAssignedMemberId.set(+$event)" class="select select-bordered select-sm w-full">
+                    <option [ngValue]="null">Unassigned</option>
+                    @for(member of allMembers(); track member.id){
+                        <option [ngValue]="member.id">{{ member.name }}</option>
+                    }
+                </select>
+             </div>
+            
+             <!-- Hierarchy -->
+             <div class="bg-base-200/50 p-4 rounded-xl border border-base-200 space-y-3">
+                 <div class="text-xs font-bold opacity-50 uppercase tracking-wider mb-1">Location</div>
+                 <div class="form-control">
+                    <select [ngModel]="taskClientId()" (ngModelChange)="taskClientId.set(+$event); taskProjectId.set(null); taskBoardId.set(null)" class="select select-bordered select-xs w-full" [disabled]="isEditMode() || selectedClientId()">
+                        <option [ngValue]="null" disabled>Select Client</option>
+                        @for(client of clients(); track client.id){
+                            <option [ngValue]="client.id">{{ client.name }}</option>
+                        }
+                    </select>
+                 </div>
+                 <div class="form-control">
+                    <select [ngModel]="taskProjectId()" (ngModelChange)="taskProjectId.set(+$event); taskBoardId.set(null)" class="select select-bordered select-xs w-full" [disabled]="isEditMode() || !taskClientId() || selectedProjectId()">
+                        <option [ngValue]="null" disabled>Select Project</option>
+                         @for(project of taskModalProjects(); track project.id){
+                            <option [ngValue]="project.id">{{ project.name }}</option>
+                        }
+                    </select>
+                 </div>
+                 <div class="form-control">
+                    <select [ngModel]="taskBoardId()" (ngModelChange)="taskBoardId.set($event)" class="select select-bordered select-xs w-full" [disabled]="isEditMode() || !taskProjectId() || selectedBoardId()">
+                        <option [ngValue]="null" disabled>Select Board</option>
+                         @for(board of taskModalBoards(); track board.id){
+                            <option [ngValue]="board.id">{{ board.name }}</option>
+                        }
+                    </select>
+                 </div>
+             </div>
+        </div>
+        
+        <!-- Right/Bottom Side: Comments -->
+        @if(isEditMode()) {
+        <div class="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-base-200 pt-6 md:pt-0 md:pl-6 min-h-[350px]">
+            <h4 class="font-bold text-sm mb-4 flex items-center gap-2 opacity-80">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                Comments & Activity
+            </h4>
+            
+            <!-- Comment List -->
+            <div class="flex-grow overflow-y-auto max-h-[300px] space-y-4 mb-4 pr-2 custom-scrollbar">
+                @for(comment of currentTaskComments(); track comment.id) {
+                    @let author = getMemberById(comment.authorId);
+                    <div class="flex gap-3">
+                        <div class="avatar mt-1">
+                            <div class="w-8 h-8 rounded-full ring ring-1 ring-base-200">
+                                <img [src]="author?.avatarUrl || 'https://picsum.photos/seed/unknown/50/50'" [alt]="author?.name" class="object-cover">
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                             <div class="bg-base-200 p-3 rounded-2xl rounded-tl-none text-sm relative group">
+                                <div class="font-semibold text-xs opacity-70 mb-1 flex justify-between">
+                                    <span>{{ author?.name || 'Unknown' }}</span>
+                                    <span class="font-normal opacity-50">{{ comment.createdAt | date:'short' }}</span>
+                                </div>
+                                <div class="text-base-content/90 leading-relaxed">{{ comment.text }}</div>
+                             </div>
+                        </div>
+                    </div>
+                } @empty {
+                    <div class="flex flex-col items-center justify-center h-32 text-center opacity-50 text-sm border-2 border-dashed border-base-200 rounded-xl">
+                        <span>No comments yet.</span>
+                        <span class="text-xs mt-1">Start the conversation!</span>
+                    </div>
+                }
+            </div>
+            
+            <!-- Add Comment -->
+            <div class="form-control relative mt-auto">
+                <textarea [ngModel]="newCommentText()" (ngModelChange)="newCommentText.set($event)" class="textarea textarea-bordered pr-12 w-full resize-none focus:textarea-primary" rows="2" placeholder="Write a comment..."></textarea>
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 bottom-2 text-primary hover:bg-primary/10" (click)="addComment()" [disabled]="!newCommentText().trim()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                </button>
+            </div>
+        </div>
+        }
+      </div>
+
+      <div class="modal-action flex justify-between items-center mt-8 pt-4 border-t border-base-200">
+        <!-- Delete Option (Left) -->
+        <div>
+            @if(isEditMode()) {
+                <button type="button" (click)="deleteTask(editingTaskId()!)" class="btn btn-error btn-ghost btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Delete Task
+                </button>
+            }
+        </div>
+
+        <!-- Save Actions (Right) -->
+        <div class="flex gap-3">
+            <button type="button" (click)="closeModal()" class="btn btn-ghost">Cancel</button>
+            <button type="button" (click)="saveTask()" class="btn btn-primary shadow-md shadow-primary/20" [disabled]="!taskTitle() || !taskAssignedMemberId() || !taskProjectId() || !taskBoardId()">{{ isEditMode() ? 'Save Changes' : 'Create Task' }}</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+}
+
+<!-- Create/Edit Board Modal -->
+@if(isBoardModalOpen()){
+  <dialog class="modal modal-open backdrop-blur-sm">
+    <div class="modal-box shadow-2xl border border-base-200">
+       <button (click)="closeBoardModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+       <h3 class="font-bold text-lg mb-1">{{ isBoardEditMode() ? 'Edit Board' : 'Create New Board' }}</h3>
+       <p class="text-sm opacity-60 mb-6">{{ isBoardEditMode() ? 'Update existing board details.' : 'Organize your project with a new task board.' }}</p>
+       
+       <form (ngSubmit)="saveBoard()" class="space-y-4">
+          <div class="form-control">
+             <label class="label"><span class="label-text font-medium">Client</span></label>
+             <select [ngModel]="boardModalClientId()" (ngModelChange)="boardModalClientId.set(+$event); boardModalProjectId.set(null)" name="boardClient" required class="select select-bordered w-full" [disabled]="isBoardEditMode()">
+                <option [ngValue]="null" disabled>Select Client</option>
+                @for(client of clients(); track client.id){
+                   <option [value]="client.id">{{ client.name }}</option>
+                }
+             </select>
+          </div>
+          <div class="form-control">
+             <label class="label"><span class="label-text font-medium">Project</span></label>
+             <select [ngModel]="boardModalProjectId()" (ngModelChange)="boardModalProjectId.set(+$event)" name="boardProject" required class="select select-bordered w-full" [disabled]="!boardModalClientId() || isBoardEditMode()">
+                <option [ngValue]="null" disabled>Select Project</option>
+                @for(project of boardModalProjects(); track project.id){
+                   <option [value]="project.id">{{ project.name }}</option>
+                }
+             </select>
+          </div>
+          <div class="form-control">
+             <label class="label"><span class="label-text font-medium">Board Name</span></label>
+             <input type="text" [ngModel]="boardModalName()" (ngModelChange)="boardModalName.set($event)" name="boardName" required class="input input-bordered w-full focus:input-primary" placeholder="e.g., Kanban Board">
+          </div>
+          <div class="modal-action mt-6">
+             <button type="button" (click)="closeBoardModal()" class="btn btn-ghost">Cancel</button>
+             <button type="submit" class="btn btn-primary shadow-md" [disabled]="!boardModalProjectId() || !boardModalName()">{{ isBoardEditMode() ? 'Save Changes' : 'Create Board' }}</button>
+          </div>
+       </form>
+    </div>
+  </dialog>
+}

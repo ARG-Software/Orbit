@@ -1,0 +1,392 @@
+
+<div class="container mx-auto pb-12">
+  
+  <!-- Header (Always visible except print) -->
+  <div class="mb-8 print:hidden">
+    <h1 class="text-3xl font-bold">
+        @if(activeTab() === 'history') { Budget History }
+        @else if(currentStep() === 1) { Budget Planner: Setup }
+        @else if(currentStep() === 2) { Budget Planner: Planning }
+        @else { Budget Planner: Review }
+    </h1>
+    <p class="opacity-60 mt-1">
+        @if(activeTab() === 'history') { View and manage your past budgets/proposals. }
+        @else if(currentStep() === 1) { Start by selecting a client and defining the project scope. }
+        @else if(currentStep() === 2) { Break down the project into phases and allocate time. }
+        @else { Check the details one last time before generating the PDF. }
+    </p>
+  </div>
+  
+  <!-- Tab Navigation (Hidden on Print) -->
+  <div role="tablist" class="tabs tabs-lifted mb-8 print:hidden">
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'builder'" (click)="activeTab.set('builder')">New Budget</a>
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">History</a>
+  </div>
+
+  @if(activeTab() === 'builder') {
+    <!-- Stepper (Hidden on Print) -->
+    <div class="w-full mb-10 print:hidden">
+        <ul class="steps w-full">
+            <li class="step cursor-pointer" [class.step-primary]="currentStep() >= 1" (click)="goToStep(1)">Client Info</li>
+            <li class="step cursor-pointer" [class.step-primary]="currentStep() >= 2" (click)="goToStep(2)">Budget & Tasks</li>
+            <li class="step cursor-pointer" [class.step-primary]="currentStep() >= 3" (click)="goToStep(3)">Review & Download</li>
+        </ul>
+    </div>
+
+    <!-- STEP 1: CLIENT & INFO -->
+    @if(currentStep() === 1) {
+        <div class="card bg-base-100 shadow-md border border-base-200 max-w-3xl mx-auto">
+            <div class="card-body">
+                 <h2 class="card-title border-b border-base-content/10 pb-4 mb-4">Client Details</h2>
+                 
+                 <!-- Client Selector -->
+                 <div class="form-control mb-4">
+                    <label class="label"><span class="label-text font-semibold">Select Client</span></label>
+                    <select [ngModel]="selectedClientId()" (ngModelChange)="onClientSelect(+$event || null)" class="select select-bordered w-full">
+                        <option [ngValue]="null">-- Enter Manually --</option>
+                        @for(client of availableClients(); track client.id) {
+                            <option [value]="client.id">{{ client.name }}</option>
+                        }
+                    </select>
+                 </div>
+
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Client Name</span></label>
+                        <input type="text" [ngModel]="clientName()" (ngModelChange)="clientName.set($event)" class="input input-bordered w-full focus:input-primary" placeholder="e.g. Acme Corp" [disabled]="selectedClientId() !== null">
+                    </div>
+                     <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Project Name</span></label>
+                        <input type="text" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" class="input input-bordered w-full focus:input-primary" placeholder="e.g. Website Redesign">
+                    </div>
+                    <div class="col-span-1 md:col-span-2 grid grid-cols-2 gap-4 p-4 bg-base-200/30 rounded-lg border border-base-200">
+                         <div class="form-control">
+                            <label class="label"><span class="label-text font-semibold">Schedule Start</span></label>
+                            <input type="date" [ngModel]="projectStartDate()" (ngModelChange)="projectStartDate.set($event)" class="input input-bordered w-full">
+                        </div>
+                         <div class="form-control">
+                            <label class="label"><span class="label-text font-semibold">Schedule End</span></label>
+                            <input type="date" [ngModel]="projectEndDate()" (ngModelChange)="projectEndDate.set($event)" class="input input-bordered w-full">
+                        </div>
+                    </div>
+                     <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Currency</span></label>
+                        <select [ngModel]="currency()" (ngModelChange)="currency.set($event)" class="select select-bordered w-full">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Tax Rate (%)</span></label>
+                        <input type="number" [ngModel]="taxRate()" (ngModelChange)="taxRate.set($event === '' ? null : +$event)" class="input input-bordered w-full" min="0" step="0.1" placeholder="Optional (0%)">
+                     </div>
+                 </div>
+
+                 <div class="card-actions justify-end mt-8">
+                     <button class="btn btn-primary px-8" (click)="nextStep()">Next Step</button>
+                 </div>
+            </div>
+        </div>
+    }
+
+    <!-- STEP 2: TASKS BUILDER -->
+    @if(currentStep() === 2) {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Builder Area -->
+            <div class="lg:col-span-2 space-y-6">
+                @for (section of sections(); track section.id) {
+                    <div class="card bg-base-100 shadow-sm border border-base-200">
+                        <div class="card-body p-4 sm:p-6">
+                            <!-- Section Header -->
+                            <div class="flex justify-between items-center mb-4">
+                                <input type="text" [ngModel]="section.name" (ngModelChange)="updateSectionName(section.id, $event)" class="input input-ghost font-bold text-xl w-full max-w-md p-0 h-auto focus:bg-base-200/50 hover:bg-base-200/30 transition-colors" placeholder="Phase Name">
+                                <button (click)="removeSection(section.id)" class="btn btn-ghost btn-sm text-error" title="Remove Section">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </div>
+
+                            <!-- Tasks Table -->
+                            <div class="overflow-x-auto">
+                                <table class="table table-sm w-full">
+                                    <thead class="bg-base-200/50 text-base-content/70 border-b border-base-200">
+                                        <tr>
+                                            <th class="pl-0 w-5/12">Task Name</th>
+                                            <th class="w-4/12">Description</th>
+                                            <th class="w-1/12 text-center">Hrs</th>
+                                            <th class="w-1/12 text-center">Rate</th>
+                                            <th class="w-1/12 text-right pr-0">Total</th>
+                                            <th class="w-8"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (task of section.tasks; track task.id) {
+                                            <tr class="group hover:bg-base-100 transition-colors">
+                                                <td class="pl-0 p-2 align-top">
+                                                    <input type="text" [ngModel]="task.name" (ngModelChange)="updateTask(section.id, task.id, 'name', $event)" class="input input-sm input-ghost w-full focus:input-bordered font-medium" placeholder="Task name...">
+                                                </td>
+                                                 <td class="p-2 align-top">
+                                                    <textarea [ngModel]="task.description" (ngModelChange)="updateTask(section.id, task.id, 'description', $event)" class="textarea textarea-sm textarea-ghost w-full focus:textarea-bordered resize-none leading-tight" rows="1" placeholder="Details..."></textarea>
+                                                </td>
+                                                <td class="p-2 align-top">
+                                                    <input type="number" [ngModel]="task.hours" (ngModelChange)="updateTask(section.id, task.id, 'hours', +$event)" class="input input-sm input-bordered w-full text-center focus:input-primary" min="0" step="0.5">
+                                                </td>
+                                                <td class="p-2 align-top">
+                                                    <input type="number" [ngModel]="task.rate" (ngModelChange)="updateTask(section.id, task.id, 'rate', +$event)" class="input input-sm input-bordered w-full text-center focus:input-primary" min="0">
+                                                </td>
+                                                <td class="text-right font-medium pr-0 align-top pt-3">
+                                                    {{ task.hours * task.rate | number:'1.0-0' }}
+                                                </td>
+                                                <td class="text-center p-1 align-top pt-2">
+                                                    <button (click)="removeTask(section.id, task.id)" class="btn btn-ghost btn-xs btn-circle text-base-content/30 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button (click)="addTask(section.id)" class="btn btn-ghost btn-xs text-primary gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                    Add Task
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                
+                <!-- Add Section CTA -->
+                <button (click)="addSection()" class="w-full py-8 border-2 border-dashed border-base-300 rounded-xl text-base-content/50 hover:border-primary hover:text-primary hover:bg-base-100 transition-all duration-300 flex flex-col items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span class="font-medium text-lg">Add New Phase</span>
+                </button>
+            </div>
+
+            <!-- Sidebar (Totals) -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24 card bg-base-100 shadow-lg border-t-4 border-primary">
+                    <div class="card-body p-6">
+                        <h3 class="card-title text-lg mb-4">Budget Summary</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="opacity-70">Total Hours</span>
+                                <span class="font-mono font-bold">{{ totals().totalHours | number:'1.1-1' }}h</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="opacity-70">Subtotal</span>
+                                <span class="font-mono font-bold">{{ totals().subtotal | currency: currency() }}</span>
+                            </div>
+                            @if((taxRate() || 0) > 0) {
+                                <div class="flex justify-between text-sm">
+                                    <span class="opacity-70">Tax ({{taxRate()}}%)</span>
+                                    <span class="font-mono">{{ totals().taxAmount | currency: currency() }}</span>
+                                </div>
+                            }
+                            <div class="divider my-2"></div>
+                            <div class="flex justify-between items-end">
+                                <span class="font-bold text-lg">Total</span>
+                                <span class="font-extrabold text-2xl text-primary">{{ totals().grandTotal | currency: currency() }}</span>
+                            </div>
+                        </div>
+                        <div class="card-actions mt-6">
+                            <div class="grid grid-cols-2 w-full gap-3">
+                                <button class="btn btn-outline" (click)="prevStep()">Back</button>
+                                <button class="btn btn-primary" (click)="nextStep()">Review</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- STEP 3: REVIEW & DOWNLOAD -->
+    @if(currentStep() === 3) {
+        <div class="flex justify-between mb-6 print:hidden">
+             <button class="btn btn-ghost" (click)="prevStep()">← Back to Editing</button>
+             <button (click)="saveAndDownload()" class="btn btn-primary shadow-lg shadow-primary/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Save & Download PDF
+             </button>
+        </div>
+
+        <!-- PRINTABLE AREA START -->
+        <div id="estimate-content" class="bg-white text-black p-8 max-w-4xl mx-auto shadow-2xl print:shadow-none print:p-0 print:max-w-none">
+             
+             <!-- Header -->
+             <div class="flex justify-between items-start mb-12 border-b-2 border-gray-100 pb-8">
+                <div class="flex items-center gap-4">
+                    @if(currentUser(); as user) {
+                        @if(user.logoUrl) {
+                            <img [src]="user.logoUrl" class="w-16 h-16 rounded object-cover" />
+                        }
+                        <div>
+                            <h2 class="font-bold text-xl">{{ user.name }}</h2>
+                            <p class="text-sm text-gray-500">{{ user.email }}</p>
+                             @if(user.taxNumber) { <p class="text-xs text-gray-400 mt-1">{{ user.taxNumber }}</p> }
+                        </div>
+                     }
+                </div>
+                <div class="text-right">
+                    <h1 class="text-4xl font-bold text-primary tracking-tight mb-2">BUDGET PLAN</h1>
+                    <p class="text-gray-500">{{ projectStartDate() | date:'mediumDate' }}</p>
+                </div>
+             </div>
+
+             <!-- Meta -->
+             <div class="flex justify-between mb-12">
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Project</h3>
+                    <p class="text-xl font-bold">{{ projectName() }}</p>
+                    <p class="text-sm text-gray-500 mt-1">Schedule: {{ projectStartDate() | date:'shortDate' }} - {{ projectEndDate() | date:'shortDate' }}</p>
+                </div>
+                <div class="text-right">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Prepared For</h3>
+                    <p class="text-xl font-bold">{{ clientName() }}</p>
+                </div>
+             </div>
+
+             <!-- Content -->
+             <div class="space-y-8">
+                @for (section of sections(); track section.id) {
+                    <div class="break-inside-avoid">
+                        <h3 class="font-bold text-lg border-b border-gray-200 pb-2 mb-4 text-primary">{{ section.name }}</h3>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-500 border-b border-gray-100">
+                                    <th class="text-left py-2 font-medium w-1/2">Task</th>
+                                    <th class="text-center py-2 font-medium">Hours</th>
+                                    <th class="text-center py-2 font-medium">Rate</th>
+                                    <th class="text-right py-2 font-medium">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for(task of section.tasks; track task.id) {
+                                    <tr class="border-b border-gray-50">
+                                        <td class="py-3 pr-4">
+                                            <div class="font-bold">{{ task.name }}</div>
+                                            @if(task.description){ <div class="text-gray-500 text-xs mt-1">{{ task.description }}</div> }
+                                        </td>
+                                        <td class="py-3 text-center">{{ task.hours }}</td>
+                                        <td class="py-3 text-center">{{ task.rate }}</td>
+                                        <td class="py-3 text-right font-medium">{{ task.hours * task.rate | number:'1.2-2' }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+             </div>
+
+             <!-- Totals -->
+             <div class="mt-12 pt-6 border-t-2 border-gray-100 flex justify-end">
+                 <div class="w-64 space-y-3 text-right">
+                     <div class="flex justify-between text-sm text-gray-600">
+                         <span>Subtotal</span>
+                         <span>{{ totals().subtotal | currency: currency() }}</span>
+                     </div>
+                     @if((taxRate() || 0) > 0) {
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Tax ({{taxRate()}}%)</span>
+                            <span>{{ totals().taxAmount | currency: currency() }}</span>
+                        </div>
+                     }
+                     <div class="flex justify-between text-xl font-extrabold text-black pt-3 border-t border-gray-200">
+                         <span>Total</span>
+                         <span>{{ totals().grandTotal | currency: currency() }}</span>
+                     </div>
+                 </div>
+             </div>
+             
+             <!-- Footer -->
+             <div class="mt-20 text-center text-xs text-gray-400">
+                 <p>This estimate is valid for 30 days from the date of issue.</p>
+                 <p>Thank you for considering us for your project.</p>
+             </div>
+        </div>
+    }
+  } 
+  
+  @if(activeTab() === 'history') {
+      <div class="card bg-base-100 shadow border border-base-200">
+          <div class="card-body">
+              <h2 class="card-title mb-4">Proposal History</h2>
+              
+              <div class="overflow-x-auto">
+                  <table class="table">
+                      <thead>
+                          <tr>
+                              <th>Created</th>
+                              <th>Client</th>
+                              <th>Project</th>
+                              <th>Schedule</th>
+                              <th class="text-right">Total</th>
+                              <th class="text-center">Status</th>
+                              <th class="text-right">Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          @for(prop of paginatedProposals(); track prop.id) {
+                              <tr class="hover:bg-base-100">
+                                  <td>{{ prop.createdAt | date:'mediumDate' }}</td>
+                                  <td class="font-medium">{{ prop.clientName }}</td>
+                                  <td>{{ prop.projectName }}</td>
+                                  <td class="text-xs opacity-70">{{ prop.startDate | date:'shortDate' }} - {{ prop.endDate | date:'shortDate' }}</td>
+                                  <td class="text-right font-mono">{{ prop.totalAmount | currency:'USD' }}</td>
+                                  <td class="text-center">
+                                      <span class="badge badge-sm" 
+                                        [class.badge-ghost]="prop.status === 'Draft'"
+                                        [class.badge-info]="prop.status === 'Sent'"
+                                        [class.badge-success]="prop.status === 'Accepted'"
+                                        [class.badge-error]="prop.status === 'Rejected'">
+                                        {{ prop.status }}
+                                      </span>
+                                  </td>
+                                  <td class="text-right">
+                                      <button class="btn btn-ghost btn-xs text-error" (click)="deleteProposal(prop.id)">Delete</button>
+                                  </td>
+                              </tr>
+                          } @empty {
+                              <tr><td colspan="7" class="text-center py-8 opacity-50">No history available.</td></tr>
+                          }
+                      </tbody>
+                  </table>
+              </div>
+              @if(allProposals().length > historyPerPage()) {
+                <div class="flex justify-center mt-6">
+                    <app-pagination 
+                        [currentPage]="historyPage()"
+                        [totalItems]="allProposals().length"
+                        [itemsPerPage]="historyPerPage()"
+                        (pageChange)="onHistoryPageChange($event)">
+                    </app-pagination>
+                </div>
+              }
+          </div>
+      </div>
+  }
+
+</div>
+
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .tab-content, .tab-content * {
+      display: block !important;
+  }
+  #invoice-preview, #invoice-preview * {
+    visibility: visible;
+  }
+  #invoice-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+}
+</style>

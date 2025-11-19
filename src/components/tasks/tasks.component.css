@@ -1,0 +1,18 @@
+
+.drag-over {
+    @apply bg-base-300 border-2 border-dashed border-primary;
+}
+
+/* Custom scrollbar for task columns */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-base-content/20 rounded-full;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-base-content/40;
+}

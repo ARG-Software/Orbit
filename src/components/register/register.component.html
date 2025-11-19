@@ -1,0 +1,46 @@
+<div class="flex items-center justify-center min-h-screen p-4 bg-base-200">
+	<div class="card w-full max-w-md bg-base-100 shadow-xl">
+		<div class="card-body">
+      <div class="flex justify-center text-primary">
+         <svg class="h-12 w-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" />
+        </svg>
+      </div>
+			<h2 class="card-title justify-center text-3xl">Create a new account</h2>
+			
+      @if(errorMessage()){
+        <div class="alert alert-error mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form class="flex flex-col gap-4 mt-4" (ngSubmit)="register(registerForm)" #registerForm="ngForm">
+          <div class="form-control">
+            <label class="label" for="full-name">Full Name</label>
+            <input id="full-name" name="name" type="text" autocomplete="name" required class="input input-solid" placeholder="Your Name" ngModel>
+          </div>
+          <div class="form-control">
+            <label class="label" for="email-address">Email address</label>
+            <input id="email-address" name="email" type="email" autocomplete="email" required class="input input-solid" placeholder="you@example.com" ngModel>
+          </div>
+
+          <div class="form-control">
+            <label class="label" for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required class="input input-solid" placeholder="Password" ngModel>
+          </div>
+        
+          <div class="card-actions">
+            <button type="submit" class="btn btn-primary w-full" [disabled]="registerForm.invalid || isSubmitting()">
+              @if(isSubmitting()){ <span class="loading loading-spinner"></span> }
+              Sign up
+            </button>
+          </div>
+      </form>
+      
+      <div class="text-sm text-center mt-4">
+          <p>Already have an account? <a routerLink="/login" class="link link-primary">Sign in</a></p>
+      </div>
+		</div>
+	</div>
+</div>

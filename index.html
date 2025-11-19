@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <title>Freelancer CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  
+  <!-- DaisyUI Styles -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  
+  <!-- TailwindCSS JIT via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- UI Color Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      },
+      daisyui: {
+        themes: [
+          {
+            light: {
+              "primary": "#6366f1",   // Indigo 500
+              "secondary": "#14b8a6", // Teal 500
+              "accent": "#f59e0b",    // Amber 500
+              "neutral": "#1e293b",   // Slate 800
+              "base-100": "#ffffff",
+              "base-200": "#f1f5f9",  // Slate 100
+              "base-300": "#e2e8f0",  // Slate 200
+              "info": "#3b82f6",
+              "success": "#22c55e",
+              "warning": "#eab308",
+              "error": "#ef4444",
+            },
+            dark: {
+              "primary": "#818cf8",   // Indigo 400
+              "secondary": "#2dd4bf", // Teal 400
+              "accent": "#fbbf24",    // Amber 400
+              "neutral": "#1e293b",
+              "base-100": "#0f172a",  // Slate 900
+              "base-200": "#1e293b",  // Slate 800
+              "base-300": "#334155",  // Slate 700
+              "info": "#60a5fa",
+              "success": "#4ade80",
+              "warning": "#facc15",
+              "error": "#f87171",
+            }
+          },
+        ],
+      }
+    }
+  </script>
+
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://aistudiocdn.com/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://aistudiocdn.com/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://aistudiocdn.com/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@angular/common": "https://next.esm.sh/@angular/common@^20.3.12?external=rxjs",
+    "@angular/common/http": "https://next.esm.sh/@angular/common@^20.3.12/http?external=rxjs",
+    "@angular/core/rxjs-interop": "https://next.esm.sh/@angular/core@^20.3.12/rxjs-interop?external=rxjs",
+    "@angular/core": "https://next.esm.sh/@angular/core@^20.3.12?external=rxjs",
+    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.3.12?external=rxjs",
+    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.12?external=rxjs",
+    "@angular/router": "https://next.esm.sh/@angular/router@^20.3.12?external=rxjs",
+    "@angular/forms": "https://next.esm.sh/@angular/forms@^20.3.12?external=rxjs",
+    "@angular/core/rxjs/interop": "https://next.esm.sh/@angular/core@^20.3.12/rxjs/interop?external=rxjs"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

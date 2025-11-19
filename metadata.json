@@ -1,0 +1,5 @@
+{
+  "name": "Freelancer CRM",
+  "description": "A comprehensive CRM for freelancers to manage clients, track hours, generate invoices, and view financial dashboards. This app helps streamline freelance operations with an elegant and intuitive interface.",
+  "requestFramePermissions": []
+}

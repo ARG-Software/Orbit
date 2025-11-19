@@ -1,0 +1,147 @@
+<div class="container mx-auto">
+  @if (hasPreferences()) {
+    <!-- Job Board View -->
+    <div>
+      <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold">Job Board</h1>
+            <p class="opacity-75 mt-1">Showing jobs based on your preferences.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4">
+            <input type="text" placeholder="Search by title, company, or tag..." class="input input-bordered w-full sm:w-64" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+            <button class="btn btn-ghost" (click)="editPreferences()">Edit Preferences</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for(job of paginatedJobs(); track job.id){
+          <div class="card bg-base-100 shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+            <div class="card-body">
+                <div class="flex items-start gap-4">
+                    <div class="avatar">
+                        <div class="w-12 rounded-lg">
+                            <img [src]="job.companyLogo" [alt]="job.company + ' logo'">
+                        </div>
+                    </div>
+                    <div>
+                         <h2 class="card-title text-base">{{ job.title }}</h2>
+                         <p class="text-sm font-medium opacity-80">{{ job.company }}</p>
+                    </div>
+                </div>
+              
+              <div class="my-3 text-sm space-y-2">
+                <div class="flex items-center gap-2 opacity-75">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span>{{ job.location }} ({{ job.workModel }})</span>
+                </div>
+                <div class="flex items-center gap-2 opacity-75">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+                   <span>{{ job.salary.min / 1000 }}k - {{ job.salary.max / 1000 }}k {{ job.salary.currency }}</span>
+                </div>
+              </div>
+
+              <div class="card-actions justify-between items-center">
+                <div class="text-xs opacity-60">{{ timeSince(job.postedDate) }}</div>
+                <button class="btn btn-primary btn-sm" (click)="viewJobDetails(job)">View Details</button>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="md:col-span-2 lg:col-span-3 card bg-base-100/50">
+            <div class="card-body text-center opacity-75">
+              <p>No jobs found matching your criteria.</p>
+            </div>
+          </div>
+        }
+      </div>
+       @if(filteredJobs().length > itemsPerPage()){
+        <div class="flex justify-center mt-8">
+          <app-pagination 
+            [currentPage]="currentPage()"
+            [totalItems]="filteredJobs().length"
+            [itemsPerPage]="itemsPerPage()"
+            (pageChange)="onPageChange($event)">
+          </app-pagination>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Preferences Form View -->
+    <div class="flex items-center justify-center py-12">
+      <div class="card w-full max-w-2xl bg-base-100 shadow-xl">
+        <form class="card-body" (ngSubmit)="savePreferences()">
+          <h2 class="card-title text-2xl">Set Your Job Preferences</h2>
+          <p class="opacity-75 mb-4">Tell us what you're looking for to get started.</p>
+          <div class="space-y-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text">Preferred Location</span></label>
+              <input type="text" [ngModel]="prefLocation()" (ngModelChange)="prefLocation.set($event)" name="location" placeholder="e.g., San Francisco, CA or Remote" required class="input input-bordered">
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Work Model</span></label>
+              <select [ngModel]="prefWorkModel()" (ngModelChange)="prefWorkModel.set($event)" name="workModel" class="select select-bordered">
+                <option value="any">Any</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="on-site">On-site</option>
+              </select>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Areas of Interest</span></label>
+              <input type="text" [ngModel]="prefInterests()" (ngModelChange)="prefInterests.set($event)" name="interests" placeholder="e.g., Frontend, UI/UX, Project Management" required class="input input-bordered">
+              <label class="label"><span class="label-text-alt">Separate interests with a comma</span></label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Expected Annual Salary ({{ prefExpectedSalary() | number:'1.0-0' }} USD)</span></label>
+              <input type="range" min="30000" max="250000" step="5000" [ngModel]="prefExpectedSalary()" (ngModelChange)="prefExpectedSalary.set(+$event)" name="salary" class="range range-primary">
+            </div>
+          </div>
+          <div class="card-actions justify-end mt-6">
+            <button type="submit" class="btn btn-primary">Save and Find Jobs</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Job Details Modal -->
+@if (selectedJob(); as job) {
+  <dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-3xl">
+       <button (click)="closeJobDetails()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+       <div class="flex items-center gap-4 mb-4">
+          <div class="avatar"><div class="w-16 rounded-xl"><img [src]="job.companyLogo" [alt]="job.company + ' logo'"></div></div>
+          <div>
+            <h3 class="font-bold text-xl">{{ job.title }}</h3>
+            <p class="font-semibold text-primary">{{ job.company }}</p>
+            <p class="text-sm opacity-75">{{ job.location }} ({{ job.workModel }})</p>
+          </div>
+       </div>
+       <div class="flex flex-wrap gap-2 my-4">
+          @for(tag of job.tags; track tag){
+            <div class="badge badge-outline">{{ tag }}</div>
+          }
+       </div>
+       <div class="prose max-w-none text-base-content/90">
+          <p>A full job description would be displayed here. For now, this is placeholder content to demonstrate the modal functionality. The real implementation would pull this data from the job API.</p>
+          <h4>Responsibilities:</h4>
+          <ul>
+             <li>Develop and maintain web applications using modern technologies.</li>
+             <li>Collaborate with cross-functional teams to define, design, and ship new features.</li>
+             <li>Ensure the performance, quality, and responsiveness of applications.</li>
+          </ul>
+          <h4>Qualifications:</h4>
+          <ul>
+             <li>5+ years of experience in software development.</li>
+             <li>Strong proficiency in JavaScript, TypeScript, and a modern framework like Angular or React.</li>
+             <li>Experience with cloud services (AWS, Azure, GCP).</li>
+          </ul>
+       </div>
+       <div class="modal-action mt-6">
+          <button (click)="closeJobDetails()" class="btn btn-ghost">Close</button>
+          <a [href]="job.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Apply Now</a>
+       </div>
+    </div>
+  </dialog>
+}

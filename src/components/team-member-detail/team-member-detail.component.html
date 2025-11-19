@@ -1,0 +1,60 @@
+@if(member(); as m){
+<div class="container mx-auto">
+  <div class="flex items-center mb-8">
+    <a routerLink="/team" class="btn btn-ghost btn-circle mr-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+    </a>
+    <div class="avatar avatar-lg">
+      <div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+         <img [src]="m.avatarUrl" [alt]="m.name + ' avatar'" class="object-cover">
+      </div>
+    </div>
+    <div class="ml-4">
+      <h1 class="text-3xl font-bold">{{ m.name }}</h1>
+      <p class="opacity-75">{{ m.role }}</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow max-w-2xl mx-auto">
+    <div class="card-body">
+      <h2 class="card-title">Member Details</h2>
+      <div class="divider my-2"></div>
+      <div class="space-y-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Name</span></label>
+          <input type="text" class="input input-bordered" [ngModel]="memberName()" (ngModelChange)="memberName.set($event)">
+        </div>
+         <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Role</span></label>
+          <input type="text" class="input input-bordered" [ngModel]="memberRole()" (ngModelChange)="memberRole.set($event)">
+        </div>
+         <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Avatar URL</span></label>
+          <input type="text" class="input input-bordered" [ngModel]="memberAvatarUrl()" (ngModelChange)="memberAvatarUrl.set($event)">
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Default Hourly Rate ($)</span></label>
+          <input type="number" class="input input-bordered" [ngModel]="memberDefaultRate()" (ngModelChange)="memberDefaultRate.set(+$event)" min="0">
+        </div>
+      </div>
+      <div class="card-actions justify-end mt-4">
+        <button class="btn btn-primary" (click)="saveMemberDetails()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+} @else {
+    <div class="flex justify-center items-center p-16">
+        <span class="loading loading-lg"></span>
+    </div>
+}
+
+<!-- Success Toast -->
+@if(showSuccessToast()){
+<div class="toast toast-top toast-center">
+  <div class="alert alert-success">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span>Member details saved successfully.</span>
+  </div>
+</div>
+}

@@ -1,0 +1,190 @@
+
+@if(client(); as c){
+<div class="container mx-auto">
+  <!-- Header -->
+  <div class="flex items-center mb-8">
+    <a routerLink="/clients" class="btn btn-ghost btn-circle mr-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+    </a>
+    <div class="avatar avatar-lg">
+      <div class="w-16 rounded-full ring ring-offset-base-100 ring-offset-2" [style.--tw-ring-color]="c.color">
+        <img [src]="c.logoUrl" alt="{{ c.name }} logo" class="object-cover">
+      </div>
+    </div>
+    <div class="ml-4">
+      <h1 class="text-3xl font-bold">{{ c.name }}</h1>
+      <p class="opacity-75">{{ c.contact }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Client Details -->
+    <div class="lg:col-span-1 flex flex-col gap-8">
+      <div class="card bg-base-100 shadow border-t-4" [style.border-color]="c.color">
+        <div class="card-body">
+          <h2 class="card-title">Client Details</h2>
+          <div class="divider my-2"></div>
+          <div class="space-y-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Name</span></label>
+              <input type="text" class="input input-bordered" [ngModel]="clientName()" (ngModelChange)="clientName.set($event)">
+            </div>
+             <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Email</span></label>
+              <input type="email" class="input input-bordered" [ngModel]="clientContact()" (ngModelChange)="clientContact.set($event)">
+            </div>
+             <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Phone</span></label>
+              <input type="tel" class="input input-bordered" [ngModel]="clientPhone()" (ngModelChange)="clientPhone.set($event)">
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Address</span></label>
+              <input type="text" class="input input-bordered" [ngModel]="clientAddress()" (ngModelChange)="clientAddress.set($event)">
+            </div>
+             <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Tax Number</span></label>
+              <input type="text" class="input input-bordered" [ngModel]="clientTaxNumber()" (ngModelChange)="clientTaxNumber.set($event)">
+            </div>
+             <div class="form-control">
+                <label class="label"><span class="label-text font-medium">Brand Color</span></label>
+                <div class="flex gap-2">
+                  <input type="color" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" class="input input-bordered w-16 p-1 h-12 cursor-pointer">
+                  <input type="text" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" class="input input-bordered flex-1 uppercase">
+                </div>
+             </div>
+             <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Default Tax Rate (%)</span></label>
+              <input type="number" class="input input-bordered" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" step="0.1" min="0">
+            </div>
+             <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Status</span></label>
+              <select class="select select-bordered" [ngModel]="clientStatus()" (ngModelChange)="clientStatus.set($event)">
+                <option value="Active">Active</option>
+                <option value="Paused">Paused</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-actions justify-end mt-4">
+            <button class="btn btn-primary" (click)="saveClientDetails()">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Projects -->
+    <div class="lg:col-span-2 flex flex-col gap-8">
+      <!-- Projects -->
+      <div class="card bg-base-100 shadow">
+        <div class="card-body">
+           <div class="flex justify-between items-center mb-4">
+             <h2 class="card-title">Projects</h2>
+             <button class="btn btn-primary btn-sm" (click)="openAddProjectModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Add Project
+             </button>
+           </div>
+           <div class="space-y-4">
+              @for(project of projects(); track project.id){
+                <div class="card card-compact bg-base-200/50">
+                   <div class="card-body">
+                      <div class="flex justify-between items-start">
+                         <div>
+                            <h3 class="font-bold">{{ project.name }}</h3>
+                            <span class="badge badge-sm mt-1" [class]="getStatusClass(project.status)">{{ project.status }}</span>
+                         </div>
+                         <button class="btn btn-ghost btn-sm" (click)="openEditProjectModal(project)">Manage</button>
+                      </div>
+                      <div class="divider my-1"></div>
+                      <div class="flex items-center justify-between">
+                         <span class="text-sm font-medium">Team:</span>
+                         <div class="avatar-group -space-x-4 rtl:space-x-reverse">
+                            @for(memberId of project.allocatedTeamMemberIds; track memberId){
+                               @let member = getMemberById(memberId);
+                               @if(member){
+                                 <div class="avatar" title="{{ member.name }}">
+                                    <div class="w-8">
+                                       <img [src]="member.avatarUrl" [alt]="member.name" />
+                                    </div>
+                                 </div>
+                               }
+                            }
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              } @empty {
+                <p class="text-center opacity-75 py-8">This client has no projects. Click "Add Project" to get started.</p>
+              }
+           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+} @else {
+    <p class="text-center opacity-75">Loading client details...</p>
+}
+
+<!-- Project Add/Edit Modal -->
+@if (isProjectModalOpen()) {
+  <dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-2xl">
+      <button (click)="closeProjectModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 class="font-bold text-lg">{{ editingProject() ? 'Edit Project' : 'Add New Project' }}</h3>
+      <form (ngSubmit)="saveProject()" class="mt-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text">Project Name</span></label>
+          <input type="text" class="input input-bordered" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" name="projectName" required>
+        </div>
+        <div class="form-control mt-4">
+          <label class="label"><span class="label-text">Status</span></label>
+          <select class="select select-bordered" [ngModel]="projectStatus()" (ngModelChange)="projectStatus.set($event)" name="projectStatus">
+            <option value="Active">Active</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div class="divider">Team Allocation & Rates</div>
+        <div class="max-h-64 overflow-y-auto pr-2 space-y-3">
+          @for(member of allMembers(); track member.id){
+            @let isChecked = projectAllocatedMemberIds().includes(member.id);
+            <div class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4" [class.bg-base-200]="isChecked" [class.bg-base-100]="!isChecked">
+              <div class="form-control flex-1">
+                <label class="label cursor-pointer justify-start gap-3">
+                  <input type="checkbox" class="checkbox checkbox-primary" [checked]="isChecked" (change)="onMemberSelectionChange(member.id, $any($event.target).checked)"/>
+                  <div class="flex items-center gap-3">
+                      <div class="avatar"><div class="w-8 rounded-full"><img [src]="member.avatarUrl" [alt]="member.name" /></div></div>
+                      <span class="label-text">{{ member.name }}</span>
+                  </div>
+                </label>
+              </div>
+              @if(isChecked){
+                <div class="form-control">
+                  <label class="input-group">
+                    <span>$</span>
+                    <input type="number" class="input input-bordered w-24" [ngModel]="projectMemberRates()[member.id] ?? member.defaultHourlyRate" (ngModelChange)="updateProjectMemberRate(member.id, +$event)" [name]="'rate_' + member.id" [placeholder]="member.defaultHourlyRate.toString()">
+                    <span class="hidden sm:inline-flex">/hr</span>
+                  </label>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <div class="modal-action mt-6">
+          <button type="button" class="btn" (click)="closeProjectModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Project</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+}
+
+
+<!-- Success Toast -->
+@if(showSuccessToast()){
+<div class="toast toast-top toast-center">
+  <div class="alert alert-success">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span>Settings saved successfully.</span>
+  </div>
+</div>
+}

@@ -1,0 +1,192 @@
+
+<div class="container mx-auto">
+  <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold">Timesheet</h1>
+      <p class="opacity-60 mt-1">Track work hours across projects and clients.</p>
+    </div>
+    
+    <!-- View Switcher -->
+    <div class="card-actions">
+      <div role="tablist" class="tabs tabs-boxed">
+        <a role="tab" class="tab" [class.tab-active]="viewMode() === 'week'" (click)="viewMode.set('week')">Week</a>
+        <a role="tab" class="tab" [class.tab-active]="viewMode() === 'month'" (click)="viewMode.set('month')">Month</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow">
+    <div class="card-body">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-base-content/10">
+        <button (click)="changePeriod(-1)" class="btn btn-ghost btn-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <h2 class="text-xl font-semibold text-center">
+          @if(viewMode() === 'week') {
+            <span>Week of {{ currentWeekDays()[0].date | date:'MMMM d, yyyy' }}</span>
+          } @else {
+            <span>{{ currentDate() | date:'MMMM yyyy' }}</span>
+          }
+        </h2>
+        <button (click)="changePeriod(1)" class="btn btn-ghost btn-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+      
+      <!-- Week View -->
+      @if(viewMode() === 'week') {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+          @for(day of currentWeekDays(); track day.name){
+            @let summary = getDailySummary(day.date);
+            <div (click)="openEntryModal(day.date)" 
+                class="border border-base-content/10 rounded-lg p-3 text-center cursor-pointer hover:bg-base-200 transition-colors min-h-[120px] flex flex-col items-center justify-start relative group">
+              <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+              </div>
+              <p class="font-semibold">{{ day.name }}</p>
+              <p class="text-2xl font-bold my-2">{{ day.date.getDate() }}</p>
+              
+              @if(summary.totalHours > 0){
+                <p class="text-lg font-bold text-primary">{{ summary.totalHours | number:'1.0-1' }} hrs</p>
+                <p class="text-xs opacity-60 mt-1">{{ summary.entries.length }} projects</p>
+              } @else {
+                <p class="text-base-content/30 mt-2">-</p>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Month View -->
+      @if(viewMode() === 'month') {
+        <div class="grid grid-cols-7 border border-base-content/10 rounded-lg overflow-hidden">
+            @for(dayName of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; track dayName){
+              <div class="text-center font-semibold text-sm py-2 bg-base-200 border-b border-base-content/10">{{ dayName }}</div>
+            }
+            @for(day of currentMonthDays(); track day.date; let i = $index){
+              @let summary = getDailySummary(day.date);
+              <div (click)="openEntryModal(day.date)" 
+                    class="p-2 min-h-[110px] cursor-pointer hover:bg-base-200 transition-colors border-r border-b border-base-content/10 relative group"
+                    [class.opacity-50]="!day.isCurrentMonth"
+                    [class.border-r-0]="(i + 1) % 7 === 0">
+                  
+                  <div class="flex justify-between items-start">
+                    <span class="opacity-0 group-hover:opacity-100 text-primary text-xs font-bold">+ Log</span>
+                    <p class="font-bold text-sm">{{ day.date.getDate() }}</p>
+                  </div>
+
+                  @if(summary.totalHours > 0){
+                      <div class="mt-2 flex flex-col gap-1">
+                          <div class="p-1 rounded-md bg-primary/10 text-primary text-center">
+                              <p class="text-sm font-bold">{{ summary.totalHours | number:'1.0-1' }}h</p>
+                          </div>
+                          <div class="text-[10px] text-center opacity-70 truncate">
+                              {{ summary.entries.length }} items
+                          </div>
+                      </div>
+                  }
+              </div>
+            }
+        </div>
+      }
+      <div class="mt-4 text-right">
+        <p class="text-xs opacity-75">Click on a date to view details or log time.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Time Entry Modal -->
+@if(isEntryModalOpen() && entryModalDate(); as date){
+  <div class="modal modal-open" role="dialog" (click)="closeEntryModal()">
+    <div class="modal-box w-11/12 max-w-2xl shadow-2xl" (click)="$event.stopPropagation()">
+      <button (click)="closeEntryModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 class="font-bold text-xl mb-1">Log Time</h3>
+      <p class="opacity-60 mb-6">{{ date | date:'fullDate' }}</p>
+
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Left: Entry Form -->
+        <form (ngSubmit)="saveTimeEntry()" class="flex-1 space-y-4">
+          <div class="form-control">
+             <label class="label"><span class="label-text font-medium">Freelancer</span></label>
+             <select [ngModel]="modalMemberId()" (ngModelChange)="modalMemberId.set(+$event)" name="member" class="select select-bordered w-full" required>
+                <option [ngValue]="null" disabled>Select Member</option>
+                @for(member of members(); track member.id){
+                  <option [value]="member.id">{{ member.name }}</option>
+                }
+             </select>
+          </div>
+          
+          <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Client</span></label>
+            <select [ngModel]="modalClientId()" (ngModelChange)="modalClientId.set(+$event); modalProjectId.set(null)" name="client" class="select select-bordered w-full" required>
+               <option [ngValue]="null" disabled>Select Client</option>
+               @for(client of clients(); track client.id){
+                 <option [value]="client.id">{{ client.name }}</option>
+               }
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Project</span></label>
+            <select [ngModel]="modalProjectId()" (ngModelChange)="modalProjectId.set(+$event)" name="project" class="select select-bordered w-full" [disabled]="!modalClientId()" required>
+               <option [ngValue]="null" disabled>Select Project</option>
+               @for(project of modalAvailableProjects(); track project.id){
+                 <option [value]="project.id">{{ project.name }}</option>
+               }
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+              <div class="form-control col-span-1">
+                <label class="label"><span class="label-text font-medium">Hours</span></label>
+                <input type="number" [ngModel]="entryHours()" (ngModelChange)="entryHours.set($event)" name="hours" required min="0.25" max="24" step="0.25" class="input input-bordered">
+              </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Description</span></label>
+            <textarea [ngModel]="entryDescription()" (ngModelChange)="entryDescription.set($event)" name="description" rows="3" class="textarea textarea-bordered" placeholder="What did you work on?"></textarea>
+          </div>
+
+          <div class="modal-action pt-4">
+            <button type="button" (click)="closeEntryModal()" class="btn btn-ghost">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!modalMemberId() || !modalProjectId() || entryHours() <= 0">Save Entry</button>
+          </div>
+        </form>
+
+        <!-- Right: Existing Entries Summary -->
+        <div class="w-full md:w-1/3 border-l border-base-200 pl-0 md:pl-6 pt-6 md:pt-0">
+            <h4 class="font-bold text-sm uppercase tracking-wider opacity-60 mb-4">Entries for this day</h4>
+            @let summary = getDailySummary(date);
+            
+            @if(summary.entries.length > 0) {
+                <div class="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                    @for(entry of summary.entries; track $index) {
+                        <div class="bg-base-200/50 p-3 rounded-lg text-sm border border-base-200">
+                            <div class="flex justify-between font-bold mb-1">
+                                <span class="text-primary">{{ entry.hours }}h</span>
+                                <span class="opacity-70 text-xs">{{ entry.memberName }}</span>
+                            </div>
+                            <div class="font-medium truncate">{{ entry.projectName }}</div>
+                            <div class="text-xs opacity-50 mb-1">{{ entry.clientName }}</div>
+                            <div class="text-xs opacity-70 italic">"{{ entry.description }}"</div>
+                        </div>
+                    }
+                    <div class="divider my-2"></div>
+                    <div class="flex justify-between font-bold text-base">
+                        <span>Total</span>
+                        <span>{{ summary.totalHours }}h</span>
+                    </div>
+                </div>
+            } @else {
+                <div class="text-center py-10 opacity-50 text-sm italic bg-base-200/30 rounded-lg">
+                    No time logged yet.
+                </div>
+            }
+        </div>
+      </div>
+    </div>
+  </div>
+}

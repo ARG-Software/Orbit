@@ -1,0 +1,222 @@
+
+<div class="container mx-auto pb-12">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold">Meetings</h1>
+            <p class="opacity-60 mt-1">Schedule and manage your calls with clients.</p>
+        </div>
+        <button (click)="openScheduleModal()" class="btn btn-primary shadow-lg shadow-primary/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            Schedule Meeting
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Upcoming Meetings Column -->
+        <div class="lg:col-span-2 space-y-6">
+            <h2 class="font-bold text-lg flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-success"></span>
+                Upcoming
+            </h2>
+
+            @if(paginatedUpcoming().length > 0) {
+                <div class="grid grid-cols-1 gap-4">
+                    @for(meeting of paginatedUpcoming(); track meeting.id) {
+                        <div class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow">
+                            <div class="card-body p-5">
+                                <div class="flex flex-col sm:flex-row justify-between gap-4">
+                                    <div class="flex gap-4">
+                                        <!-- Date Box -->
+                                        <div class="flex flex-col items-center justify-center bg-base-200/50 rounded-xl p-3 min-w-[80px] text-center border border-base-200">
+                                            <span class="text-xs font-bold text-primary uppercase tracking-wider">{{ meeting.startTime | date:'MMM' }}</span>
+                                            <span class="text-2xl font-bold">{{ meeting.startTime | date:'dd' }}</span>
+                                            <span class="text-xs opacity-60">{{ meeting.startTime | date:'EEE' }}</span>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 class="font-bold text-lg">{{ meeting.title }}</h3>
+                                            <p class="text-sm text-base-content/70 flex items-center gap-2 mt-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                {{ meeting.startTime | date:'shortTime' }} - {{ meeting.endTime | date:'shortTime' }}
+                                            </p>
+                                            <div class="flex items-center gap-2 mt-2">
+                                                <span class="badge badge-sm badge-outline gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                                    {{ meeting.clientName }}
+                                                    @if(!meeting.clientId){ <span class="ml-1 text-xs opacity-60">(Guest)</span> }
+                                                </span>
+                                                <span class="badge badge-sm" 
+                                                    [class.badge-primary]="meeting.platform === 'Google Meet'"
+                                                    [class.badge-info]="meeting.platform === 'Zoom'">
+                                                    {{ meeting.platform }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-row sm:flex-col items-end justify-between sm:justify-center gap-2">
+                                        @if(meeting.link) {
+                                            <a [href]="meeting.link" target="_blank" class="btn btn-primary btn-sm w-full sm:w-auto">
+                                                Join Call
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                            </a>
+                                        }
+                                        <button (click)="deleteMeeting(meeting.id)" class="btn btn-ghost btn-xs text-error">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if(upcomingMeetings().length > upcomingPerPage()){
+                    <div class="flex justify-center mt-4">
+                        <app-pagination 
+                            [currentPage]="upcomingPage()" 
+                            [totalItems]="upcomingMeetings().length" 
+                            [itemsPerPage]="upcomingPerPage()" 
+                            (pageChange)="onUpcomingPageChange($event)">
+                        </app-pagination>
+                    </div>
+                }
+            } @else {
+                <div class="text-center py-12 bg-base-100 border border-base-200 rounded-xl border-dashed opacity-60">
+                    <p class="font-medium">No upcoming meetings.</p>
+                    <p class="text-sm">Schedule a new one to get started.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Past / Filters Column -->
+        <div class="lg:col-span-1 space-y-6">
+             <!-- Quick Filter -->
+             <div class="card bg-base-100 shadow-sm border border-base-200">
+                <div class="card-body p-4">
+                    <h3 class="font-bold text-sm uppercase tracking-wider opacity-60 mb-3">Filter</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="btn btn-sm" [class.btn-primary]="filterPlatform() === 'All'" [class.btn-ghost]="filterPlatform() !== 'All'" (click)="filterPlatform.set('All')">All</button>
+                        <button class="btn btn-sm" [class.btn-primary]="filterPlatform() === 'Google Meet'" [class.btn-ghost]="filterPlatform() !== 'Google Meet'" (click)="filterPlatform.set('Google Meet')">Meet</button>
+                        <button class="btn btn-sm" [class.btn-primary]="filterPlatform() === 'Zoom'" [class.btn-ghost]="filterPlatform() !== 'Zoom'" (click)="filterPlatform.set('Zoom')">Zoom</button>
+                    </div>
+                </div>
+             </div>
+
+             <!-- Past Meetings List -->
+             <div class="card bg-base-100 shadow-sm border border-base-200">
+                <div class="card-body p-0">
+                    <div class="p-4 border-b border-base-200">
+                        <h3 class="font-bold text-sm uppercase tracking-wider opacity-60">Past Meetings</h3>
+                    </div>
+                    <ul class="menu p-2">
+                        @for(meeting of paginatedHistory(); track meeting.id) {
+                            <li class="border-b border-base-100 last:border-0">
+                                <a class="flex flex-col items-start gap-1 py-3">
+                                    <div class="flex justify-between w-full">
+                                        <span class="font-bold text-sm truncate">{{ meeting.title }}</span>
+                                        <span class="text-xs opacity-50">{{ meeting.startTime | date:'shortDate' }}</span>
+                                    </div>
+                                    <div class="flex justify-between w-full items-center">
+                                        <span class="text-xs opacity-70">{{ meeting.clientName }}</span>
+                                        <span class="badge badge-xs badge-ghost">{{ meeting.platform }}</span>
+                                    </div>
+                                </a>
+                            </li>
+                        } @empty {
+                            <li class="disabled"><a class="opacity-50 italic">No history found.</a></li>
+                        }
+                    </ul>
+                    @if(pastMeetings().length > historyPerPage()) {
+                        <div class="p-2 flex justify-center">
+                            <app-pagination 
+                                [currentPage]="historyPage()" 
+                                [totalItems]="pastMeetings().length" 
+                                [itemsPerPage]="historyPerPage()" 
+                                (pageChange)="onHistoryPageChange($event)">
+                            </app-pagination>
+                        </div>
+                    }
+                </div>
+             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Modal -->
+@if(isModalOpen()) {
+    <dialog class="modal modal-open">
+        <div class="modal-box">
+            <button (click)="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <h3 class="font-bold text-lg mb-6">Schedule New Meeting</h3>
+            
+            <div class="form-control mb-4">
+                <label class="label"><span class="label-text font-medium">Meeting Title</span></label>
+                <input type="text" [ngModel]="meetTitle()" (ngModelChange)="meetTitle.set($event)" class="input input-bordered w-full focus:input-primary" placeholder="e.g. Project Sync">
+            </div>
+            
+            <!-- Attendee Type Selector -->
+            <div class="flex gap-4 mb-4">
+                <label class="label cursor-pointer gap-2">
+                    <input type="radio" name="attendeeType" class="radio radio-primary" [value]="'client'" [ngModel]="attendeeType()" (ngModelChange)="attendeeType.set($event)">
+                    <span class="label-text font-medium">Existing Client</span>
+                </label>
+                 <label class="label cursor-pointer gap-2">
+                    <input type="radio" name="attendeeType" class="radio radio-primary" [value]="'guest'" [ngModel]="attendeeType()" (ngModelChange)="attendeeType.set($event)">
+                    <span class="label-text font-medium">External Guest</span>
+                </label>
+            </div>
+
+            @if(attendeeType() === 'client') {
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text font-medium">Select Client</span></label>
+                    <select [ngModel]="meetClientId()" (ngModelChange)="meetClientId.set(+$event)" class="select select-bordered w-full">
+                        <option [ngValue]="null" disabled>Choose...</option>
+                        @for(client of clients(); track client.id) {
+                            <option [value]="client.id">{{ client.name }}</option>
+                        }
+                    </select>
+                </div>
+            } @else {
+                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-medium">Guest Name</span></label>
+                        <input type="text" [ngModel]="meetGuestName()" (ngModelChange)="meetGuestName.set($event)" class="input input-bordered w-full">
+                    </div>
+                     <div class="form-control">
+                        <label class="label"><span class="label-text font-medium">Guest Email</span></label>
+                        <input type="email" [ngModel]="meetGuestEmail()" (ngModelChange)="meetGuestEmail.set($event)" class="input input-bordered w-full">
+                    </div>
+                 </div>
+            }
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Date & Time</span></label>
+                    <input type="datetime-local" [ngModel]="meetDate()" (ngModelChange)="meetDate.set($event)" class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Platform</span></label>
+                    <select [ngModel]="meetPlatform()" (ngModelChange)="meetPlatform.set($event)" class="select select-bordered w-full">
+                        <option value="Google Meet">Google Meet</option>
+                        <option value="Zoom">Zoom</option>
+                        <option value="Phone">Phone Call</option>
+                        <option value="In-Person">In-Person</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-control mb-6">
+                <label class="label"><span class="label-text font-medium">Description (Optional)</span></label>
+                <textarea [ngModel]="meetDescription()" (ngModelChange)="meetDescription.set($event)" class="textarea textarea-bordered h-24 resize-none" placeholder="Agenda notes..."></textarea>
+            </div>
+            
+            <div class="alert alert-info text-xs mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>A {{ meetPlatform() }} link will be automatically generated and saved.</span>
+            </div>
+
+            <div class="modal-action">
+                <button (click)="closeModal()" class="btn btn-ghost">Cancel</button>
+                <button (click)="saveMeeting()" class="btn btn-primary" [disabled]="!meetTitle() || !meetDate() || (attendeeType() === 'client' && !meetClientId()) || (attendeeType() === 'guest' && !meetGuestName())">Schedule</button>
+            </div>
+        </div>
+    </dialog>
+}
