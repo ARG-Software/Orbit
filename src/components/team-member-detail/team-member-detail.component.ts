@@ -1,8 +1,9 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal, effect, Signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, ParamMap, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs';
 import { MockDataService, TeamMember } from '../../services/mock-data.service';
 import { FormsModule } from '@angular/forms';
 
@@ -18,7 +19,7 @@ export class TeamMemberDetailComponent {
 
   member: Signal<TeamMember | undefined> = toSignal(
     this.route.paramMap.pipe(
-      map(params => Number(params.get('id'))),
+      map((params: ParamMap) => Number(params.get('id'))),
       switchMap(id => this.dataService.getTeamMemberById(id))
     )
   );

@@ -1,9 +1,9 @@
 
 import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, WritableSignal, Signal } from '@angular/core';
 import { AsyncPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MockDataService, Client, TimeEntry, TeamMember, Project } from '../../services/mock-data.service';
+import { AuthService } from '../../services/auth.service';
 
 interface CalendarDay {
   date: Date;
@@ -14,6 +14,7 @@ interface CalendarDay {
 interface DailySummary {
   totalHours: number;
   entries: Array<{
+    projectId: number;
     projectName: string;
     clientName?: string;
     memberName: string;
@@ -30,10 +31,14 @@ interface DailySummary {
 })
 export class TimesheetComponent {
   private dataService = inject(MockDataService);
+  private authService = inject(AuthService);
 
-  clients: Signal<Client[]> = toSignal(this.dataService.getClients(), { initialValue: [] });
-  members: Signal<TeamMember[]> = toSignal(this.dataService.getTeamMembers(), { initialValue: [] });
-  projects: Signal<Project[]> = toSignal(this.dataService.getProjects(), { initialValue: [] });
+  user = this.authService.currentUser;
+  isAdmin = this.authService.isAdmin;
+
+  clients = this.dataService.getClients();
+  members = this.dataService.getTeamMembers();
+  projects = this.dataService.getProjects();
 
   currentDate = signal(new Date());
   viewMode = signal<'week' | 'month'>('week');
@@ -53,14 +58,33 @@ export class TimesheetComponent {
   modalAvailableProjects = computed(() => {
     const cId = this.modalClientId();
     if (!cId) return [];
-    return this.projects().filter(p => p.clientId === cId);
+    
+    let available = this.projects().filter(p => p.clientId === cId);
+
+    // If Member, restrict projects to those allocated
+    if (!this.isAdmin()) {
+        const myId = this.user()?.teamMemberId;
+        if (myId) {
+             available = available.filter(p => p.allocatedTeamMemberIds.includes(myId));
+        } else {
+            return [];
+        }
+    }
+
+    return available;
   });
 
   constructor() {
-    // Auto-select first member in modal if available (convenience)
+    // Auto-select user logic
     effect(() => {
-      if (this.isEntryModalOpen() && !this.modalMemberId() && this.members().length > 0) {
-        this.modalMemberId.set(this.members()[0].id);
+      if (this.isEntryModalOpen()) {
+          if (!this.isAdmin()) {
+             // Lock to current member
+             const myId = this.user()?.teamMemberId;
+             if(myId) this.modalMemberId.set(myId);
+          } else if (!this.modalMemberId() && this.members().length > 0) {
+            this.modalMemberId.set(this.members()[0].id);
+          }
       }
     }, { allowSignalWrites: true });
   }
@@ -146,13 +170,20 @@ export class TimesheetComponent {
     let totalHours = 0;
     const entries: DailySummary['entries'] = [];
 
+    // If member, filter only their entries
+    const currentMemberId = !this.isAdmin() ? this.user()?.teamMemberId : null;
+
     this.projects().forEach(p => {
       const entry = p.hours[weekId]?.[dayName];
       if (entry) {
+        // Filter logic
+        if (currentMemberId && entry.memberId !== currentMemberId) return;
+
         totalHours += entry.hours;
         const member = this.members().find(m => m.id === entry.memberId);
         const client = this.clients().find(c => c.id === p.clientId);
         entries.push({
+          projectId: p.id,
           projectName: p.name,
           clientName: client?.name,
           memberName: member?.name || 'Unknown',
@@ -175,8 +206,6 @@ export class TimesheetComponent {
     this.modalProjectId.set(null);
     this.entryHours.set(0);
     this.entryDescription.set('');
-    
-    // Note: modalMemberId is kept if already set, or auto-set by effect
     
     this.isEntryModalOpen.set(true);
   }
@@ -204,5 +233,16 @@ export class TimesheetComponent {
 
     this.dataService.submitHours(projectId, weekId, { [dayName]: newEntry });
     this.closeEntryModal();
+  }
+
+  deleteEntry(projectId: number) {
+    const date = this.entryModalDate();
+    if (!date) return;
+    
+    if(confirm('Are you sure you want to delete this entry?')) {
+        const weekId = this.getWeekId(date);
+        const dayName = date.toLocaleString('en-US', { weekday: 'short' });
+        this.dataService.deleteTimeEntry(projectId, weekId, dayName);
+    }
   }
 }

@@ -3,7 +3,7 @@
   <!-- Dashboard Header & Filter -->
   <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
     <div>
-        <h1 class="text-3xl font-bold">Dashboard</h1>
+        <h1 class="text-3xl font-bold">{{ isAdmin() ? 'Dashboard' : 'My Work Dashboard' }}</h1>
         <p class="opacity-60">Overview for {{ startDate() | date:'mediumDate' }} - {{ endDate() | date:'mediumDate' }}</p>
     </div>
     
@@ -21,262 +21,264 @@
     </div>
   </div>
 
-  <!-- SECTION 1: REVENUE -->
-  <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().revenue">
-    <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('revenue')">
-      <div class="p-2 bg-primary/10 text-primary rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div>
-      Revenue & Financials
-    </div>
-    <div class="collapse-content">
-        <div class="divider my-0"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6">
-            <!-- Key Metrics -->
-            <div class="lg:col-span-3 space-y-6">
-                <div class="card bg-base-200/50 border border-base-300">
-                    <div class="card-body p-6">
-                        <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Total Earnings</h3>
-                        <div class="text-4xl font-extrabold text-primary mt-2">${{ revenue().totalEarnings | number:'1.0-0' }}</div>
+  @if(isAdmin()){
+      <!-- SECTION 1: REVENUE -->
+      <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().revenue">
+        <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('revenue')">
+          <div class="p-2 bg-primary/10 text-primary rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div>
+          Revenue & Financials
+        </div>
+        <div class="collapse-content">
+            <div class="divider my-0"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6">
+                <!-- Key Metrics -->
+                <div class="lg:col-span-3 space-y-6">
+                    <div class="card bg-base-200/50 border border-base-300">
+                        <div class="card-body p-6">
+                            <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Total Earnings</h3>
+                            <div class="text-4xl font-extrabold text-primary mt-2">${{ revenue().totalEarnings | number:'1.0-0' }}</div>
+                        </div>
+                    </div>
+                    <div class="card bg-base-200/50 border border-base-300">
+                        <div class="card-body p-6">
+                             <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Avg. Hourly Rate</h3>
+                             <div class="text-3xl font-bold mt-2">${{ revenue().avgHourlyRate | number:'1.2-2' }}</div>
+                        </div>
+                    </div>
+                    <div class="card bg-base-200/50 border border-base-300">
+                        <div class="card-body p-6">
+                             <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Hours vs Earnings</h3>
+                             <div class="mt-2">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Hours</span>
+                                    <span class="font-mono">{{ revenue().totalHours | number:'1.0-0' }}h</span>
+                                </div>
+                                <progress class="progress progress-secondary w-full" value="100" max="100"></progress>
+                                <div class="flex justify-between text-sm mb-1 mt-3">
+                                    <span>Earnings Ratio</span>
+                                    <span class="font-mono text-xs opacity-70">~${{ revenue().avgHourlyRate | number:'1.0-0' }}/h</span>
+                                </div>
+                                 <progress class="progress progress-primary w-full" value="100" max="100"></progress>
+                             </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card bg-base-200/50 border border-base-300">
-                    <div class="card-body p-6">
-                         <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Avg. Hourly Rate</h3>
-                         <div class="text-3xl font-bold mt-2">${{ revenue().avgHourlyRate | number:'1.2-2' }}</div>
+
+                <!-- Earnings by Client (Chart) -->
+                <div class="lg:col-span-5 card bg-base-100 border border-base-200">
+                    <div class="card-body">
+                        <h3 class="font-bold text-lg mb-4">Earnings by Client</h3>
+                        <div class="space-y-4">
+                            @for(item of revenue().earningsByClient; track item.name) {
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="font-medium">{{ item.name }}</span>
+                                        <span class="font-bold text-primary">${{ item.value | number:'1.0-0' }}</span>
+                                    </div>
+                                    <progress class="progress progress-primary h-2" [value]="item.value" [max]="getMaxRevenueValue()"></progress>
+                                </div>
+                            } @empty {
+                                <div class="text-center py-10 opacity-50">No revenue data available.</div>
+                            }
+                        </div>
                     </div>
                 </div>
-                <div class="card bg-base-200/50 border border-base-300">
-                    <div class="card-body p-6">
-                         <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Hours vs Earnings</h3>
-                         <div class="mt-2">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span>Hours</span>
-                                <span class="font-mono">{{ revenue().totalHours | number:'1.0-0' }}h</span>
-                            </div>
-                            <progress class="progress progress-secondary w-full" value="100" max="100"></progress>
-                            <div class="flex justify-between text-sm mb-1 mt-3">
-                                <span>Earnings Ratio</span>
-                                <span class="font-mono text-xs opacity-70">~${{ revenue().avgHourlyRate | number:'1.0-0' }}/h</span>
-                            </div>
-                             <progress class="progress progress-primary w-full" value="100" max="100"></progress>
+
+                <!-- Most Valuable Projects -->
+                <div class="lg:col-span-4 card bg-base-100 border border-base-200">
+                    <div class="card-body p-0">
+                        <div class="p-5 border-b border-base-200 font-bold">Most Valuable Projects</div>
+                        <div class="overflow-y-auto max-h-[300px]">
+                            <table class="table w-full">
+                                <tbody>
+                                    @for(proj of revenue().mostValuableProjects; track proj.name; let i = $index) {
+                                        <tr class="hover:bg-base-100">
+                                            <td class="font-bold text-center w-8 opacity-50">{{ i + 1 }}</td>
+                                            <td>
+                                                <div class="font-medium">{{ proj.name }}</div>
+                                                <div class="text-xs opacity-60">{{ proj.clientName }}</div>
+                                            </td>
+                                            <td class="text-right font-bold text-success">${{ proj.value | number:'1.0-0' }}</td>
+                                        </tr>
+                                    } @empty {
+                                        <tr><td colspan="3" class="text-center py-8 opacity-50">No active projects found.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: CLIENTS -->
+      <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().clients">
+        <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('clients')">
+          <div class="p-2 bg-secondary/10 text-secondary rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z" /></svg></div>
+          Client Insights
+        </div>
+        <div class="collapse-content">
+            <div class="divider my-0"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6">
+                <!-- KPIs -->
+                <div class="lg:col-span-1 space-y-4">
+                     <div class="stats shadow w-full border border-base-200 bg-base-100">
+                        <div class="stat place-items-center">
+                            <div class="stat-title">Active Clients</div>
+                            <div class="stat-value text-secondary">{{ clients().activeClientsCount }}</div>
+                            <div class="stat-desc">In selected period</div>
+                        </div>
+                     </div>
+                     
+                     <!-- Invoice Status Radial -->
+                     <div class="card bg-base-100 border border-base-200 shadow-sm">
+                         <div class="card-body items-center text-center p-4">
+                             <h4 class="text-xs font-bold uppercase opacity-60 mb-2">Invoice Status</h4>
+                             <div class="relative flex items-center justify-center mb-2">
+                                 @let total = getInvoiceTotal();
+                                 <div class="radial-progress text-success bg-base-200 border-4 border-base-200" [style.--value]="(clients().invoiceStatusSummary.paid / (total || 1)) * 100" [style.--size]="'6rem'" role="progressbar">
+                                    <span class="text-sm font-bold text-base-content">{{ (clients().invoiceStatusSummary.paid / (total || 1)) * 100 | number:'1.0-0' }}%</span>
+                                 </div>
+                             </div>
+                             <div class="flex gap-3 text-xs">
+                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-success"></div> Paid</div>
+                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-warning"></div> Pending</div>
+                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-error"></div> Overdue</div>
+                             </div>
+                         </div>
+                     </div>
+                </div>
+
+                <!-- Most Valuable Clients List -->
+                <div class="lg:col-span-1 card bg-base-100 border border-base-200">
+                    <div class="card-body p-0">
+                        <div class="p-4 font-bold border-b border-base-200">Top Clients (Revenue)</div>
+                        <ul class="menu p-2">
+                            @for(c of clients().mostValuableClients.slice(0,5); track c.name) {
+                                <li class="flex flex-row justify-between py-2 border-b border-base-100 last:border-0">
+                                    <span class="font-medium">{{ c.name }}</span>
+                                    <span class="font-bold text-primary">${{ c.value | number:'1.0-0' }}</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Most Billed Time -->
+                 <div class="lg:col-span-1 card bg-base-100 border border-base-200">
+                    <div class="card-body p-0">
+                        <div class="p-4 font-bold border-b border-base-200">Most Billed Time</div>
+                         <div class="p-4 space-y-4">
+                            @for(c of clients().clientsWithMostBilledTime; track c.name) {
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>{{ c.name }}</span>
+                                        <span class="font-bold">{{ c.hours }} hrs</span>
+                                    </div>
+                                    <progress class="progress progress-secondary h-1.5" [value]="c.hours" [max]="getMaxClientHours()"></progress>
+                                </div>
+                            }
                          </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Earnings by Client (Chart) -->
-            <div class="lg:col-span-5 card bg-base-100 border border-base-200">
-                <div class="card-body">
-                    <h3 class="font-bold text-lg mb-4">Earnings by Client</h3>
-                    <div class="space-y-4">
-                        @for(item of revenue().earningsByClient; track item.name) {
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="font-medium">{{ item.name }}</span>
-                                    <span class="font-bold text-primary">${{ item.value | number:'1.0-0' }}</span>
-                                </div>
-                                <progress class="progress progress-primary h-2" [value]="item.value" [max]="getMaxRevenueValue()"></progress>
-                            </div>
-                        } @empty {
-                            <div class="text-center py-10 opacity-50">No revenue data available.</div>
-                        }
+                <!-- Avg Project Value -->
+                 <div class="lg:col-span-1 card bg-base-100 border border-base-200">
+                    <div class="card-body p-0">
+                        <div class="p-4 font-bold border-b border-base-200">Avg. Project Value</div>
+                        <ul class="menu p-2">
+                            @for(c of clients().projectValuePerClient; track c.name) {
+                                <li class="flex flex-row justify-between py-2 border-b border-base-100 last:border-0">
+                                    <span class="font-medium text-sm">{{ c.name }}</span>
+                                    <span class="font-bold text-sm opacity-70">${{ c.avgValue | number:'1.0-0' }}</span>
+                                </li>
+                            }
+                        </ul>
                     </div>
                 </div>
             </div>
+        </div>
+      </div>
 
-            <!-- Most Valuable Projects -->
-            <div class="lg:col-span-4 card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-5 border-b border-base-200 font-bold">Most Valuable Projects</div>
-                    <div class="overflow-y-auto max-h-[300px]">
+      <!-- SECTION 3: MEMBERS -->
+      <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().members">
+        <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('members')">
+          <div class="p-2 bg-accent/10 text-accent rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
+          Team Performance
+        </div>
+        <div class="collapse-content">
+            <div class="divider my-0"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
+                <!-- Highlight Cards -->
+                <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div class="stats shadow border border-base-200">
+                        <div class="stat">
+                            <div class="stat-figure text-accent">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-8 h-8 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z"></path></svg>
+                            </div>
+                            <div class="stat-title">Active Members</div>
+                            <div class="stat-value">{{ members().activeMembersCount }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats shadow border border-base-200">
+                        <div class="stat">
+                            <div class="stat-title">Most Profitable</div>
+                            <div class="stat-value text-lg text-primary truncate">{{ members().mostProfitableMember?.member?.name || 'N/A' }}</div>
+                            <div class="stat-desc font-bold text-success">${{ members().mostProfitableMember?.earnings | number:'1.0-0' }} generated</div>
+                        </div>
+                    </div>
+
+                    <div class="stats shadow border border-base-200">
+                        <div class="stat">
+                            <div class="stat-title">Most Hours</div>
+                            <div class="stat-value text-lg text-secondary truncate">{{ members().mostHoursLogged?.member?.name || 'N/A' }}</div>
+                            <div class="stat-desc font-bold">{{ members().mostHoursLogged?.hours | number:'1.0-0' }} hrs logged</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ranking Table -->
+                <div class="lg:col-span-3 card bg-base-100 border border-base-200">
+                     <div class="card-body p-0">
                         <table class="table w-full">
+                            <thead class="bg-base-200">
+                                <tr>
+                                    <th class="w-12 text-center">Rank</th>
+                                    <th>Member</th>
+                                    <th class="text-right">Hours</th>
+                                    <th class="text-right">Revenue Generated</th>
+                                </tr>
+                            </thead>
                             <tbody>
-                                @for(proj of revenue().mostValuableProjects; track proj.name; let i = $index) {
+                                @for(rank of members().rankingByHours; track rank.member.id; let i = $index) {
                                     <tr class="hover:bg-base-100">
-                                        <td class="font-bold text-center w-8 opacity-50">{{ i + 1 }}</td>
+                                        <td class="text-center font-bold opacity-50">{{ i + 1 }}</td>
                                         <td>
-                                            <div class="font-medium">{{ proj.name }}</div>
-                                            <div class="text-xs opacity-60">{{ proj.clientName }}</div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="avatar"><div class="mask mask-squircle w-8 h-8"><img [src]="rank.member.avatarUrl" /></div></div>
+                                                <div class="font-bold">{{ rank.member.name }}</div>
+                                            </div>
                                         </td>
-                                        <td class="text-right font-bold text-success">${{ proj.value | number:'1.0-0' }}</td>
+                                        <td class="text-right font-mono">{{ rank.hours | number:'1.1-1' }}</td>
+                                        <td class="text-right font-bold text-success">${{ rank.earnings | number:'1.0-0' }}</td>
                                     </tr>
-                                } @empty {
-                                    <tr><td colspan="3" class="text-center py-8 opacity-50">No active projects found.</td></tr>
                                 }
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <!-- SECTION 2: CLIENTS -->
-  <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().clients">
-    <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('clients')">
-      <div class="p-2 bg-secondary/10 text-secondary rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z" /></svg></div>
-      Client Insights
-    </div>
-    <div class="collapse-content">
-        <div class="divider my-0"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6">
-            <!-- KPIs -->
-            <div class="lg:col-span-1 space-y-4">
-                 <div class="stats shadow w-full border border-base-200 bg-base-100">
-                    <div class="stat place-items-center">
-                        <div class="stat-title">Active Clients</div>
-                        <div class="stat-value text-secondary">{{ clients().activeClientsCount }}</div>
-                        <div class="stat-desc">In selected period</div>
-                    </div>
-                 </div>
-                 
-                 <!-- Invoice Status Radial -->
-                 <div class="card bg-base-100 border border-base-200 shadow-sm">
-                     <div class="card-body items-center text-center p-4">
-                         <h4 class="text-xs font-bold uppercase opacity-60 mb-2">Invoice Status</h4>
-                         <div class="relative flex items-center justify-center mb-2">
-                             @let total = getInvoiceTotal();
-                             <div class="radial-progress text-success bg-base-200 border-4 border-base-200" [style.--value]="(clients().invoiceStatusSummary.paid / (total || 1)) * 100" [style.--size]="'6rem'" role="progressbar">
-                                <span class="text-sm font-bold text-base-content">{{ (clients().invoiceStatusSummary.paid / (total || 1)) * 100 | number:'1.0-0' }}%</span>
-                             </div>
-                         </div>
-                         <div class="flex gap-3 text-xs">
-                             <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-success"></div> Paid</div>
-                             <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-warning"></div> Pending</div>
-                             <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-error"></div> Overdue</div>
-                         </div>
-                     </div>
-                 </div>
-            </div>
-
-            <!-- Most Valuable Clients List -->
-            <div class="lg:col-span-1 card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200">Top Clients (Revenue)</div>
-                    <ul class="menu p-2">
-                        @for(c of clients().mostValuableClients.slice(0,5); track c.name) {
-                            <li class="flex flex-row justify-between py-2 border-b border-base-100 last:border-0">
-                                <span class="font-medium">{{ c.name }}</span>
-                                <span class="font-bold text-primary">${{ c.value | number:'1.0-0' }}</span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Most Billed Time -->
-             <div class="lg:col-span-1 card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200">Most Billed Time</div>
-                     <div class="p-4 space-y-4">
-                        @for(c of clients().clientsWithMostBilledTime; track c.name) {
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span>{{ c.name }}</span>
-                                    <span class="font-bold">{{ c.hours }} hrs</span>
-                                </div>
-                                <progress class="progress progress-secondary h-1.5" [value]="c.hours" [max]="getMaxClientHours()"></progress>
-                            </div>
-                        }
                      </div>
                 </div>
             </div>
-
-            <!-- Avg Project Value -->
-             <div class="lg:col-span-1 card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200">Avg. Project Value</div>
-                    <ul class="menu p-2">
-                        @for(c of clients().projectValuePerClient; track c.name) {
-                            <li class="flex flex-row justify-between py-2 border-b border-base-100 last:border-0">
-                                <span class="font-medium text-sm">{{ c.name }}</span>
-                                <span class="font-bold text-sm opacity-70">${{ c.avgValue | number:'1.0-0' }}</span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
         </div>
-    </div>
-  </div>
+      </div>
+  }
 
-  <!-- SECTION 3: MEMBERS -->
-  <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().members">
-    <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('members')">
-      <div class="p-2 bg-accent/10 text-accent rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
-      Team Performance
-    </div>
-    <div class="collapse-content">
-        <div class="divider my-0"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
-            <!-- Highlight Cards -->
-            <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                <div class="stats shadow border border-base-200">
-                    <div class="stat">
-                        <div class="stat-figure text-accent">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-8 h-8 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z"></path></svg>
-                        </div>
-                        <div class="stat-title">Active Members</div>
-                        <div class="stat-value">{{ members().activeMembersCount }}</div>
-                    </div>
-                </div>
-                
-                <div class="stats shadow border border-base-200">
-                    <div class="stat">
-                        <div class="stat-title">Most Profitable</div>
-                        <div class="stat-value text-lg text-primary truncate">{{ members().mostProfitableMember?.member?.name || 'N/A' }}</div>
-                        <div class="stat-desc font-bold text-success">${{ members().mostProfitableMember?.earnings | number:'1.0-0' }} generated</div>
-                    </div>
-                </div>
-
-                <div class="stats shadow border border-base-200">
-                    <div class="stat">
-                        <div class="stat-title">Most Hours</div>
-                        <div class="stat-value text-lg text-secondary truncate">{{ members().mostHoursLogged?.member?.name || 'N/A' }}</div>
-                        <div class="stat-desc font-bold">{{ members().mostHoursLogged?.hours | number:'1.0-0' }} hrs logged</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ranking Table -->
-            <div class="lg:col-span-3 card bg-base-100 border border-base-200">
-                 <div class="card-body p-0">
-                    <table class="table w-full">
-                        <thead class="bg-base-200">
-                            <tr>
-                                <th class="w-12 text-center">Rank</th>
-                                <th>Member</th>
-                                <th class="text-right">Hours</th>
-                                <th class="text-right">Revenue Generated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for(rank of members().rankingByHours; track rank.member.id; let i = $index) {
-                                <tr class="hover:bg-base-100">
-                                    <td class="text-center font-bold opacity-50">{{ i + 1 }}</td>
-                                    <td>
-                                        <div class="flex items-center gap-3">
-                                            <div class="avatar"><div class="mask mask-squircle w-8 h-8"><img [src]="rank.member.avatarUrl" /></div></div>
-                                            <div class="font-bold">{{ rank.member.name }}</div>
-                                        </div>
-                                    </td>
-                                    <td class="text-right font-mono">{{ rank.hours | number:'1.1-1' }}</td>
-                                    <td class="text-right font-bold text-success">${{ rank.earnings | number:'1.0-0' }}</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                 </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <!-- SECTION 4: TASKS -->
+  <!-- SECTION 4: TASKS (Visible to All, but filtered for Members) -->
   <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200" [class.collapse-open]="sections().tasks">
     <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('tasks')">
       <div class="p-2 bg-info/10 text-info rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg></div>
-      Task Activity
+      {{ isAdmin() ? 'Task Activity' : 'My Recent Tasks' }}
     </div>
     <div class="collapse-content">
         <div class="divider my-0"></div>
@@ -284,7 +286,7 @@
             <!-- Recently Added -->
             <div class="card bg-base-100 border border-base-200">
                 <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Recently Added</div>
+                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Recently Assigned</div>
                     <ul class="menu p-2">
                         @for(t of tasks().recentlyAddedTasks; track t.id) {
                             <li class="border-b border-base-100 last:border-0">
@@ -294,7 +296,7 @@
                                 </a>
                             </li>
                         } @empty {
-                            <li class="disabled"><a>No recent tasks added.</a></li>
+                            <li class="disabled"><a>No recent tasks.</a></li>
                         }
                     </ul>
                 </div>
@@ -325,7 +327,7 @@
             <!-- Board Activity -->
             <div class="card bg-base-100 border border-base-200">
                 <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Most Active Boards</div>
+                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Board Activity</div>
                     <div class="p-4 space-y-4">
                         @for(b of tasks().boardActivity; track b.name) {
                             <div>

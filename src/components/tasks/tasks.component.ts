@@ -1,4 +1,3 @@
-
 import {
   Component,
   ChangeDetectionStrategy,
@@ -39,11 +38,11 @@ export class TasksComponent {
   activeTab = signal<'board' | 'history'>('board');
 
   // --- Master Data Signals ---
-  clients: Signal<Client[]> = toSignal(this.dataService.getClients(), { initialValue: [] });
-  allProjects: Signal<Project[]> = toSignal(this.dataService.getProjects(), { initialValue: [] });
-  allBoards: Signal<Board[]> = toSignal(this.dataService.getBoards(), { initialValue: [] });
-  allMembers: Signal<TeamMember[]> = toSignal(this.dataService.getTeamMembers(), { initialValue: [] });
-  allTasks: Signal<Task[]> = toSignal(this.dataService.getAllTasks(), { initialValue: [] });
+  clients = this.dataService.getClients();
+  allProjects = this.dataService.getProjects();
+  allBoards = this.dataService.getBoards();
+  allMembers = this.dataService.getTeamMembers();
+  allTasks = this.dataService.getAllTasks();
   currentUser = this.authService.currentUser;
 
   // ==========================================

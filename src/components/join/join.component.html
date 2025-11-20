@@ -1,0 +1,38 @@
+
+<div class="flex items-center justify-center min-h-screen p-4 bg-base-200">
+	<div class="card w-full max-w-md bg-base-100 shadow-xl">
+		<div class="card-body">
+      <div class="flex justify-center text-secondary">
+         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+      </div>
+			<h2 class="card-title justify-center text-2xl">Join the Team</h2>
+            <p class="text-center opacity-75 text-sm mb-4">Accepting invitation for <strong>{{ memberName() }}</strong></p>
+			
+      @if(errorMessage()){
+        <div class="alert alert-error mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form class="flex flex-col gap-4 mt-2" (ngSubmit)="register(joinForm)" #joinForm="ngForm">
+          <div class="form-control">
+            <label class="label" for="email-address">Confirm Email</label>
+            <input id="email-address" name="email" type="email" autocomplete="email" required class="input input-bordered" placeholder="you@example.com" ngModel>
+          </div>
+
+          <div class="form-control">
+            <label class="label" for="password">Set Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required class="input input-bordered" placeholder="********" ngModel>
+          </div>
+        
+          <div class="card-actions mt-4">
+            <button type="submit" class="btn btn-secondary w-full shadow-lg shadow-secondary/20" [disabled]="joinForm.invalid || isSubmitting()">
+              @if(isSubmitting()){ <span class="loading loading-spinner"></span> }
+              Complete Registration
+            </button>
+          </div>
+      </form>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,223 @@
+
+@if(project(); as p) {
+<div class="container mx-auto">
+  <div class="flex items-center mb-8">
+    <a routerLink="/projects" class="btn btn-ghost btn-circle mr-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+    </a>
+    <div>
+      <h1 class="text-3xl font-bold">Project Details</h1>
+      <p class="opacity-60">Manage project scope, assets, and team allocation.</p>
+    </div>
+    <div class="ml-auto">
+        <button class="btn btn-ghost text-error" (click)="deleteProject()">Delete Project</button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Info -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- General Info -->
+        <div class="card bg-base-100 shadow border border-base-200">
+            <div class="card-body">
+                <h2 class="card-title border-b border-base-200 pb-2 mb-4">General Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-medium">Project Name</span></label>
+                        <input type="text" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" class="input input-bordered focus:input-primary">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-medium">Status</span></label>
+                        <select [ngModel]="projectStatus()" (ngModelChange)="projectStatus.set($event)" class="select select-bordered">
+                            <option value="Active">Active</option>
+                            <option value="On Hold">On Hold</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="form-control md:col-span-2">
+                        <label class="label"><span class="label-text font-medium">Client</span></label>
+                        <select [ngModel]="projectClientId()" (ngModelChange)="projectClientId.set(+$event)" class="select select-bordered">
+                             @for(client of clients(); track client.id){
+                                <option [value]="client.id">{{ client.name }}</option>
+                             }
+                        </select>
+                    </div>
+                     <div class="form-control md:col-span-2">
+                        <label class="label"><span class="label-text font-medium">Description</span></label>
+                        <textarea [ngModel]="projectDescription()" (ngModelChange)="projectDescription.set($event)" class="textarea textarea-bordered focus:textarea-primary min-h-[100px]" placeholder="Project scope and details..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity & Files Tabs -->
+        <div class="card bg-base-100 shadow border border-base-200">
+            <div class="card-body p-0">
+                <div role="tablist" class="tabs tabs-lifted pt-4 px-4 bg-base-200/30">
+                   <!-- Just visual structure for now, simplistic implementation -->
+                   <a role="tab" class="tab tab-active font-bold bg-base-100 border-b-0">Comments & Files</a>
+                </div>
+                
+                <div class="p-6">
+                   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <!-- Comments -->
+                       <div class="space-y-4">
+                           <h3 class="font-bold text-sm uppercase tracking-wider opacity-60">Comments</h3>
+                           <div class="max-h-60 overflow-y-auto space-y-4 pr-2">
+                               @for(comment of p.comments; track comment.id) {
+                                   @let author = getMember(comment.authorId);
+                                   <div class="flex gap-3">
+                                       <div class="avatar mt-1">
+                                           <div class="w-8 h-8 rounded-full">
+                                               <img [src]="author?.avatarUrl || 'https://picsum.photos/seed/unknown/50/50'">
+                                           </div>
+                                       </div>
+                                       <div class="bg-base-200 p-3 rounded-2xl rounded-tl-none text-sm">
+                                           <div class="flex justify-between items-center mb-1 gap-2">
+                                               <span class="font-bold">{{ author?.name || 'Unknown' }}</span>
+                                               <span class="text-xs opacity-50">{{ comment.createdAt | date:'short' }}</span>
+                                           </div>
+                                           <p class="opacity-90">{{ comment.text }}</p>
+                                       </div>
+                                   </div>
+                               } @empty {
+                                   <div class="text-center py-6 opacity-50 text-sm italic">No comments yet.</div>
+                               }
+                           </div>
+                           <div class="form-control relative">
+                               <input type="text" [ngModel]="newComment()" (ngModelChange)="newComment.set($event)" (keyup.enter)="addComment()" placeholder="Write a comment..." class="input input-bordered w-full pr-12">
+                               <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-1 text-primary" (click)="addComment()" [disabled]="!newComment()">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                               </button>
+                           </div>
+                       </div>
+
+                       <!-- Files -->
+                       <div class="space-y-4 border-t md:border-t-0 md:border-l border-base-200 md:pl-8 pt-4 md:pt-0">
+                           <div class="flex justify-between items-center">
+                               <h3 class="font-bold text-sm uppercase tracking-wider opacity-60">Files</h3>
+                               <button class="btn btn-xs btn-outline" (click)="triggerFileUpload(fileInput)" [disabled]="isUploading()">
+                                   @if(isUploading()){ <span class="loading loading-spinner loading-xs"></span> }
+                                   Upload
+                               </button>
+                               <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)">
+                           </div>
+                           
+                           <div class="space-y-2">
+                               @for(file of p.files; track file.id) {
+                                   @let uploader = getMember(file.uploadedBy);
+                                   <div class="flex items-center justify-between p-2 border border-base-200 rounded-lg hover:bg-base-200/50 transition-colors group">
+                                       <div class="flex items-center gap-3 overflow-hidden">
+                                           <div class="w-8 h-8 bg-primary/10 text-primary rounded flex items-center justify-center">
+                                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                           </div>
+                                           <div class="min-w-0">
+                                               <div class="font-medium text-sm truncate">{{ file.name }}</div>
+                                               <div class="text-xs opacity-50">Added by {{ uploader?.name || 'Unknown' }}</div>
+                                           </div>
+                                       </div>
+                                       <button class="btn btn-ghost btn-xs btn-circle opacity-0 group-hover:opacity-100">
+                                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                       </button>
+                                   </div>
+                               } @empty {
+                                   <div class="text-center py-6 opacity-50 text-sm italic border-2 border-dashed border-base-200 rounded-lg">
+                                       No files uploaded.
+                                   </div>
+                               }
+                           </div>
+                       </div>
+                   </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team & Rates -->
+        <div class="card bg-base-100 shadow border border-base-200">
+            <div class="card-body">
+                <h2 class="card-title border-b border-base-200 pb-2 mb-4">Team & Rates</h2>
+                <div class="space-y-1">
+                     <div class="grid grid-cols-12 gap-4 mb-2 px-2 text-xs font-bold opacity-50 uppercase">
+                         <div class="col-span-6 sm:col-span-5">Member</div>
+                         <div class="col-span-6 sm:col-span-4 text-right sm:text-left">Hourly Rate</div>
+                         <div class="hidden sm:block sm:col-span-3">Role</div>
+                     </div>
+                     
+                     @for(member of allMembers(); track member.id) {
+                        @let isAllocated = allocatedMemberIds().includes(member.id);
+                        <div class="grid grid-cols-12 gap-4 items-center p-2 rounded-lg transition-colors" [class.bg-base-200]="isAllocated" [class.hover:bg-base-100]="!isAllocated">
+                             <div class="col-span-6 sm:col-span-5 form-control">
+                                <label class="cursor-pointer flex items-center gap-3">
+                                    <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" [checked]="isAllocated" (change)="toggleMember(member.id, $any($event.target).checked)" />
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar"><div class="w-8 rounded-full"><img [src]="member.avatarUrl"></div></div>
+                                        <span class="font-medium text-sm">{{ member.name }}</span>
+                                    </div>
+                                </label>
+                             </div>
+                             <div class="col-span-6 sm:col-span-4 flex justify-end sm:justify-start">
+                                 @if(isAllocated) {
+                                     <label class="input-group input-group-sm max-w-[140px]">
+                                        <span>$</span>
+                                        <input type="number" class="input input-bordered input-sm w-full" [ngModel]="memberRates()[member.id] ?? member.defaultHourlyRate" (ngModelChange)="updateRate(member.id, +$event)">
+                                        <span class="hidden xl:flex">/hr</span>
+                                     </label>
+                                 } @else {
+                                     <span class="text-sm opacity-40 italic px-2">Not allocated</span>
+                                 }
+                             </div>
+                             <div class="hidden sm:block sm:col-span-3 text-sm opacity-70 truncate">
+                                 {{ member.role }}
+                             </div>
+                        </div>
+                     }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+        <div class="card bg-base-100 shadow border border-base-200 sticky top-24">
+             <div class="card-body">
+                 <h3 class="font-bold text-lg mb-4">Summary</h3>
+                 <div class="flex justify-between text-sm mb-2">
+                     <span class="opacity-70">Team Size</span>
+                     <span class="font-bold">{{ allocatedMemberIds().length }} members</span>
+                 </div>
+                 <div class="flex justify-between text-sm mb-2">
+                     <span class="opacity-70">Files</span>
+                     <span class="font-bold">{{ p.files ? p.files.length : 0 }}</span>
+                 </div>
+                 <div class="flex justify-between text-sm mb-2">
+                     <span class="opacity-70">Status</span>
+                     <span class="badge badge-sm" 
+                        [class.badge-success]="projectStatus() === 'Active'"
+                        [class.badge-warning]="projectStatus() === 'On Hold'"
+                        [class.badge-neutral]="projectStatus() === 'Completed'">
+                        {{ projectStatus() }}
+                    </span>
+                 </div>
+                 <div class="divider my-4"></div>
+                 <button class="btn btn-primary w-full" (click)="saveChanges()">Save Changes</button>
+             </div>
+        </div>
+    </div>
+  </div>
+</div>
+} @else {
+    <div class="flex justify-center items-center min-h-[50vh]">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+}
+
+<!-- Success Toast -->
+@if(showSuccessToast()){
+<div class="toast toast-top toast-center z-50">
+  <div class="alert alert-success shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span>Project updated successfully.</span>
+  </div>
+</div>
+}

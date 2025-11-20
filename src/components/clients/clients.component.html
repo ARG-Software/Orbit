@@ -58,7 +58,7 @@
 <!-- Add Client Modal -->
 @if(isModalOpen()){
   <dialog class="modal modal-open">
-    <div class="modal-box shadow-2xl border border-base-200">
+    <div class="modal-box w-11/12 max-w-3xl max-h-screen overflow-y-auto shadow-2xl border border-base-200">
        <button (click)="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
       <h3 class="font-bold text-lg mb-6 pb-2 border-b border-base-200">Add New Client</h3>
       
@@ -85,6 +85,10 @@
             <input type="text" [ngModel]="clientTaxNumber()" (ngModelChange)="clientTaxNumber.set($event)" name="clientTaxNumber" class="input input-bordered focus:input-primary">
           </div>
           <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Default Tax Rate (%)</span></label>
+            <input type="number" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" name="clientTaxRate" class="input input-bordered focus:input-primary" min="0" step="0.1">
+          </div>
+           <div class="form-control">
              <label class="label"><span class="label-text font-medium">Brand Color</span></label>
              <div class="flex gap-2">
                <input type="color" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" name="clientColor" class="input input-bordered w-16 p-1 h-12 cursor-pointer">
@@ -92,12 +96,17 @@
              </div>
           </div>
           <div class="form-control">
-            <label class="label"><span class="label-text font-medium">Default Tax Rate (%)</span></label>
-            <input type="number" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" name="clientTaxRate" class="input input-bordered focus:input-primary" min="0" step="0.1">
-          </div>
-          <div class="form-control md:col-span-2">
-            <label class="label"><span class="label-text font-medium">Logo URL</span></label>
-            <input type="text" [ngModel]="clientLogoUrl()" (ngModelChange)="clientLogoUrl.set($event)" name="clientLogoUrl" class="input input-bordered focus:input-primary">
+             <label class="label"><span class="label-text font-medium">Logo Upload</span></label>
+             <div class="flex gap-4 items-center">
+                <input type="file" (change)="onLogoSelected($event)" accept="image/*" class="file-input file-input-bordered w-full max-w-xs" />
+                @if(clientLogoUrl()){
+                  <div class="avatar">
+                    <div class="w-12 rounded ring ring-primary ring-offset-base-100 ring-offset-2">
+                      <img [src]="clientLogoUrl()" class="object-cover" />
+                    </div>
+                  </div>
+                }
+             </div>
           </div>
         </div>
         <div class="modal-action mt-8">

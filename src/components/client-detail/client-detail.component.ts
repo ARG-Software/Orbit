@@ -1,9 +1,9 @@
 
-import { Component, ChangeDetectionStrategy, inject, Signal, computed, signal, effect, WritableSignal } from '@angular/core';
-import { AsyncPipe, DecimalPipe, DatePipe } from '@angular/common';
+import { Component, ChangeDetectionStrategy, inject, Signal, computed, signal, effect } from '@angular/core';
+import { AsyncPipe, DecimalPipe, DatePipe, NgIf } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs';
 import { MockDataService, Client, TeamMember, Project } from '../../services/mock-data.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
@@ -12,16 +12,11 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-client-detail',
   templateUrl: './client-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AsyncPipe, RouterLink, DecimalPipe, DatePipe, PaginationComponent, FormsModule],
+  imports: [AsyncPipe, RouterLink, DecimalPipe, DatePipe, PaginationComponent, FormsModule, NgIf],
 })
 export class ClientDetailComponent {
   private route: ActivatedRoute = inject(ActivatedRoute);
   private dataService = inject(MockDataService);
-
-  private clientId: Signal<number> = toSignal(
-      this.route.paramMap.pipe(map(params => Number(params.get('id')))),
-      { initialValue: 0}
-  );
 
   client: Signal<Client | undefined> = toSignal(
     this.route.paramMap.pipe(
@@ -37,7 +32,7 @@ export class ClientDetailComponent {
     ), { initialValue: [] }
   );
 
-  allMembers: Signal<TeamMember[]> = toSignal(this.dataService.getTeamMembers(), { initialValue: [] });
+  allMembers = this.dataService.getTeamMembers();
   
   // Form state signals for Client Details
   clientName = signal('');
@@ -49,14 +44,15 @@ export class ClientDetailComponent {
   clientStatus = signal<'Active' | 'Paused'>('Active');
   clientTaxRate = signal(0);
   
-  // Modal state signals for Project
-  isProjectModalOpen = signal(false);
-  editingProject: WritableSignal<Project | null> = signal(null);
-  projectName = signal('');
-  projectStatus = signal<'Active' | 'Completed' | 'On Hold'>('Active');
-  projectAllocatedMemberIds = signal<number[]>([]);
-  projectMemberRates = signal<{ [memberId: number]: number }>({});
+  // Pagination for Projects
+  currentPage = signal(1);
+  itemsPerPage = signal(5);
 
+  paginatedProjects = computed(() => {
+    const all = this.projects();
+    const start = (this.currentPage() - 1) * this.itemsPerPage();
+    return all.slice(start, start + this.itemsPerPage());
+  });
 
   showSuccessToast = signal(false);
 
@@ -95,88 +91,10 @@ export class ClientDetailComponent {
     this.dataService.updateClient(updatedClient);
     this.triggerSuccessToast('Client details saved');
   }
-
-  // --- Project Modal Logic ---
-
-  private resetProjectForm(): void {
-    this.editingProject.set(null);
-    this.projectName.set('');
-    this.projectStatus.set('Active');
-    this.projectAllocatedMemberIds.set([]);
-    this.projectMemberRates.set({});
-  }
-
-  openAddProjectModal(): void {
-    this.resetProjectForm();
-    this.isProjectModalOpen.set(true);
-  }
-
-  openEditProjectModal(project: Project): void {
-    this.editingProject.set(project);
-    this.projectName.set(project.name);
-    this.projectStatus.set(project.status);
-    this.projectAllocatedMemberIds.set([...project.allocatedTeamMemberIds]);
-    this.projectMemberRates.set({ ...project.memberRates });
-    this.isProjectModalOpen.set(true);
-  }
-
-  closeProjectModal(): void {
-    this.isProjectModalOpen.set(false);
-    this.resetProjectForm();
-  }
-
-  onMemberSelectionChange(memberId: number, isChecked: boolean): void {
-    this.projectAllocatedMemberIds.update(ids => {
-      if (isChecked) {
-        return [...ids, memberId];
-      } else {
-        return ids.filter(id => id !== memberId);
-      }
-    });
-  }
-
-  updateProjectMemberRate(memberId: number, rate: number): void {
-    this.projectMemberRates.update(rates => ({
-      ...rates,
-      [memberId]: rate || 0
-    }));
-  }
-
-  saveProject(): void {
-    const projToEdit = this.editingProject();
-    
-    const memberRates: { [memberId: number]: number } = {};
-    this.projectAllocatedMemberIds().forEach(id => {
-      const member = this.allMembers().find(m => m.id === id);
-      if (member) {
-        memberRates[id] = this.projectMemberRates()[id] ?? member.defaultHourlyRate;
-      }
-    });
-
-    if (projToEdit) { // Editing existing project
-      const updatedProject: Project = {
-        ...projToEdit,
-        name: this.projectName(),
-        status: this.projectStatus(),
-        allocatedTeamMemberIds: this.projectAllocatedMemberIds(),
-        memberRates: memberRates,
-      };
-      this.dataService.updateProject(updatedProject);
-    } else { // Adding new project
-      this.dataService.addProject({
-        clientId: this.clientId(),
-        name: this.projectName(),
-        status: this.projectStatus(),
-        allocatedTeamMemberIds: this.projectAllocatedMemberIds(),
-        memberRates: memberRates,
-      });
-    }
-    
-    this.triggerSuccessToast(projToEdit ? 'Project updated' : 'Project added');
-    this.closeProjectModal();
-  }
   
-  // --- General ---
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+  }
 
   private triggerSuccessToast(message: string) {
     this.showSuccessToast.set(true);

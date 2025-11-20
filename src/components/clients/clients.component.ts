@@ -1,10 +1,9 @@
-
 import { Component, ChangeDetectionStrategy, inject, signal, Signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MockDataService, Client } from '../../services/mock-data.service';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-clients',
@@ -16,7 +15,7 @@ export class ClientsComponent {
   private dataService = inject(MockDataService);
   private router = inject(Router);
 
-  clients: Signal<Client[]> = toSignal(this.dataService.getClients(), { initialValue: [] });
+  clients = this.dataService.getClients();
   
   // Pagination
   currentPage = signal(1);
@@ -42,7 +41,7 @@ export class ClientsComponent {
   clientPhone = signal('');
   clientAddress = signal('');
   clientTaxNumber = signal('');
-  clientLogoUrl = signal('');
+  clientLogoUrl = signal(''); // Will hold data URL or string
   clientColor = signal('#6366f1'); // Default color
   clientTaxRate = signal<number>(0);
 
@@ -72,6 +71,20 @@ export class ClientsComponent {
   closeModal(): void {
     this.isModalOpen.set(false);
     this.resetForm();
+  }
+
+  onLogoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          this.clientLogoUrl.set(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   saveClient(): void {

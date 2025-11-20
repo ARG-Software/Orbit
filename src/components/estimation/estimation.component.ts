@@ -1,10 +1,8 @@
-
 import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { MockDataService, Client, Proposal } from '../../services/mock-data.service';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 
 interface EstimateTask {
@@ -33,8 +31,8 @@ export class EstimationComponent {
   private dataService = inject(MockDataService);
   
   currentUser = this.authService.currentUser;
-  availableClients = toSignal(this.dataService.getClients(), { initialValue: [] });
-  allProposals = toSignal(this.dataService.getProposals(), { initialValue: [] });
+  availableClients = this.dataService.getClients();
+  allProposals = this.dataService.getProposals();
 
   // --- Tabs & Stepper State ---
   activeTab = signal<'builder' | 'history'>('builder');

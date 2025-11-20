@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, CommonModule } from '@angular/common';
@@ -20,8 +19,8 @@ export class MeetingsComponent {
   private authService = inject(AuthService);
 
   // Data
-  meetings = toSignal(this.dataService.getMeetings(), { initialValue: [] });
-  clients = toSignal(this.dataService.getClients(), { initialValue: [] });
+  meetings = this.dataService.getMeetings();
+  clients = this.dataService.getClients();
   currentUser = this.authService.currentUser;
 
   // Filter

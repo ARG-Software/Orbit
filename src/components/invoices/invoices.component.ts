@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, computed, inject, signal, effect, Signal } from '@angular/core';
 import { DecimalPipe, DatePipe, KeyValuePipe, TitleCasePipe } from '@angular/common';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
@@ -36,11 +35,11 @@ export class InvoicesComponent {
   activeTab = signal<'create' | 'history'>('create');
 
   // --- Data Signals ---
-  clients: Signal<Client[]> = toSignal(this.dataService.getClients(), { initialValue: [] });
-  members: Signal<TeamMember[]> = toSignal(this.dataService.getTeamMembers(), { initialValue: [] });
+  clients = this.dataService.getClients();
+  members = this.dataService.getTeamMembers();
   user = this.authService.currentUser;
-  allProjects: Signal<Project[]> = toSignal(this.dataService.getProjects(), { initialValue: [] });
-  allInvoices: Signal<Invoice[]> = toSignal(this.dataService.getInvoices(), { initialValue: [] });
+  allProjects = this.dataService.getProjects();
+  allInvoices = this.dataService.getInvoices();
 
   // --- Create Invoice Signals ---
   selectedClientId = signal<number | null>(null);

@@ -9,10 +9,14 @@ export interface JobPreferences {
   expectedSalary: number;
 }
 
+export type UserRole = 'ADMIN' | 'MEMBER';
+
 export interface User {
   id: number;
   name: string;
   email: string;
+  role: UserRole;
+  teamMemberId?: number; // Linked ID from MockDataService TeamMember
   password?: string;
   isGoogleUser?: boolean;
   address?: string;
@@ -32,29 +36,60 @@ export class AuthService {
   private users = signal<User[]>([]);
   currentUser = signal<User | null>(null);
   isAuthenticated = computed(() => !!this.currentUser());
+  isAdmin = computed(() => this.currentUser()?.role === 'ADMIN');
 
   constructor() {
     if (typeof window !== 'undefined' && window.localStorage) {
       const storedUsers = localStorage.getItem('freelance_users');
-      if (storedUsers) {
-        this.users.set(JSON.parse(storedUsers));
-      } else {
-        // Add a default user for demonstration
-        const defaultUser: User = { 
-          id: 1, 
-          name: 'Demo User', 
-          email: 'user@example.com', 
+      
+      // Default users definition
+      const defaultAdmin: User = { 
+        id: 1, 
+        name: 'Demo Admin', 
+        email: 'admin@example.com', 
+        password: 'password123',
+        role: 'ADMIN',
+        address: '123 Demo Street, Webville',
+        taxNumber: 'TAX-DEMO-123',
+        logoUrl: '',
+        paypalConnected: false,
+        stripeConnected: false,
+        googleMeetConnected: false,
+        zoomConnected: false,
+      };
+
+      const defaultMember: User = {
+          id: 2,
+          name: 'Alex Doe',
+          email: 'member@example.com',
           password: 'password123',
-          address: '123 Demo Street, Webville',
-          taxNumber: 'TAX-DEMO-123',
-          logoUrl: '',
+          role: 'MEMBER',
+          teamMemberId: 1, // Links to "Alex Doe" in MockDataService
+          address: '456 Freelance Blvd',
+          taxNumber: 'TAX-MEM-001',
+          logoUrl: 'https://picsum.photos/seed/alex/100/100',
           paypalConnected: false,
           stripeConnected: false,
           googleMeetConnected: false,
-          zoomConnected: false,
-        };
-        this.users.set([defaultUser]);
-        localStorage.setItem('freelance_users', JSON.stringify([defaultUser]));
+          zoomConnected: false
+      };
+
+      if (storedUsers) {
+        const parsedUsers = JSON.parse(storedUsers);
+        
+        // ROBUSTNESS: Ensure default member exists even if local storage has old data
+        if (!parsedUsers.some((u: User) => u.email === 'member@example.com')) {
+             // Find a safe ID
+             const maxId = parsedUsers.length > 0 ? Math.max(...parsedUsers.map((u: any) => u.id)) : 0;
+             defaultMember.id = maxId + 1;
+             parsedUsers.push(defaultMember);
+             localStorage.setItem('freelance_users', JSON.stringify(parsedUsers));
+        }
+
+        this.users.set(parsedUsers);
+      } else {
+        this.users.set([defaultAdmin, defaultMember]);
+        localStorage.setItem('freelance_users', JSON.stringify([defaultAdmin, defaultMember]));
       }
 
       const storedUser = localStorage.getItem('freelance_currentUser');
@@ -69,11 +104,14 @@ export class AuthService {
       return { success: false, message: 'An account with this email already exists.' };
     }
     const maxId = this.users().length > 0 ? Math.max(...this.users().map(u => u.id)) : 0;
+    
+    // Default registration creates an ADMIN
     const newUser: User = { 
       id: maxId + 1, 
       name, 
       email, 
       password,
+      role: 'ADMIN',
       address: '',
       taxNumber: '',
       logoUrl: '',
@@ -84,10 +122,31 @@ export class AuthService {
     };
     this.users.update(users => [...users, newUser]);
     
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem('freelance_users', JSON.stringify(this.users()));
+    this.saveUsers();
+    this.setCurrentUser(newUser);
+    return { success: true };
+  }
+
+  async registerMember(name: string, email: string, password: string, teamMemberId: number): Promise<{ success: boolean; message?: string }> {
+    if (this.users().some(u => u.email === email)) {
+      return { success: false, message: 'An account with this email already exists.' };
     }
-    
+    const maxId = this.users().length > 0 ? Math.max(...this.users().map(u => u.id)) : 0;
+
+    const newUser: User = {
+        id: maxId + 1,
+        name,
+        email,
+        password,
+        role: 'MEMBER',
+        teamMemberId: teamMemberId,
+        paypalConnected: false,
+        stripeConnected: false,
+        googleMeetConnected: false,
+        zoomConnected: false
+    };
+    this.users.update(users => [...users, newUser]);
+    this.saveUsers();
     this.setCurrentUser(newUser);
     return { success: true };
   }
@@ -106,26 +165,34 @@ export class AuthService {
 
   async loginWithGoogle(): Promise<{ success: boolean; message?: string }> {
     let googleUser = this.users().find(u => u.email === 'google.user@example.com');
+    
+    // If user doesn't exist, create them as ADMIN
     if (!googleUser) {
       const maxId = this.users().length > 0 ? Math.max(...this.users().map(u => u.id)) : 0;
       googleUser = { 
         id: maxId + 1, 
         name: 'Google User', 
         email: 'google.user@example.com', 
+        role: 'ADMIN', 
         isGoogleUser: true,
         address: '456 Google Way, Mountain View',
         taxNumber: 'TAX-GOOG-456',
         logoUrl: '',
         paypalConnected: true,
         stripeConnected: false,
-        googleMeetConnected: true, // Assume connected for Google User
+        googleMeetConnected: true,
         zoomConnected: false,
       };
       this.users.update(users => [...users, googleUser!]);
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('freelance_users', JSON.stringify(this.users()));
-      }
+      this.saveUsers();
+    } else {
+        // Ensure existing Google user is ADMIN (updates if previously different)
+        if (googleUser.role !== 'ADMIN') {
+            googleUser = { ...googleUser, role: 'ADMIN' };
+            this.updateUserSettings(googleUser);
+        }
     }
+    
     this.setCurrentUser(googleUser);
     return { success: true };
   }
@@ -144,6 +211,12 @@ export class AuthService {
     this.currentUser.set(userToStore);
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem('freelance_currentUser', JSON.stringify(userToStore));
+    }
+  }
+
+  private saveUsers() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('freelance_users', JSON.stringify(this.users()));
     }
   }
 

@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal, computed, Signal, effect } from '@angular/core';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -5,7 +6,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { AuthService, JobPreferences } from '../../services/auth.service';
 import { MockDataService, Job } from '../../services/mock-data.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
-import { switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs';
 import { of } from 'rxjs';
 
 @Component({

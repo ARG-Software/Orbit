@@ -20,7 +20,7 @@
 			</div>
 			<div class="flex-none hidden md:flex">
         <ul class="menu menu-horizontal p-0 gap-1 font-medium text-sm">
-          @for(item of navGroups; track item.label || item.name){
+          @for(item of navGroups(); track item.label || item.name){
             @if(item.type === 'link') {
                <li><a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="rounded-lg" (click)="closeGroup()">{{ item.name }}</a></li>
             }
@@ -95,7 +95,7 @@
       </li>
       <li class="menu-title text-primary uppercase tracking-wider font-bold mb-2">Navigation</li>
       
-      @for(item of navGroups; track item.label || item.name){
+      @for(item of navGroups(); track item.label || item.name){
         @if(item.type === 'link') {
            <li><a [routerLink]="item.path" routerLinkActive="active" (click)="toggleMobileMenu(); closeGroup()" class="py-3 text-base font-medium rounded-lg mb-1">{{ item.name }}</a></li>
         }

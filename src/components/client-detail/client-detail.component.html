@@ -78,43 +78,59 @@
         <div class="card-body">
            <div class="flex justify-between items-center mb-4">
              <h2 class="card-title">Projects</h2>
-             <button class="btn btn-primary btn-sm" (click)="openAddProjectModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Add Project
-             </button>
+             <div class="text-sm opacity-60" *ngIf="projects().length > 0">{{ projects().length }} total</div>
            </div>
            <div class="space-y-4">
-              @for(project of projects(); track project.id){
-                <div class="card card-compact bg-base-200/50">
+              @for(project of paginatedProjects(); track project.id){
+                <a [routerLink]="['/projects', project.id]" class="card card-compact bg-base-200/50 hover:bg-base-200 transition-colors cursor-pointer border border-transparent hover:border-base-300">
                    <div class="card-body">
                       <div class="flex justify-between items-start">
                          <div>
-                            <h3 class="font-bold">{{ project.name }}</h3>
+                            <h3 class="font-bold text-lg">{{ project.name }}</h3>
                             <span class="badge badge-sm mt-1" [class]="getStatusClass(project.status)">{{ project.status }}</span>
                          </div>
-                         <button class="btn btn-ghost btn-sm" (click)="openEditProjectModal(project)">Manage</button>
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                       </div>
                       <div class="divider my-1"></div>
                       <div class="flex items-center justify-between">
-                         <span class="text-sm font-medium">Team:</span>
-                         <div class="avatar-group -space-x-4 rtl:space-x-reverse">
-                            @for(memberId of project.allocatedTeamMemberIds; track memberId){
+                         <span class="text-sm font-medium opacity-70">Assigned Team:</span>
+                         <div class="avatar-group -space-x-3 rtl:space-x-reverse">
+                            @for(memberId of project.allocatedTeamMemberIds.slice(0, 5); track memberId){
                                @let member = getMemberById(memberId);
                                @if(member){
-                                 <div class="avatar" title="{{ member.name }}">
+                                 <div class="avatar border-base-200" title="{{ member.name }}">
                                     <div class="w-8">
                                        <img [src]="member.avatarUrl" [alt]="member.name" />
                                     </div>
                                  </div>
                                }
                             }
+                            @if(project.allocatedTeamMemberIds.length > 5){
+                                <div class="avatar placeholder border-base-200">
+                                    <div class="w-8 bg-neutral text-neutral-content">
+                                      <span class="text-xs">+{{ project.allocatedTeamMemberIds.length - 5 }}</span>
+                                    </div>
+                                </div>
+                            }
                          </div>
                       </div>
                    </div>
-                </div>
+                </a>
               } @empty {
-                <p class="text-center opacity-75 py-8">This client has no projects. Click "Add Project" to get started.</p>
+                <p class="text-center opacity-75 py-8 bg-base-200/30 rounded-lg">This client has no projects.</p>
               }
            </div>
+
+           @if(projects().length > itemsPerPage()){
+             <div class="flex justify-center mt-4">
+               <app-pagination 
+                 [currentPage]="currentPage()"
+                 [totalItems]="projects().length"
+                 [itemsPerPage]="itemsPerPage()"
+                 (pageChange)="onPageChange($event)">
+               </app-pagination>
+             </div>
+           }
         </div>
       </div>
     </div>
@@ -124,67 +140,12 @@
     <p class="text-center opacity-75">Loading client details...</p>
 }
 
-<!-- Project Add/Edit Modal -->
-@if (isProjectModalOpen()) {
-  <dialog class="modal modal-open">
-    <div class="modal-box w-11/12 max-w-2xl">
-      <button (click)="closeProjectModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-      <h3 class="font-bold text-lg">{{ editingProject() ? 'Edit Project' : 'Add New Project' }}</h3>
-      <form (ngSubmit)="saveProject()" class="mt-4">
-        <div class="form-control">
-          <label class="label"><span class="label-text">Project Name</span></label>
-          <input type="text" class="input input-bordered" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" name="projectName" required>
-        </div>
-        <div class="form-control mt-4">
-          <label class="label"><span class="label-text">Status</span></label>
-          <select class="select select-bordered" [ngModel]="projectStatus()" (ngModelChange)="projectStatus.set($event)" name="projectStatus">
-            <option value="Active">Active</option>
-            <option value="On Hold">On Hold</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </div>
-        <div class="divider">Team Allocation & Rates</div>
-        <div class="max-h-64 overflow-y-auto pr-2 space-y-3">
-          @for(member of allMembers(); track member.id){
-            @let isChecked = projectAllocatedMemberIds().includes(member.id);
-            <div class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4" [class.bg-base-200]="isChecked" [class.bg-base-100]="!isChecked">
-              <div class="form-control flex-1">
-                <label class="label cursor-pointer justify-start gap-3">
-                  <input type="checkbox" class="checkbox checkbox-primary" [checked]="isChecked" (change)="onMemberSelectionChange(member.id, $any($event.target).checked)"/>
-                  <div class="flex items-center gap-3">
-                      <div class="avatar"><div class="w-8 rounded-full"><img [src]="member.avatarUrl" [alt]="member.name" /></div></div>
-                      <span class="label-text">{{ member.name }}</span>
-                  </div>
-                </label>
-              </div>
-              @if(isChecked){
-                <div class="form-control">
-                  <label class="input-group">
-                    <span>$</span>
-                    <input type="number" class="input input-bordered w-24" [ngModel]="projectMemberRates()[member.id] ?? member.defaultHourlyRate" (ngModelChange)="updateProjectMemberRate(member.id, +$event)" [name]="'rate_' + member.id" [placeholder]="member.defaultHourlyRate.toString()">
-                    <span class="hidden sm:inline-flex">/hr</span>
-                  </label>
-                </div>
-              }
-            </div>
-          }
-        </div>
-        <div class="modal-action mt-6">
-          <button type="button" class="btn" (click)="closeProjectModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Project</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
-}
-
-
 <!-- Success Toast -->
 @if(showSuccessToast()){
 <div class="toast toast-top toast-center">
   <div class="alert alert-success">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    <span>Settings saved successfully.</span>
+    <span>Client saved successfully.</span>
   </div>
 </div>
 }

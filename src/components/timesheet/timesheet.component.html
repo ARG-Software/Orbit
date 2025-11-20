@@ -110,7 +110,7 @@
         <form (ngSubmit)="saveTimeEntry()" class="flex-1 space-y-4">
           <div class="form-control">
              <label class="label"><span class="label-text font-medium">Freelancer</span></label>
-             <select [ngModel]="modalMemberId()" (ngModelChange)="modalMemberId.set(+$event)" name="member" class="select select-bordered w-full" required>
+             <select [ngModel]="modalMemberId()" (ngModelChange)="modalMemberId.set(+$event)" name="member" class="select select-bordered w-full" [disabled]="!isAdmin()" required>
                 <option [ngValue]="null" disabled>Select Member</option>
                 @for(member of members(); track member.id){
                   <option [value]="member.id">{{ member.name }}</option>
@@ -164,8 +164,11 @@
             @if(summary.entries.length > 0) {
                 <div class="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                     @for(entry of summary.entries; track $index) {
-                        <div class="bg-base-200/50 p-3 rounded-lg text-sm border border-base-200">
-                            <div class="flex justify-between font-bold mb-1">
+                        <div class="bg-base-200/50 p-3 rounded-lg text-sm border border-base-200 group relative">
+                            <button (click)="deleteEntry(entry.projectId)" class="btn btn-xs btn-circle btn-ghost text-error absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete Entry">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                            <div class="flex justify-between font-bold mb-1 pr-4">
                                 <span class="text-primary">{{ entry.hours }}h</span>
                                 <span class="opacity-70 text-xs">{{ entry.memberName }}</span>
                             </div>
