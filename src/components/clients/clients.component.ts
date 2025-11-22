@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal, Signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MockDataService, Client } from '../../services/mock-data.service';
@@ -50,7 +51,10 @@ export class ClientsComponent {
   selectedClientForEmail = signal<Client | null>(null);
   emailSubject = signal('');
   emailBody = signal('');
+  
+  // Notification State
   showSuccessToast = signal(false);
+  toastMessage = signal('');
 
   private resetForm(): void {
     this.clientName.set('');
@@ -104,17 +108,19 @@ export class ClientsComponent {
     };
 
     this.dataService.addClient(clientData);
+    this.triggerSuccessToast('Client added successfully!');
     this.closeModal();
   }
 
   deleteClient(clientId: number): void {
     if (confirm('Are you sure you want to delete this client? All associated projects and data will be affected.')) {
       this.dataService.deleteClient(clientId);
+      this.triggerSuccessToast('Client deleted.');
     }
   }
 
   navigateToClient(clientId: number): void {
-    this.router.navigate(['/clients', clientId]);
+    this.router.navigate(['/app/clients', clientId]);
   }
 
   // --- Email Logic ---
@@ -142,10 +148,11 @@ export class ClientsComponent {
     });
 
     this.closeEmailModal();
-    this.triggerSuccessToast();
+    this.triggerSuccessToast('Email sent successfully!');
   }
 
-  private triggerSuccessToast() {
+  private triggerSuccessToast(message: string) {
+    this.toastMessage.set(message);
     this.showSuccessToast.set(true);
     setTimeout(() => this.showSuccessToast.set(false), 3000);
   }

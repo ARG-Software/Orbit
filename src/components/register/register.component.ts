@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -26,7 +27,7 @@ export class RegisterComponent {
     const result = await this.authService.register(name, email, password);
 
     if (result.success) {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/app/dashboard']);
     } else {
       this.errorMessage.set(result.message || 'Registration failed. Please try again.');
     }

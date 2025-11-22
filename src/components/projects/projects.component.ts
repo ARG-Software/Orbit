@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal, computed, Signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -43,6 +44,8 @@ export class ProjectsComponent {
   newProjectDescription = signal('');
   newProjectMembers = signal<number[]>([]);
   newProjectRates = signal<{ [memberId: number]: number }>({});
+
+  showSuccessToast = signal(false);
 
   filteredProjects = computed(() => {
     const term = this.searchTerm().toLowerCase();
@@ -123,6 +126,7 @@ export class ProjectsComponent {
           });
           
           // Reset and switch to list
+          this.triggerSuccessToast();
           this.resetForm();
           this.activeTab.set('list');
       }
@@ -135,5 +139,10 @@ export class ProjectsComponent {
     this.newProjectDescription.set('');
     this.newProjectMembers.set([]);
     this.newProjectRates.set({});
+  }
+
+  private triggerSuccessToast() {
+    this.showSuccessToast.set(true);
+    setTimeout(() => this.showSuccessToast.set(false), 3000);
   }
 }

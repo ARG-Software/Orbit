@@ -1,5 +1,5 @@
 {
-  "name": "Freelancer CRM",
-  "description": "A comprehensive CRM for freelancers to manage clients, track hours, generate invoices, and view financial dashboards. This app helps streamline freelance operations with an elegant and intuitive interface.",
+  "name": "Orbit",
+  "description": "Orbit is the central operating system for freelancers and agencies. Manage clients, projects, invoices, and finances in one unified, gravitational interface.",
   "requestFramePermissions": []
 }

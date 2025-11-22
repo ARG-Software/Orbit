@@ -127,30 +127,6 @@ export class AuthService {
     return { success: true };
   }
 
-  async registerMember(name: string, email: string, password: string, teamMemberId: number): Promise<{ success: boolean; message?: string }> {
-    if (this.users().some(u => u.email === email)) {
-      return { success: false, message: 'An account with this email already exists.' };
-    }
-    const maxId = this.users().length > 0 ? Math.max(...this.users().map(u => u.id)) : 0;
-
-    const newUser: User = {
-        id: maxId + 1,
-        name,
-        email,
-        password,
-        role: 'MEMBER',
-        teamMemberId: teamMemberId,
-        paypalConnected: false,
-        stripeConnected: false,
-        googleMeetConnected: false,
-        zoomConnected: false
-    };
-    this.users.update(users => [...users, newUser]);
-    this.saveUsers();
-    this.setCurrentUser(newUser);
-    return { success: true };
-  }
-
   async login(email: string, password: string): Promise<{ success: boolean; message?: string }> {
     const user = this.users().find(u => u.email === email);
     if (!user || user.isGoogleUser) {
@@ -195,6 +171,22 @@ export class AuthService {
     
     this.setCurrentUser(googleUser);
     return { success: true };
+  }
+  
+  async resetPassword(email: string): Promise<{ success: boolean; message?: string }> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const user = this.users().find(u => u.email === email);
+    
+    if (user) {
+        console.log(`Password reset link sent to ${email}`);
+        return { success: true, message: 'A password reset link has been sent to your email.' };
+    }
+    
+    // For a mock app, returning false helps testing. 
+    // In production, you often return success to prevent email enumeration.
+    return { success: false, message: 'No account found with that email address.' };
   }
 
   logout(): void {
@@ -249,8 +241,6 @@ export class AuthService {
   }
 
   updateJobPreferences(preferences: JobPreferences) {
-    const currentUser = this.currentUser();
-    if (!currentUser) return;
     this.updateUserSettings({ jobPreferences: preferences });
   }
 }

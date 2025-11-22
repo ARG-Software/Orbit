@@ -5,6 +5,14 @@ import { publicGuard } from './guards/public.guard';
 import { adminGuard } from './guards/admin.guard';
 
 export const APP_ROUTES: Routes = [
+  // Root redirects to Login
+  { 
+    path: '', 
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  
+  // Auth Routes
   {
     path: 'login',
     loadComponent: () => import('./components/login/login.component').then(c => c.LoginComponent),
@@ -15,13 +23,9 @@ export const APP_ROUTES: Routes = [
     loadComponent: () => import('./components/register/register.component').then(c => c.RegisterComponent),
     canActivate: [publicGuard],
   },
+  // Authenticated App Routes (Moved to /app)
   {
-    path: 'join',
-    loadComponent: () => import('./components/join/join.component').then(c => c.JoinComponent),
-    canActivate: [publicGuard],
-  },
-  {
-    path: '',
+    path: 'app',
     loadComponent: () => import('./components/layout/layout.component').then(c => c.LayoutComponent),
     canActivate: [authGuard],
     children: [
@@ -94,5 +98,6 @@ export const APP_ROUTES: Routes = [
       }
     ]
   },
+  // Catch all - Redirect to Login
   { path: '**', redirectTo: 'login' }
 ];

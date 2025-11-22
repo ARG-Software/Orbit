@@ -3,7 +3,7 @@
 <div class="container mx-auto">
   <!-- Header -->
   <div class="flex items-center mb-8">
-    <a routerLink="/clients" class="btn btn-ghost btn-circle mr-4">
+    <a routerLink="/app/clients" class="btn btn-ghost btn-circle mr-4">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
     </a>
     <div class="avatar avatar-lg">
@@ -20,7 +20,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Left Column: Client Details -->
     <div class="lg:col-span-1 flex flex-col gap-8">
-      <div class="card bg-base-100 shadow border-t-4" [style.border-color]="c.color">
+      <div class="card bg-base-100 shadow border border-t-4" [style.border-color]="c.color">
         <div class="card-body">
           <h2 class="card-title">Client Details</h2>
           <div class="divider my-2"></div>
@@ -82,7 +82,7 @@
            </div>
            <div class="space-y-4">
               @for(project of paginatedProjects(); track project.id){
-                <a [routerLink]="['/projects', project.id]" class="card card-compact bg-base-200/50 hover:bg-base-200 transition-colors cursor-pointer border border-transparent hover:border-base-300">
+                <a [routerLink]="['/app/projects', project.id]" class="card card-compact bg-base-200/50 hover:bg-base-200 transition-colors cursor-pointer border border-transparent hover:border-base-300">
                    <div class="card-body">
                       <div class="flex justify-between items-start">
                          <div>

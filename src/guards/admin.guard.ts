@@ -12,5 +12,5 @@ export const adminGuard: CanActivateFn = () => {
   }
 
   // Redirect members to dashboard if they try to access admin pages
-  return router.parseUrl('/dashboard');
+  return router.parseUrl('/app/dashboard');
 };

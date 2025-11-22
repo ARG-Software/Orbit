@@ -1,122 +1,102 @@
-# FreelanceOS - Freelancer CRM
 
-FreelanceOS is a comprehensive, single-page application (SPA) designed to help freelancers and small agencies manage their entire business operation. From client relationships and project management to time tracking, invoicing, and financial forecasting, this application provides a unified interface for daily operations.
+<div align="center">
+  <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTEyIDIxYTkgOSAwIDEgMC05LTljMCAxLjQ4LjM2IDIuODguOTkgNC4xMiIHN0cm9rZT0iIzdjM2FlZCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMuNSIgZmlsbD0iIzdjM2FlZCIvPjxjaXJjbGUgY3g9IjIwLjQiIGN5PSI4LjYiIHI9IjIuNSIgZmlsbD0iIzBlYTVlOSIvPjwvc3ZnPg==" alt="Orbit Logo" width="120" height="120">
+  
+  # Orbit
+  
+  **The Operating System for Freelancers & Agencies**
+  
+  Manage clients, projects, invoices, and your time in one unified, gravitational interface.
+</div>
 
-Built with **Angular (v18+)**, **TypeScript**, and **TailwindCSS**, it leverages modern web development practices including Signals, Standalone Components, and zoneless change detection.
+---
 
-![FreelanceOS Dashboard](https://picsum.photos/seed/dashboard/800/400)
+## 🪐 Overview
+
+Orbit is a modern Single Page Application (SPA) built with **Angular v18+** that consolidates the fragmented toolset of freelancers into one cohesive platform. It replaces the need for separate apps for CRM, Project Management, Time Tracking, and Invoicing.
 
 ## 🚀 Features
 
 ### 📊 Dashboard
-*   **Financial Overview**: Real-time calculation of total earnings, average hourly rates, and revenue distribution.
-*   **Client Insights**: Visual breakdown of top-performing clients and project values.
-*   **Team Performance**: Leaderboards for team hours and revenue generation.
-*   **Recent Activity**: Quick view of recent task updates and board activity.
+*   **Financial Command Center**: Real-time views of revenue, hourly rates, and active project values.
+*   **Insights**: Visual breakdowns of client value and team performance.
 
-### 🤝 CRM (Client Relationship Management)
-*   **Client Directory**: specific profiles with contact info, tax details, and custom branding colors.
-*   **Project Management**: Create and manage projects specific to clients.
-*   **Communication**: Quick actions to email clients directly from the app.
+### 🤝 Client Management (CRM)
+*   **Client Profiles**: Store contact info, tax details, and branding colors.
+*   **Communication**: Quick email triggers and communication history.
 
-### ✅ Task Management
-*   **Kanban Board**: Drag-and-drop interface for managing task status (To Do, In Progress, On Hold, Completed).
-*   **List View**: Detailed tabular view for bulk management.
-*   **Comments**: Threaded discussions within tasks for team collaboration.
+### ✅ Project & Task Tracking
+*   **Kanban Boards**: Visual drag-and-drop task management.
+*   **Lists & Filters**: Powerful filtering by client, project, and status.
+*   **Team Allocation**: Assign members to specific projects with custom rates.
 
-### ⏱️ Time Tracking
-*   **Timesheet**: Weekly and Monthly calendar views to log hours.
-*   **Granular Logging**: Assign time to specific projects and team members with descriptions.
-*   **Visual Summaries**: Daily totals and project breakdowns.
+### ⏱️ Time & Money
+*   **Timesheets**: Visual weekly and monthly calendars for logging work.
+*   **Smart Invoicing**: Generate PDF-ready invoices from logged time or custom items.
+*   **Budget Planner**: Create detailed project estimates with a multi-step builder.
 
-### 💰 Invoicing
-*   **Invoice Builder**: Automatically generate invoices based on logged hours and custom line items.
-*   **Payment Integrations**: Toggleable support for PayPal and Stripe (simulation).
-*   **History**: Track paid, pending, and overdue invoices with filtering capabilities.
+### 📅 Scheduling
+*   **Meeting Manager**: Schedule calls with clients or guests.
+*   **Integrations**: Mock integration with Google Meet and Zoom for link generation.
 
-### 📅 Meetings
-*   **Scheduler**: Schedule meetings with clients or external guests.
-*   **Integrations**: Simulated link generation for **Google Meet** and **Zoom**.
-*   **Calendar**: View upcoming and past meetings.
+### 🔍 Discovery
+*   **Job Board**: Find new opportunities tailored to your skills and preferences.
 
-### 💼 Opportunities
-*   **Job Board**: Find freelance gigs based on your skill preferences and location.
-*   **Budget Planner**: Create detailed project estimates and proposals with a multi-step builder.
+## 🛠️ Technology Stack
 
-## 🛠️ Tech Stack
-
-*   **Framework**: Angular (Latest version)
-    *   Standalone Components
-    *   Signals for State Management
-    *   Zoneless Change Detection
-*   **Styling**: TailwindCSS & DaisyUI
-*   **Routing**: Angular Router (Hash Location Strategy)
-*   **Data Persistence**: Local Storage (via MockDataService & AuthService)
-*   **Icons**: Heroicons (via SVG)
+*   **Framework**: Angular (Standalone Components, Signals, Zoneless)
+*   **Styling**: TailwindCSS + DaisyUI
+*   **State Management**: Angular Signals
+*   **Routing**: Angular Router (Hash Strategy)
+*   **Persistence**: LocalStorage (Mock Backend)
 
 ## 📂 Project Structure
 
 ```
 src/
-├── app.routes.ts           # Application routing configuration
-├── main.ts                 # Application entry point
+├── app.routes.ts           # Route definitions
+├── main.ts                 # Entry point
 ├── components/
-│   ├── dashboard/          # Analytics and widgets
-│   ├── clients/            # Client list and CRUD
-│   ├── client-detail/      # Specific client view & projects
-│   ├── tasks/              # Kanban board
-│   ├── timesheet/          # Time logging calendar
-│   ├── invoices/           # Invoice generation
-│   ├── meetings/           # Meeting scheduler
-│   ├── estimation/         # Budget planner
-│   ├── settings/           # User profile & integrations
+│   ├── dashboard/          # Analytics view
+│   ├── clients/            # CRM features
+│   ├── projects/           # Project management
+│   ├── tasks/              # Kanban boards
+│   ├── timesheet/          # Time tracking
+│   ├── invoices/           # Billing system
+│   ├── estimation/         # Proposal builder
 │   └── ...
 ├── services/
-│   ├── auth.service.ts     # User session & local storage sync
-│   ├── mock-data.service.ts# Central data store (Signals)
-│   └── theme.service.ts    # Dark/Light mode handling
-└── guards/                 # Route protection (AuthGuard)
+│   ├── auth.service.ts     # User management & persistence
+│   └── mock-data.service.ts# Data store
+└── guards/                 # Route protection
 ```
 
 ## ⚡ Getting Started
 
-### Prerequisites
-*   Node.js (v18 or higher)
-*   npm or yarn
-
-### Installation
-
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/freelance-os.git
-    cd freelance-os
-    ```
-
-2.  **Install dependencies**:
+1.  **Install Dependencies**
     ```bash
     npm install
     ```
 
-3.  **Run the development server**:
+2.  **Start the App**
     ```bash
     npm start
     ```
 
-4.  **Open in Browser**:
-    Navigate to `http://localhost:4200/`.
+3.  **Access**
+    Open `http://localhost:4200` in your browser.
 
-## 🔐 Authentication & Data
+## 🔐 Access & Auth
 
-This application uses a **mock backend**.
-*   **Register**: You can create a new account on the registration page.
-*   **Login**: Use the credentials created during registration.
-*   **Persistence**: All data (clients, tasks, settings) is stored in your browser's `localStorage`. Clearing your cache will reset the app to its default state.
+The application uses a local mock authentication system.
 
-## 🎨 Customization
+*   **Admin User**: `admin@example.com` / `password123`
+*   **Team Member**: `member@example.com` / `password123`
 
-*   **Theming**: The app supports Light and Dark modes, toggled via the navbar.
-*   **Tailwind Config**: Design tokens can be modified in the Tailwind configuration script in `index.html`.
+_Note: All data is persisted in your browser's LocalStorage._
 
-## 📄 License
+---
 
-This project is open-source and available under the [MIT License](LICENSE).
+<div align="center">
+  <sub>Built with Angular & TailwindCSS</sub>
+</div>

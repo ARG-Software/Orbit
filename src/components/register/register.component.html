@@ -1,12 +1,19 @@
+
 <div class="flex items-center justify-center min-h-screen p-4 bg-base-200">
 	<div class="card w-full max-w-md bg-base-100 shadow-xl">
 		<div class="card-body">
-      <div class="flex justify-center text-primary">
-         <svg class="h-12 w-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" />
-        </svg>
+      <div class="flex justify-center mb-6">
+         <!-- Badge Logo -->
+         <div class="w-16 h-16 flex items-center justify-center rounded-[1.5rem] bg-gradient-to-tr from-violet-500 to-fuchsia-500 shadow-xl shadow-violet-500/20 text-white">
+             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-9 h-9">
+                <path d="M12 21a9 9 0 1 0-9-9c0 1.48.36 2.88.99 4.12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="opacity-90"/>
+                <circle cx="12" cy="12" r="3.5" class="fill-white"/>
+                <circle cx="20.4" cy="8.6" r="2.5" class="fill-secondary stroke-none"/>
+             </svg>
+         </div>
       </div>
 			<h2 class="card-title justify-center text-3xl">Create a new account</h2>
+      <p class="text-center opacity-60 text-sm mb-4">Join Orbit today</p>
 			
       @if(errorMessage()){
         <div class="alert alert-error mt-4">

@@ -2,9 +2,10 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
-  <title>Freelancer CRM</title>
+  <title>Orbit - Freelance OS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <!-- Orbit Favicon (SVG Data URI) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22><path d=%22M12 21a9 9 0 1 0-9-9c0 1.48.36 2.88.99 4.12%22 stroke=%22%237c3aed%22 stroke-width=%222.5%22 stroke-linecap=%22round%22/><circle cx=%2212%22 cy=%2212%22 r=%223.5%22 fill=%22%237c3aed%22/><circle cx=%2220.4%22 cy=%228.6%22 r=%222.5%22 fill=%22%230ea5e9%22/></svg>" />
   
   <!-- DaisyUI Styles -->
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
@@ -26,29 +27,29 @@
         themes: [
           {
             light: {
-              "primary": "#6366f1",   // Indigo 500
-              "secondary": "#14b8a6", // Teal 500
-              "accent": "#f59e0b",    // Amber 500
+              "primary": "#4f46e5",   // Indigo 600 - Professional & Trustworthy
+              "secondary": "#0ea5e9", // Sky 500 - Vibrant
+              "accent": "#ec4899",    // Pink 500 - Modern pop
               "neutral": "#1e293b",   // Slate 800
-              "base-100": "#ffffff",
-              "base-200": "#f1f5f9",  // Slate 100
+              "base-100": "#ffffff",  // Pure White
+              "base-200": "#f8fafc",  // Slate 50 - Airy, clean background
               "base-300": "#e2e8f0",  // Slate 200
               "info": "#3b82f6",
-              "success": "#22c55e",
-              "warning": "#eab308",
+              "success": "#10b981",
+              "warning": "#f59e0b",
               "error": "#ef4444",
             },
             dark: {
-              "primary": "#818cf8",   // Indigo 400
-              "secondary": "#2dd4bf", // Teal 400
-              "accent": "#fbbf24",    // Amber 400
+              "primary": "#8b5cf6",   // Violet 500
+              "secondary": "#22d3ee", // Cyan 400
+              "accent": "#f472b6",    // Pink 400
               "neutral": "#1e293b",
               "base-100": "#0f172a",  // Slate 900
               "base-200": "#1e293b",  // Slate 800
               "base-300": "#334155",  // Slate 700
               "info": "#60a5fa",
-              "success": "#4ade80",
-              "warning": "#facc15",
+              "success": "#34d399",
+              "warning": "#fbbf24",
               "error": "#f87171",
             }
           },
@@ -80,7 +81,7 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body>
+<body class="bg-base-200 min-h-screen text-base-content">
   <app-root></app-root>
 </body>
 </html>

@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal, Signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MockDataService, TeamMember } from '../../services/mock-data.service';
@@ -71,7 +72,7 @@ export class TeamComponent {
     }
   }
 
-  inviteMember(): void {
+  addMember(): void {
     if (!this.memberName() || !this.memberEmail() || !this.memberRole() || this.memberDefaultRate() <= 0) {
       return;
     }
@@ -82,15 +83,11 @@ export class TeamComponent {
       role: this.memberRole(),
       avatarUrl: this.memberAvatarUrl(),
       defaultHourlyRate: this.memberDefaultRate(),
-      status: 'Invited' // Default status
+      status: 'Active' // Directly active since invite flow is removed
     });
 
-    this.showToast(`Invitation sent to ${this.memberEmail()}!`);
+    this.showToast(`Member ${this.memberName()} added successfully!`);
     this.closeModal();
-  }
-  
-  resendInvite(member: TeamMember): void {
-    this.showToast(`Invitation link resent to ${member.email}`);
   }
 
   deleteMember(id: number): void {
@@ -103,7 +100,7 @@ export class TeamComponent {
   toggleStatus(member: TeamMember): void {
     const newStatus = member.status === 'Active' ? 'Inactive' : 'Active';
     
-    // If they were invited, toggling usually sets to Inactive or Active based on admin override
+    // If they were invited (legacy data), toggling sets to Inactive or Active
     if (member.status === 'Invited') {
         this.dataService.updateTeamMember({ ...member, status: 'Inactive' });
     } else {

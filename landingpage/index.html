@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <title>Orbit - The Operating System for Freelancers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Manage clients, projects, invoices, and finances in one unified interface.">
+  <!-- Orbit Favicon (SVG Data URI) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22><path d=%22M12 21a9 9 0 1 0-9-9c0 1.48.36 2.88.99 4.12%22 stroke=%22%237c3aed%22 stroke-width=%222.5%22 stroke-linecap=%22round%22/><circle cx=%2212%22 cy=%2212%22 r=%223.5%22 fill=%22%237c3aed%22/><circle cx=%2220.4%22 cy=%228.6%22 r=%222.5%22 fill=%22%230ea5e9%22/></svg>" />
+  
+  <!-- DaisyUI & Tailwind -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+        }
+      },
+      daisyui: {
+        themes: [
+          {
+            light: {
+              "primary": "#7c3aed",
+              "secondary": "#00e1ff",
+              "accent": "#ff0080",
+              "neutral": "#1e293b",
+              "base-100": "#ffffff",
+              "base-200": "#f3f4f6",
+              "base-300": "#d1d5db",
+            }
+          }
+        ]
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-base-200 flex flex-col font-sans overflow-x-hidden text-base-content">
+
+  <!-- Navbar -->
+  <nav class="navbar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex-1">
+      <a href="#" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20 text-white">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6">
+              <path d="M12 21a9 9 0 1 0-9-9c0 1.48.36 2.88.99 4.12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="opacity-90"/>
+              <circle cx="12" cy="12" r="3.5" class="fill-white"/>
+              <circle cx="20.4" cy="8.6" r="2.5" class="fill-secondary stroke-none"/>
+            </svg>
+        </div>
+        <span class="text-2xl font-bold tracking-tight">Orbit</span>
+      </a>
+    </div>
+    <div class="flex-none gap-4">
+      <a href="../index.html#/login" class="btn btn-ghost font-medium">Sign In</a>
+      <a href="../index.html#/register" class="btn btn-primary rounded-full px-6 shadow-lg shadow-primary/30">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="relative pt-12 pb-24 lg:pt-24 lg:pb-32 overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary/20 rounded-full blur-[120px] -z-10 opacity-50"></div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-base-100/50 border border-base-300 mb-8 backdrop-blur-sm">
+        <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+        <span class="text-xs font-bold uppercase tracking-wide opacity-80">Now in Early Access</span>
+      </div>
+      
+      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+        The Operating System for <br class="hidden md:block" />
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-500 to-primary">Freelancers & Agencies</span>
+      </h1>
+      
+      <p class="text-xl md:text-2xl text-base-content/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+        Stop juggling 5 different apps. Manage clients, projects, invoices, and your time in one unified, gravitational interface.
+      </p>
+
+      <!-- Waitlist Form -->
+      <div class="max-w-md mx-auto mb-16">
+        <div id="success-message" class="alert alert-success shadow-lg hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>You're on the list! We'll be in touch soon.</span>
+        </div>
+
+        <form id="waitlist-form" class="join w-full shadow-xl rounded-full p-1 bg-base-100 border border-base-200">
+            <input type="email" id="email-input" required placeholder="Enter your email address..." class="input input-ghost join-item w-full focus:bg-transparent ml-2" />
+            <button type="submit" id="submit-btn" class="btn btn-primary rounded-full join-item px-8">
+              <span id="btn-text">Join Waitlist</span>
+              <span id="btn-loader" class="loading loading-spinner hidden"></span>
+            </button>
+        </form>
+        <p class="text-xs text-base-content/40 mt-3">Join 2,000+ freelancers waiting for launch. No spam, ever.</p>
+      </div>
+
+      <!-- App Mockup (High Fidelity Dashboard) -->
+      <div class="relative mx-auto max-w-6xl">
+         <div class="mockup-browser border border-base-300 bg-base-200 shadow-2xl shadow-primary/20">
+            <div class="mockup-browser-toolbar bg-base-100 border-b border-base-200">
+              <div class="input border border-base-300 text-sm opacity-60">https://app.orbit.com/dashboard</div>
+            </div>
+            <div class="bg-base-200 flex justify-center relative overflow-hidden aspect-[16/10] group cursor-pointer text-left font-sans">
+                
+                <!-- DASHBOARD UI REPLICA -->
+                <div class="w-full h-full bg-base-200 flex text-base-content text-sm">
+                    <!-- Sidebar -->
+                    <div class="w-64 bg-base-100 border-r border-base-200 hidden md:flex flex-col p-4">
+                         <div class="flex items-center gap-2 mb-8 px-2">
+                            <div class="w-6 h-6 rounded bg-primary"></div>
+                            <span class="font-bold text-lg">Orbit</span>
+                         </div>
+                         <div class="space-y-1">
+                             <div class="flex items-center gap-3 px-3 py-2 bg-base-200 rounded-lg text-primary font-medium">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                                 Dashboard
+                             </div>
+                             <div class="flex items-center gap-3 px-3 py-2 hover:bg-base-200 rounded-lg opacity-70">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                 Projects
+                             </div>
+                             <div class="flex items-center gap-3 px-3 py-2 hover:bg-base-200 rounded-lg opacity-70">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                 Clients
+                             </div>
+                             <div class="flex items-center gap-3 px-3 py-2 hover:bg-base-200 rounded-lg opacity-70">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                 Finances
+                             </div>
+                         </div>
+                         <div class="mt-auto flex items-center gap-3 px-2 pt-4 border-t border-base-200">
+                             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600"></div>
+                             <div class="flex flex-col">
+                                 <span class="font-bold text-xs">Alex Doe</span>
+                                 <span class="text-[10px] opacity-50">Pro Plan</span>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="flex-1 p-6 md:p-8 overflow-hidden flex flex-col gap-6 bg-base-100/50">
+                        <!-- Header -->
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h2 class="text-2xl font-bold text-base-content">Dashboard</h2>
+                                <p class="text-base-content/50 text-xs mt-1">Overview for Oct 1 - Oct 31</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="bg-base-100 border border-base-200 rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm flex items-center gap-2">
+                                    Last 30 Days
+                                    <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-base-100 p-4 rounded-xl border border-base-200 shadow-sm">
+                                <div class="text-xs font-bold opacity-50 uppercase tracking-wider mb-1">Total Revenue</div>
+                                <div class="text-2xl font-bold text-base-content">$12,450</div>
+                                <div class="text-xs text-success font-medium mt-1">+12% vs last month</div>
+                            </div>
+                            <div class="bg-base-100 p-4 rounded-xl border border-base-200 shadow-sm">
+                                <div class="text-xs font-bold opacity-50 uppercase tracking-wider mb-1">Active Projects</div>
+                                <div class="text-2xl font-bold text-base-content">8</div>
+                                <div class="text-xs opacity-50 mt-1">3 pending review</div>
+                            </div>
+                            <div class="bg-base-100 p-4 rounded-xl border border-base-200 shadow-sm">
+                                <div class="text-xs font-bold opacity-50 uppercase tracking-wider mb-1">Hours Logged</div>
+                                <div class="text-2xl font-bold text-base-content">142h</div>
+                                <div class="text-xs opacity-50 mt-1">Billable: 94%</div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Section -->
+                        <div class="grid grid-cols-3 gap-4 flex-1 min-h-0">
+                            <!-- Recent Projects Table -->
+                            <div class="col-span-2 bg-base-100 rounded-xl border border-base-200 shadow-sm flex flex-col">
+                                <div class="p-4 border-b border-base-200 font-bold text-sm">Active Projects</div>
+                                <div class="p-2 space-y-1">
+                                    <div class="flex justify-between items-center p-2 hover:bg-base-200/50 rounded text-xs">
+                                        <div class="font-medium">Website Redesign</div>
+                                        <div class="badge badge-xs badge-success bg-success/10 text-success border-0">Active</div>
+                                        <div class="font-mono">$4,200</div>
+                                    </div>
+                                    <div class="flex justify-between items-center p-2 hover:bg-base-200/50 rounded text-xs">
+                                        <div class="font-medium">Mobile App Dev</div>
+                                        <div class="badge badge-xs badge-warning bg-warning/10 text-warning border-0">In Progress</div>
+                                        <div class="font-mono">$8,500</div>
+                                    </div>
+                                    <div class="flex justify-between items-center p-2 hover:bg-base-200/50 rounded text-xs">
+                                        <div class="font-medium">Brand Identity</div>
+                                        <div class="badge badge-xs badge-success bg-success/10 text-success border-0">Active</div>
+                                        <div class="font-mono">$2,100</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mini Chart visual -->
+                            <div class="bg-base-100 rounded-xl border border-base-200 shadow-sm p-4 flex flex-col">
+                                <div class="font-bold text-sm mb-4">Weekly Activity</div>
+                                <div class="flex-1 flex items-end justify-between gap-2 px-2">
+                                    <div class="w-full bg-primary/20 rounded-t hover:bg-primary/30 transition-colors" style="height: 40%"></div>
+                                    <div class="w-full bg-primary/20 rounded-t hover:bg-primary/30 transition-colors" style="height: 70%"></div>
+                                    <div class="w-full bg-primary/20 rounded-t hover:bg-primary/30 transition-colors" style="height: 50%"></div>
+                                    <div class="w-full bg-primary rounded-t shadow-lg shadow-primary/30" style="height: 85%"></div>
+                                    <div class="w-full bg-primary/20 rounded-t hover:bg-primary/30 transition-colors" style="height: 60%"></div>
+                                </div>
+                                <div class="flex justify-between text-[10px] opacity-50 mt-2 px-1">
+                                    <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Overlay Label -->
+                <div class="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
+                    <a href="../index.html#/register" class="btn btn-secondary shadow-lg pointer-events-none transform scale-110">View Live Demo</a>
+                </div>
+            </div>
+         </div>
+         <!-- Decorative blobs -->
+         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-secondary/30 rounded-full blur-3xl -z-10"></div>
+         <div class="absolute -top-10 -left-10 w-40 h-40 bg-primary/30 rounded-full blur-3xl -z-10"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features Grid -->
+  <section class="py-24 bg-base-100/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold mb-4">Everything you need to run your business</h2>
+            <p class="opacity-60 max-w-2xl mx-auto">Orbit replaces Trello, QuickBooks, Harvest, and Calendly with a single, cohesive platform.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+            
+            <!-- Feature 1: Task Management -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-4 overflow-hidden">
+                    <div class="flex gap-3 h-full text-[10px] font-medium transform group-hover:scale-105 transition-transform duration-500 origin-top">
+                        <div class="w-1/2 flex flex-col gap-2">
+                            <div class="flex justify-between opacity-60 px-1"><span>To Do</span><span>2</span></div>
+                            <div class="bg-base-100 p-3 rounded-lg border border-base-200 shadow-sm">
+                                <div class="flex gap-1 mb-1"><span class="w-8 h-1 rounded-full bg-red-400"></span></div>
+                                <div class="font-bold text-xs mb-1">Homepage Redesign</div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="w-4 h-4 rounded-full bg-gray-300"></div>
+                                    <span class="opacity-50">Oct 12</span>
+                                </div>
+                            </div>
+                            <div class="bg-base-100 p-3 rounded-lg border border-base-200 shadow-sm">
+                                <div class="flex gap-1 mb-1"><span class="w-8 h-1 rounded-full bg-blue-400"></span></div>
+                                <div class="font-bold text-xs mb-1">Mobile Nav Fix</div>
+                            </div>
+                        </div>
+                        <div class="w-1/2 flex flex-col gap-2">
+                            <div class="flex justify-between opacity-60 px-1"><span>In Progress</span><span>1</span></div>
+                            <div class="bg-base-100 p-3 rounded-lg border border-l-4 border-l-primary border-base-200 shadow-md">
+                                <div class="flex gap-1 mb-1"><span class="w-8 h-1 rounded-full bg-green-400"></span></div>
+                                <div class="font-bold text-xs mb-1">API Integration</div>
+                                <div class="text-[9px] opacity-60 mb-2">Connecting Stripe webhooks...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Kanban Boards</h3>
+                    <p class="text-sm opacity-60">Drag-and-drop task management. Visualize your workflow and deadlines.</p>
+                </div>
+            </div>
+            
+             <!-- Feature 2: Invoicing -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-6 flex items-center justify-center">
+                    <div class="w-40 bg-white shadow-xl border border-base-200 rounded-sm p-4 transform rotate-3 group-hover:rotate-0 transition-transform duration-300 text-[8px]">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="font-bold text-lg tracking-tighter text-base-content">INVOICE</div>
+                            <div class="text-right opacity-50"><div>#INV-2024</div><div>Oct 24</div></div>
+                        </div>
+                        <div class="mb-4 opacity-70"><div class="font-bold">Bill To:</div><div>Acme Corp</div></div>
+                        <div class="border-b border-base-200 mb-2"></div>
+                        <div class="flex justify-between mb-1"><span>Web Dev</span><span>$2,500</span></div>
+                        <div class="flex justify-between mb-1"><span>Hosting</span><span>$150</span></div>
+                        <div class="border-t border-base-200 mt-2 pt-2 flex justify-between font-bold text-primary text-xs"><span>Total</span><span>$2,650</span></div>
+                        <div class="mt-3 flex justify-center"><div class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold text-[8px]">PAID</div></div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Smart Invoicing</h3>
+                    <p class="text-sm opacity-60">Turn tracked time into professional invoices. Integrates with Stripe & PayPal.</p>
+                </div>
+            </div>
+            
+             <!-- Feature 3: Scheduling -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-6 flex flex-col items-center justify-center gap-3">
+                     <div class="bg-base-100 w-full max-w-[200px] p-2 rounded-xl border border-base-200 shadow-sm flex items-center gap-3 transform group-hover:-translate-y-1 transition-transform">
+                         <div class="bg-blue-100 text-blue-600 p-2 rounded-lg font-bold text-xs text-center min-w-[40px]">OCT<br><span class="text-base">24</span></div>
+                         <div class="flex-1 min-w-0"><div class="font-bold text-xs truncate">Project Kickoff</div><div class="text-[10px] opacity-60">10:00 AM • Meet</div></div>
+                     </div>
+                     <div class="bg-base-100 w-full max-w-[200px] p-2 rounded-xl border border-base-200 shadow-sm flex items-center gap-3 opacity-60 transform group-hover:opacity-100 transition-opacity">
+                         <div class="bg-purple-100 text-purple-600 p-2 rounded-lg font-bold text-xs text-center min-w-[40px]">OCT<br><span class="text-base">25</span></div>
+                         <div class="flex-1 min-w-0"><div class="font-bold text-xs truncate">Design Review</div><div class="text-[10px] opacity-60">2:00 PM • Zoom</div></div>
+                     </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Scheduling</h3>
+                    <p class="text-sm opacity-60">Schedule meetings with clients. Auto-generates Zoom and Google Meet links.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4: Job Search -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-4 overflow-hidden flex flex-col justify-center">
+                    <div class="space-y-2 scale-90 origin-center group-hover:scale-100 transition-transform">
+                        <div class="bg-base-100 p-3 rounded-lg border border-base-200 shadow-sm flex justify-between items-center">
+                            <div class="flex gap-3 items-center">
+                                <div class="w-8 h-8 rounded bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">H</div>
+                                <div><div class="font-bold text-xs">React Dev</div><div class="text-[9px] opacity-60">Hooli • $140k</div></div>
+                            </div>
+                            <div class="badge badge-xs badge-ghost">New</div>
+                        </div>
+                        <div class="bg-base-100 p-3 rounded-lg border border-base-200 shadow-sm flex justify-between items-center opacity-70">
+                            <div class="flex gap-3 items-center">
+                                <div class="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">P</div>
+                                <div><div class="font-bold text-xs">Product Designer</div><div class="text-[9px] opacity-60">Pied Piper • $110k</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Job Discovery</h3>
+                    <p class="text-sm opacity-60">Find high-paying freelance gigs tailored to your skills and preferences.</p>
+                </div>
+            </div>
+
+            <!-- Feature 5: Budget Planner -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-6 flex items-center justify-center">
+                    <div class="bg-base-100 rounded-lg border border-base-200 shadow-sm overflow-hidden text-[9px] w-full">
+                        <div class="bg-base-200 p-2 font-bold flex justify-between text-xs"><span>Phase</span><span>Total</span></div>
+                        <div class="p-2 border-b border-base-100 flex justify-between"><span>UX Research</span><span>$1,000</span></div>
+                        <div class="p-2 border-b border-base-100 flex justify-between"><span>UI Design</span><span>$2,500</span></div>
+                        <div class="p-2 bg-primary/5 font-bold flex justify-between text-primary"><span>Est. Total</span><span>$3,500</span></div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Budget Planner</h3>
+                    <p class="text-sm opacity-60">Build detailed proposals with phased estimates and automatic calculations.</p>
+                </div>
+            </div>
+
+            <!-- Feature 6: Time Logging -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-6 flex items-center justify-center">
+                    <div class="grid grid-cols-5 gap-2 text-center items-end h-24 w-full max-w-[200px]">
+                        <div class="flex flex-col gap-1 items-center w-full group-hover:translate-y-0 translate-y-1 transition-transform">
+                            <div class="h-12 w-full bg-primary rounded-t-md relative"><div class="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100">6h</div></div><div class="text-[9px] font-bold">M</div>
+                        </div>
+                        <div class="flex flex-col gap-1 items-center w-full group-hover:translate-y-0 translate-y-2 transition-transform delay-75">
+                            <div class="h-16 w-full bg-primary/80 rounded-t-md relative"><div class="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100">8h</div></div><div class="text-[9px] font-bold">T</div>
+                        </div>
+                        <div class="flex flex-col gap-1 items-center w-full group-hover:translate-y-0 translate-y-1 transition-transform delay-100">
+                            <div class="h-10 w-full bg-primary/60 rounded-t-md relative"><div class="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100">5h</div></div><div class="text-[9px] font-bold">W</div>
+                        </div>
+                        <div class="flex flex-col gap-1 items-center w-full group-hover:translate-y-0 translate-y-3 transition-transform delay-150">
+                            <div class="h-14 w-full bg-primary/80 rounded-t-md relative"><div class="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100">7h</div></div><div class="text-[9px] font-bold">T</div>
+                        </div>
+                        <div class="flex flex-col gap-1 items-center w-full group-hover:translate-y-0 translate-y-1 transition-transform delay-200">
+                            <div class="h-16 w-full bg-secondary rounded-t-md relative"><div class="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100">8h</div></div><div class="text-[9px] font-bold">F</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Time Logging</h3>
+                    <p class="text-sm opacity-60">Track billable hours effortlessly with a visual weekly timesheet.</p>
+                </div>
+            </div>
+
+            <!-- Feature 7: Team Collaboration -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-6 flex items-center justify-center">
+                    <div class="bg-base-100 w-48 p-4 rounded-xl border border-base-200 shadow-lg transform group-hover:scale-105 transition-transform">
+                        <div class="font-bold text-xs mb-3 flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div> Invite Member
+                        </div>
+                        <div class="space-y-3">
+                            <input class="input input-xs input-bordered w-full" value="guest@client.com" readonly>
+                            <div class="flex gap-2">
+                                <span class="badge badge-xs badge-primary badge-outline">Guest</span>
+                                <span class="badge badge-xs badge-ghost">Read-only</span>
+                            </div>
+                            <button class="btn btn-xs btn-primary w-full">Send Invite</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Team Collaboration</h3>
+                    <p class="text-sm opacity-60">Invite freelancers or clients as guests with granular permissions.</p>
+                </div>
+            </div>
+
+            <!-- Feature 8: Direct Messaging -->
+            <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+                <div class="h-56 bg-base-200/50 border-b border-base-200 relative p-4 flex flex-col justify-center">
+                    <div class="bg-base-100 w-full max-w-[240px] mx-auto rounded-xl border border-base-200 shadow-sm flex flex-col overflow-hidden text-[10px]">
+                        <div class="bg-base-200 p-2 font-bold border-b border-base-200 flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-blue-500"></div> Acme Corp
+                        </div>
+                        <div class="p-3 space-y-3">
+                            <div class="chat chat-start">
+                                <div class="chat-bubble chat-bubble-secondary min-h-0 py-1 px-2">any updates on the logo?</div>
+                            </div>
+                            <div class="chat chat-end">
+                                <div class="chat-bubble chat-bubble-primary min-h-0 py-1 px-2">Yes! Uploading drafts now.</div>
+                            </div>
+                        </div>
+                        <div class="p-2 border-t border-base-200 bg-base-50">
+                            <div class="h-4 bg-base-200 rounded-full w-3/4 animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-bold mb-1">Direct Messaging</h3>
+                    <p class="text-sm opacity-60">Chat with clients directly within the project context to keep everything in one place.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="py-24 bg-base-100 border-y border-base-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                  <div class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-violet-500 to-fuchsia-500 mb-2">$14M+</div>
+                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Invoiced</div>
+              </div>
+              <div>
+                  <div class="text-4xl font-black text-base-content mb-2">2.4k</div>
+                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Freelancers</div>
+              </div>
+               <div>
+                  <div class="text-4xl font-black text-base-content mb-2">50k+</div>
+                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Tasks Completed</div>
+              </div>
+               <div>
+                  <div class="text-4xl font-black text-secondary mb-2">99.9%</div>
+                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Uptime</div>
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-neutral text-neutral-content py-20">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+          <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to organize your chaos?</h2>
+          <p class="text-lg opacity-70 mb-10 max-w-2xl mx-auto">Join the waitlist today and get 3 months of Orbit Pro for free when we launch.</p>
+          
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
+             <a href="../index.html#/register" class="btn btn-primary btn-lg px-12 rounded-full shadow-xl shadow-primary/20 border-none">Start Demo Now</a>
+          </div>
+          
+          <div class="mt-16 pt-8 border-t border-neutral-content/10 flex flex-col md:flex-row justify-between items-center opacity-50 text-sm">
+              <p>&copy; 2024 Orbit Freelance OS. All rights reserved.</p>
+              <div class="flex gap-6 mt-4 md:mt-0">
+                  <a href="#" class="hover:text-white">Privacy</a>
+                  <a href="#" class="hover:text-white">Terms</a>
+                  <a href="#" class="hover:text-white">Twitter</a>
+              </div>
+          </div>
+      </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

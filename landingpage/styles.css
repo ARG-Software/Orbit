@@ -1,0 +1,17 @@
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+    background-color: #7c3aed; /* Violet 600 */
+    color: white;
+}
+
+/* Mockup Browser Tweaks */
+.mockup-browser .mockup-browser-toolbar .input {
+    height: 1.75rem;
+    min-height: 1.75rem;
+}

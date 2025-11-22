@@ -29,6 +29,9 @@ export class JobSearchComponent {
     prefInterests = signal('');
     prefExpectedSalary = signal(80000);
 
+    // --- Notification State ---
+    showSuccessToast = signal(false);
+
     // --- Job Board State ---
     private allJobs: Signal<Job[]> = toSignal(
         toObservable(this.userPreferences).pipe(
@@ -64,10 +67,16 @@ export class JobSearchComponent {
             expectedSalary: this.prefExpectedSalary(),
         };
         this.authService.updateJobPreferences(preferences);
+        this.triggerSuccessToast();
     }
 
     editPreferences(): void {
          this.authService.updateJobPreferences(undefined!);
+    }
+    
+    private triggerSuccessToast() {
+        this.showSuccessToast.set(true);
+        setTimeout(() => this.showSuccessToast.set(false), 3000);
     }
     
     // --- Job Filtering & Pagination ---
