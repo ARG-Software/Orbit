@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTEyIDIxYTkgOSAwIDEgMC05LTljMCAxLjQ4LjM2IDIuODguOTkgNC4xMiIHN0cm9rZT0iIzdjM2FlZCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMuNSIgZmlsbD0iIzdjM2FlZCIvPjxjaXJjbGUgY3g9IjIwLjQiIGN5PSI4LjYiIHI9IjIuNSIgZmlsbD0iIzBlYTVlOSIvPjwvc3ZnPg==" alt="Orbit Logo" width="120" height="120">
+  <img src="https://github.com/ARG-Software/Orbit/blob/main/orbit.png?raw=true" alt="Orbit Logo" width="120" height="120">
   
   # Orbit
   
