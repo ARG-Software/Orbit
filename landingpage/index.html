@@ -78,7 +78,7 @@
       
       <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
         The Operating System for <br class="hidden md:block" />
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-500 to-primary">Freelancers & Agencies</span>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-600 to-fuchsia-300">Freelancers & Agencies</span>
       </h1>
       
       <p class="text-xl md:text-2xl text-base-content/60 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -443,27 +443,472 @@
 
   <!-- Stats -->
   <section class="py-24 bg-base-100 border-y border-base-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div>
-                  <div class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-violet-500 to-fuchsia-500 mb-2">$14M+</div>
-                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Invoiced</div>
-              </div>
-              <div>
-                  <div class="text-4xl font-black text-base-content mb-2">2.4k</div>
-                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Freelancers</div>
-              </div>
-               <div>
-                  <div class="text-4xl font-black text-base-content mb-2">50k+</div>
-                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Tasks Completed</div>
-              </div>
-               <div>
-                  <div class="text-4xl font-black text-secondary mb-2">99.9%</div>
-                  <div class="text-sm font-bold uppercase tracking-wide opacity-50">Uptime</div>
-              </div>
-          </div>
-      </div>
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+						<div>
+								<div class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-violet-500 to-fuchsia-500 mb-2">$14M+</div>
+								<div class="text-sm font-bold uppercase tracking-wide opacity-50">Invoiced</div>
+						</div>
+						<div>
+								<div class="text-4xl font-black text-base-content mb-2">2.4k</div>
+								<div class="text-sm font-bold uppercase tracking-wide opacity-50">Freelancers</div>
+						</div>
+							<div>
+								<div class="text-4xl font-black text-base-content mb-2">50k+</div>
+								<div class="text-sm font-bold uppercase tracking-wide opacity-50">Tasks Completed</div>
+						</div>
+							<div>
+								<div class="text-4xl font-black text-secondary mb-2">99.9%</div>
+								<div class="text-sm font-bold uppercase tracking-wide opacity-50">Uptime</div>
+						</div>
+				</div>
+		</div>
   </section>
+
+	<section class="py-24 bg-base-200/50 relative overflow-hidden">
+		<!-- Enhanced gradient blobs matching hero section -->
+		<div class="absolute top-0 right-1/4 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[140px] -z-10"></div>
+		<div class="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-[120px] -z-10"></div>
+		
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+			<!-- Section header -->
+			<div class="text-center mb-16">
+				<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-base-100/50 border border-base-300 mb-6 backdrop-blur-sm">
+					<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+					<span class="text-xs font-bold uppercase tracking-wide opacity-80">Interactive Demo</span>
+				</div>
+				<h2 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+					<span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-600 to-fuchsia-300">Explore Every Feature</span>
+				</h2>
+				<p class="text-xl text-base-content/60 max-w-2xl mx-auto">Switch between views to see how Orbit streamlines your entire workflow</p>
+			</div>
+
+			<!-- Main card with glassmorphism -->
+			<div class="bg-base-100/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50 overflow-hidden">
+				
+				<!-- Tab navigation with gradient -->
+				<div class="relative p-3 bg-gradient-to-br from-base-100 via-base-200/50 to-base-100 border-b border-base-200/50">
+					<div class="flex gap-2 relative bg-base-200/30 rounded-2xl p-1.5 backdrop-blur-sm">
+						<!-- Sliding indicator with gradient -->
+						<div id="tab-indicator" class="absolute h-[calc(100%-0.75rem)] bg-gradient-to-r from-violet-600 to-fuchsia-500 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-primary/30" style="width: calc(33.333% - 0.5rem); left: 0.375rem; top: 0.375rem;"></div>
+						
+						<button onclick="switchTab(0)" class="tab-btn flex-1 px-6 py-4 rounded-xl font-semibold transition-all relative z-10 text-white">
+							<div class="flex items-center justify-center gap-2">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+								<span class="hidden sm:inline">Dashboard</span>
+								<span class="sm:hidden">Home</span>
+							</div>
+						</button>
+						
+						<button onclick="switchTab(1)" class="tab-btn flex-1 px-6 py-4 rounded-xl font-semibold transition-all relative z-10 text-base-content/60 hover:text-base-content">
+							<div class="flex items-center justify-center gap-2">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+								<span class="hidden sm:inline">Projects</span>
+								<span class="sm:hidden">Tasks</span>
+							</div>
+						</button>
+						
+						<button onclick="switchTab(2)" class="tab-btn flex-1 px-6 py-4 rounded-xl font-semibold transition-all relative z-10 text-base-content/60 hover:text-base-content">
+							<div class="flex items-center justify-center gap-2">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+								<span class="hidden sm:inline">Invoicing</span>
+								<span class="sm:hidden">Bills</span>
+							</div>
+						</button>
+					</div>
+				</div>
+
+				<!-- Tab content panels -->
+				<div class="p-6 md:p-12 bg-gradient-to-br from-base-100/50 to-base-200/30">
+					
+					<!-- Panel 1: Dashboard -->
+					<div class="tab-panel" style="opacity: 1;">
+						<div class="grid md:grid-cols-2 gap-8 mb-8">
+							<div class="flex flex-col justify-center">
+								<div class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase mb-4 w-fit">
+									<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"/></svg>
+									Command Center
+								</div>
+								<h3 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">
+									<span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-500">Unified Dashboard</span>
+								</h3>
+								<p class="text-lg text-base-content/70 mb-6 leading-relaxed">Monitor all your key metrics in real-time. Track revenue, active projects, and time logged in one beautiful interface.</p>
+								
+								<div class="space-y-3">
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-primary/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Real-time Analytics</div>
+											<div class="text-sm text-base-content/60">Revenue tracking with trend analysis</div>
+										</div>
+									</div>
+									
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-primary/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-fuchsia-500 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Project Overview</div>
+											<div class="text-sm text-base-content/60">Status indicators and milestones</div>
+										</div>
+									</div>
+									
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-primary/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary to-cyan-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Activity Charts</div>
+											<div class="text-sm text-base-content/60">Weekly insights and patterns</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="flex items-center">
+								<div class="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-base-200/50 group w-full">
+									<img src="assets/tab-dashboard.png" alt="Dashboard" class="w-full transition-transform duration-500 group-hover:scale-105" />
+									<div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Panel 2: Projects -->
+					<div class="tab-panel hidden" style="opacity: 0;">
+						<div class="grid md:grid-cols-2 gap-8 mb-8">
+							<div class="flex flex-col justify-center">
+								<div class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-full text-xs font-bold uppercase mb-4 w-fit">
+									<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+									Task Management
+								</div>
+								<h3 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">
+									<span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Project Boards</span>
+								</h3>
+								<p class="text-lg text-base-content/70 mb-6 leading-relaxed">Organize tasks with drag-and-drop Kanban boards. Keep projects on track effortlessly with visual workflows.</p>
+								
+								<div class="space-y-3">
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-blue-500/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Drag & Drop</div>
+											<div class="text-sm text-base-content/60">Intuitive kanban interface</div>
+										</div>
+									</div>
+									
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-blue-500/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Dependencies</div>
+											<div class="text-sm text-base-content/60">Task relationships and milestones</div>
+										</div>
+									</div>
+									
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-blue-500/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Collaboration</div>
+											<div class="text-sm text-base-content/60">Team assignments and sharing</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="flex items-center">
+								<div class="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-base-200/50 group w-full">
+									<img src="assets/tab-projects.png" alt="Projects" class="w-full transition-transform duration-500 group-hover:scale-105" />
+									<div class="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Panel 3: Invoicing -->
+					<div class="tab-panel hidden" style="opacity: 0;">
+						<div class="grid md:grid-cols-2 gap-8 mb-8">
+							<div class="flex flex-col justify-center">
+								<div class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 rounded-full text-xs font-bold uppercase mb-4 w-fit">
+									<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+									Get Paid Faster
+								</div>
+								<h3 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">
+									<span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Smart Invoicing</span>
+								</h3>
+								<p class="text-lg text-base-content/70 mb-6 leading-relaxed">Generate professional invoices in seconds. Integrate with Stripe and PayPal seamlessly for instant payments.</p>
+								
+								<div class="space-y-3">
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-green-500/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Auto-generation</div>
+											<div class="text-sm text-base-content/60">From time logs to invoices instantly</div>
+										</div>
+									</div>
+									
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-green-500/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Payment Integration</div>
+											<div class="text-sm text-base-content/60">Stripe & PayPal ready</div>
+										</div>
+									</div>
+									
+									<div class="flex items-start gap-3 p-3 bg-base-100/50 rounded-xl border border-base-200/50 hover:border-green-500/30 transition-colors">
+										<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+											<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/></svg>
+										</div>
+										<div>
+											<div class="font-semibold text-base-content">Custom Branding</div>
+											<div class="text-sm text-base-content/60">Professional templates</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="flex items-center">
+								<div class="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-base-200/50 group w-full">
+									<img src="assets/tab-flow.png" alt="Invoicing" class="w-full transition-transform duration-500 group-hover:scale-105" />
+									<div class="absolute inset-0 bg-gradient-to-t from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Freelance Benefits -->
+	<section class="py-24 bg-base-100 border-y border-base-200">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+
+				<div>
+					<div class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-violet-500 to-fuchsia-500 mb-2">
+						All-in-One Workspace
+					</div>
+					<div class="text-sm font-bold uppercase tracking-wide opacity-50">
+						Projects · Clients · Finances
+					</div>
+				</div>
+
+				<div>
+					<div class="text-xl font-black text-base-content mb-2">
+						Automated Admin
+					</div>
+					<div class="text-sm font-bold uppercase tracking-wide opacity-50">
+						Invoices · Tasks · Tracking
+					</div>
+				</div>
+
+				<div>
+					<div class="text-xl font-black text-base-content mb-2">
+						Smarter Workflow
+					</div>
+					<div class="text-sm font-bold uppercase tracking-wide opacity-50">
+						Stay Organized Effortlessly
+					</div>
+				</div>
+
+				<div>
+					<div class="text-xl font-black text-secondary mb-2">
+						Built for Freelancers
+					</div>
+					<div class="text-sm font-bold uppercase tracking-wide opacity-50">
+						Scales with Your Business
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</section>
+	
+	<section class="py-24 bg-base-200/50 relative overflow-hidden">
+		<!-- Enhanced gradient blobs -->
+		<div class="absolute top-0 left-1/4 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[140px] -z-10"></div>
+		<div class="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-[120px] -z-10"></div>
+		
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+			<!-- Section header -->
+			<div class="text-center mb-12">
+				<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-base-100/50 border border-base-300 mb-6 backdrop-blur-sm">
+					<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+					<span class="text-xs font-bold uppercase tracking-wide opacity-80">Cross-Platform</span>
+				</div>
+				<h2 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+					<span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-600 to-fuchsia-400">Works Everywhere</span>
+				</h2>
+				<p class="text-xl text-base-content/60 max-w-2xl mx-auto">Desktop, tablet, and mobile — perfectly synchronized across all your devices</p>
+			</div>
+
+			<div class="relative h-[600px] md:h-[800px] flex items-center justify-center perspective-container mb-16">
+				
+				<!-- Desktop (Center) with enhanced glow -->
+				<div class="absolute desktop-device z-30" style="top: 10%; left: 50%; transform: translateX(-50%);">
+					<!-- Glow effect layers -->
+					<div class="absolute inset-0 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-3xl blur-[60px] scale-110 opacity-30 animate-pulse-slow"></div>
+					<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-[40px] scale-105 opacity-40"></div>
+					
+					<div class="relative transform-3d hover:scale-105 transition-all duration-500">
+						<div class="bg-gradient-to-b from-slate-800 via-slate-900 to-black rounded-t-3xl p-5 shadow-2xl border-t-2 border-slate-700/50 ring-1 ring-white/5">
+							<div class="bg-gradient-to-br from-slate-900 to-slate-950 p-3 rounded-2xl shadow-inner">
+								<div class="bg-black rounded-xl overflow-hidden shadow-2xl ring-2 ring-slate-700/50 relative group">
+									<img src="assets/main-dashboard.png" alt="Desktop Dashboard" class="w-[500px] md:w-[700px] h-auto" />
+									<!-- Screen shine effect -->
+									<div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+								</div>
+							</div>
+						</div>
+						<div class="w-36 h-6 bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 mx-auto rounded-b-2xl shadow-lg"></div>
+						<div class="w-64 h-4 bg-gradient-to-r from-slate-800 via-slate-600 to-slate-800 mx-auto rounded-full shadow-2xl mt-2"></div>
+						<!-- Desktop shadow -->
+						<div class="absolute -bottom-8 left-1/2 -translate-x-1/2 w-[90%] h-12 bg-black/20 rounded-full blur-2xl"></div>
+					</div>
+				</div>
+
+				<!-- Tablet (Left) with glow -->
+				<div class="absolute tablet-device z-25 hidden md:block" style="left: 5%; top: 35%;">
+					<!-- Glow effect -->
+					<div class="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-[3rem] blur-[50px] scale-110 opacity-25 animate-pulse-slow" style="animation-delay: 0.5s;"></div>
+					
+					<div class="relative transform rotate-[-12deg] hover:rotate-[-8deg] hover:scale-105 transition-all duration-500">
+						<div class="bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-[3rem] p-4 shadow-2xl border-2 border-slate-700/40 ring-1 ring-white/5">
+							<div class="relative">
+								<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-[2rem] overflow-hidden shadow-inner ring-2 ring-slate-300/50 relative group">
+									<img src="assets/device-1.png" alt="Tablet Projects" class="w-[450px] h-auto" />
+								</div>
+							</div>
+							<!-- Camera -->
+							<div class="absolute top-8 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-slate-700 ring-2 ring-slate-900 shadow-inner"></div>
+							<!-- Home button -->
+							<div class="w-12 h-12 rounded-full bg-slate-900 ring-2 ring-slate-700 mx-auto mt-4 shadow-xl"></div>
+						</div>
+						<!-- Tablet shadow -->
+						<div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[80%] h-8 bg-black/20 rounded-full blur-xl"></div>
+					</div>
+				</div>
+
+				<!-- Phone (Right) with glow -->
+				<div class="absolute phone-device z-25 hidden lg:block" style="right: 8%; top: 25%;">
+					<!-- Glow effect -->
+					<div class="absolute inset-0 bg-gradient-to-r from-fuchsia-500/30 to-pink-500/30 rounded-[4rem] blur-[50px] scale-110 opacity-25 animate-pulse-slow" style="animation-delay: 1s;"></div>
+					
+					<div class="relative transform rotate-[15deg] hover:rotate-[10deg] hover:scale-105 transition-all duration-500">
+						<div class="bg-gradient-to-br from-slate-900 via-black to-slate-950 rounded-[3.5rem] p-4 shadow-2xl border-2 border-slate-800/50 ring-1 ring-white/5">
+							<!-- Notch -->
+							<div class="absolute top-0 left-1/2 -translate-x-1/2 w-44 h-8 bg-black rounded-b-[2rem] z-10 shadow-xl border-x border-b border-slate-800">
+								<div class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-2 bg-slate-800 rounded-full"></div>
+								<div class="absolute top-3 right-8 w-2.5 h-2.5 bg-slate-700 rounded-full shadow-inner"></div>
+							</div>
+							<!-- Phone screen -->
+							<div class="relative">
+								<div class="bg-black rounded-[3rem] overflow-hidden shadow-inner ring-2 ring-slate-800/50 relative group">
+									<img src="assets/device-2.png" alt="Mobile Invoicing" class="w-[320px] h-[580px] object-cover object-top" />
+									<!-- Screen reflection -->
+									<div class="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent rounded-[3rem] pointer-events-none"></div>
+									<div class="absolute inset-0 bg-gradient-to-tl from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+								</div>
+							</div>
+							<!-- Power button -->
+							<div class="absolute right-0 top-36 w-1.5 h-20 bg-slate-800 rounded-l-full shadow-lg"></div>
+						</div>
+						<!-- Phone shadow -->
+						<div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[70%] h-8 bg-black/20 rounded-full blur-xl"></div>
+					</div>
+				</div>
+
+				<!-- Enhanced sync animation lines -->
+				<svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 20;">
+					<defs>
+						<linearGradient id="syncGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+							<stop offset="0%" style="stop-color:#7c3aed;stop-opacity:0.8" />
+							<stop offset="50%" style="stop-color:#d946ef;stop-opacity:1" />
+							<stop offset="100%" style="stop-color:#00e1ff;stop-opacity:0.8" />
+						</linearGradient>
+						<filter id="glow">
+							<feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+							<feMerge>
+								<feMergeNode in="coloredBlur"/>
+								<feMergeNode in="SourceGraphic"/>
+							</feMerge>
+						</filter>
+					</defs>
+					
+					<!-- Animated connection lines with glow -->
+					<path d="M 200 450 Q 450 350 700 400" stroke="url(#syncGradient1)" stroke-width="3" fill="none" stroke-dasharray="15,10" stroke-linecap="round" filter="url(#glow)" class="sync-line-1" />
+					<path d="M 900 380 Q 800 300 700 400" stroke="url(#syncGradient1)" stroke-width="3" fill="none" stroke-dasharray="15,10" stroke-linecap="round" filter="url(#glow)" class="sync-line-2" />
+					
+					<!-- Animated sync particles -->
+					<circle r="4" fill="#7c3aed" filter="url(#glow)">
+						<animateMotion dur="3s" repeatCount="indefinite" path="M 200 450 Q 450 350 700 400" />
+						<animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite" />
+					</circle>
+					<circle r="4" fill="#d946ef" filter="url(#glow)">
+						<animateMotion dur="3s" repeatCount="indefinite" begin="1s" path="M 200 450 Q 450 350 700 400" />
+						<animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite" begin="1s" />
+					</circle>
+					<circle r="4" fill="#00e1ff" filter="url(#glow)">
+						<animateMotion dur="3s" repeatCount="indefinite" path="M 900 380 Q 800 300 700 400" />
+						<animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite" />
+					</circle>
+					<circle r="4" fill="#a855f7" filter="url(#glow)">
+						<animateMotion dur="3s" repeatCount="indefinite" begin="1.5s" path="M 900 380 Q 800 300 700 400" />
+						<animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite" begin="1.5s" />
+					</circle>
+				</svg>
+
+			</div>
+
+			<!-- Feature Pills with enhanced styling -->
+			<div class="flex flex-col md:flex-row flex-wrap gap-4 justify-center mt-12 max-w-4xl mx-auto">
+				<div class="group flex items-center gap-3 px-8 py-4 bg-base-100/80 backdrop-blur-sm rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/40 transition-all hover:-translate-y-1 relative overflow-hidden w-full md:w-auto md:flex-1">
+					<div class="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg relative z-10">
+						<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/><path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"/></svg>
+					</div>
+					<div class="relative z-10">
+						<div class="font-bold text-sm text-base-content">Real-time Sync</div>
+						<div class="text-xs text-base-content/60">Instant updates across devices</div>
+					</div>
+				</div>
+				
+				<div class="group flex items-center gap-3 px-8 py-4 bg-base-100/80 backdrop-blur-sm rounded-2xl border border-secondary/20 shadow-xl hover:shadow-2xl hover:shadow-secondary/20 hover:border-secondary/40 transition-all hover:-translate-y-1 relative overflow-hidden w-full md:w-auto md:flex-1">
+					<div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg relative z-10">
+						<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"/></svg>
+					</div>
+					<div class="relative z-10">
+						<div class="font-bold text-sm text-base-content">Responsive Design</div>
+						<div class="text-xs text-base-content/60">Perfect on any screen size</div>
+					</div>
+				</div>
+				
+				<div class="group flex items-center gap-3 px-8 py-4 bg-base-100/80 backdrop-blur-sm rounded-2xl border border-green-200/50 shadow-xl hover:shadow-2xl hover:shadow-green-500/20 hover:border-green-300/50 transition-all hover:-translate-y-1 relative overflow-hidden w-full md:w-auto md:flex-1">
+					<div class="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg relative z-10">
+						<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+					</div>
+					<div class="relative z-10">
+						<div class="font-bold text-sm text-base-content">Offline Mode</div>
+						<div class="text-xs text-base-content/60">Work without internet</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 
   <!-- Footer -->
   <footer class="bg-neutral text-neutral-content py-20">
