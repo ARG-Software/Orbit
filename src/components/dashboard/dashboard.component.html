@@ -1,350 +1,366 @@
 
-<div class="container mx-auto pb-12">
-  <!-- Dashboard Header & Filter -->
-  <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-    <div>
-        <h1 class="text-3xl font-bold">{{ isAdmin() ? 'Dashboard' : 'My Work Dashboard' }}</h1>
-        <p class="opacity-60">Overview for {{ startDate() | date:'mediumDate' }} - {{ endDate() | date:'mediumDate' }}</p>
-    </div>
-    
-    <div class="flex flex-col sm:flex-row gap-4 items-center">
-        <div class="join bg-base-200 p-1 rounded-lg">
-          <button class="join-item btn btn-sm border-none hover:bg-base-100" [class.btn-active]="activeFilter() === '30d'" [class.bg-base-100]="activeFilter() === '30d'" (click)="setDateFilter('30d')">30d</button>
-          <button class="join-item btn btn-sm border-none hover:bg-base-100" [class.btn-active]="activeFilter() === 'quarter'" [class.bg-base-100]="activeFilter() === 'quarter'" (click)="setDateFilter('quarter')">Qtr</button>
-          <button class="join-item btn btn-sm border-none hover:bg-base-100" [class.btn-active]="activeFilter() === 'year'" [class.bg-base-100]="activeFilter() === 'year'" (click)="setDateFilter('year')">Year</button>
-        </div>
-        <div class="flex items-center gap-2 bg-base-100 border border-base-300 rounded-lg px-2 py-1">
-            <input type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event); onDateChange()" class="input input-ghost input-sm w-32 focus:bg-transparent">
-            <span class="opacity-40">→</span>
-            <input type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event); onDateChange()" class="input input-ghost input-sm w-32 focus:bg-transparent">
-        </div>
-    </div>
+<div class="container mx-auto pb-12 max-w-6xl">
+  
+  <!-- Greeting Section -->
+  <div class="mb-8 mt-4">
+      <h1 class="text-4xl font-extrabold tracking-tight text-base-content">{{ greeting() }}.</h1>
+      <p class="text-lg opacity-60 mt-1 font-medium">Ready to conquer the day?</p>
   </div>
 
-  @if(isAdmin()){
-      <!-- SECTION 1: REVENUE -->
-      <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().revenue">
-        <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('revenue')">
-          <div class="p-2 bg-primary/10 text-primary rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div>
-          Revenue & Financials
-        </div>
-        <div class="collapse-content">
-            <div class="divider my-0"></div>
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6">
-                <!-- Key Metrics -->
-                <div class="lg:col-span-3 space-y-6">
-                    <div class="card bg-base-200/50 border border-base-300">
-                        <div class="card-body p-6">
-                            <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Total Earnings</h3>
-                            <div class="text-4xl font-extrabold text-primary mt-2">${{ revenue().totalEarnings | number:'1.0-0' }}</div>
-                        </div>
-                    </div>
-                    <div class="card bg-base-200/50 border border-base-300">
-                        <div class="card-body p-6">
-                             <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Avg. Hourly Rate</h3>
-                             <div class="text-3xl font-bold mt-2">${{ revenue().avgHourlyRate | number:'1.2-2' }}</div>
-                        </div>
-                    </div>
-                    <div class="card bg-base-200/50 border border-base-300">
-                        <div class="card-body p-6">
-                             <h3 class="text-sm font-bold opacity-60 uppercase tracking-wider">Hours vs Earnings</h3>
-                             <div class="mt-2">
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>Hours</span>
-                                    <span class="font-mono">{{ revenue().totalHours | number:'1.0-0' }}h</span>
-                                </div>
-                                <progress class="progress progress-secondary w-full" value="100" max="100"></progress>
-                                <div class="flex justify-between text-sm mb-1 mt-3">
-                                    <span>Earnings Ratio</span>
-                                    <span class="font-mono text-xs opacity-70">~${{ revenue().avgHourlyRate | number:'1.0-0' }}/h</span>
-                                </div>
-                                 <progress class="progress progress-primary w-full" value="100" max="100"></progress>
-                             </div>
-                        </div>
-                    </div>
-                </div>
+  <!-- Quick Actions Bar -->
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-10">
+      <!-- Create Task -->
+      <button (click)="isTaskModalOpen.set(true)" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-primary/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
+          <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-content transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+          </div>
+          <span class="text-xs font-bold">New Task</span>
+      </button>
 
-                <!-- Earnings by Client (Chart) -->
-                <div class="lg:col-span-5 card bg-base-100 border border-base-200">
-                    <div class="card-body">
-                        <h3 class="font-bold text-lg mb-4">Earnings by Client</h3>
-                        <div class="space-y-4">
-                            @for(item of revenue().earningsByClient; track item.name) {
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="font-medium">{{ item.name }}</span>
-                                        <span class="font-bold text-primary">${{ item.value | number:'1.0-0' }}</span>
-                                    </div>
-                                    <progress class="progress progress-primary h-2" [value]="item.value" [max]="getMaxRevenueValue()"></progress>
-                                </div>
-                            } @empty {
-                                <div class="text-center py-10 opacity-50">No revenue data available.</div>
-                            }
-                        </div>
-                    </div>
-                </div>
+      <!-- Create Project -->
+      <button (click)="isProjectModalOpen.set(true)" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-secondary/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
+          <div class="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-secondary-content transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+          </div>
+          <span class="text-xs font-bold">New Project</span>
+      </button>
 
-                <!-- Most Valuable Projects -->
-                <div class="lg:col-span-4 card bg-base-100 border border-base-200">
-                    <div class="card-body p-0">
-                        <div class="p-5 border-b border-base-200 font-bold">Most Valuable Projects</div>
-                        <div class="overflow-y-auto max-h-[300px]">
-                            <table class="table w-full">
-                                <tbody>
-                                    @for(proj of revenue().mostValuableProjects; track proj.name; let i = $index) {
-                                        <tr class="hover:bg-base-100">
-                                            <td class="font-bold text-center w-8 opacity-50">{{ i + 1 }}</td>
-                                            <td>
-                                                <div class="font-medium">{{ proj.name }}</div>
-                                                <div class="text-xs opacity-60">{{ proj.clientName }}</div>
-                                            </td>
-                                            <td class="text-right font-bold text-success">${{ proj.value | number:'1.0-0' }}</td>
-                                        </tr>
-                                    } @empty {
-                                        <tr><td colspan="3" class="text-center py-8 opacity-50">No active projects found.</td></tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
+      <!-- Pay Expense (New) -->
+      <button (click)="openExpenseModal()" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-error/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
+          <div class="w-10 h-10 rounded-full bg-error/10 text-error flex items-center justify-center group-hover:bg-error group-hover:text-error-content transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          </div>
+          <span class="text-xs font-bold">Pay Expense</span>
+      </button>
 
-      <!-- SECTION 2: CLIENTS -->
-      <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().clients">
-        <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('clients')">
-          <div class="p-2 bg-secondary/10 text-secondary rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z" /></svg></div>
-          Client Insights
-        </div>
-        <div class="collapse-content">
-            <div class="divider my-0"></div>
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6">
-                <!-- KPIs -->
-                <div class="lg:col-span-1 space-y-4">
-                     <div class="stats shadow w-full border border-base-200 bg-base-100">
-                        <div class="stat place-items-center">
-                            <div class="stat-title">Active Clients</div>
-                            <div class="stat-value text-secondary">{{ clients().activeClientsCount }}</div>
-                            <div class="stat-desc">In selected period</div>
-                        </div>
-                     </div>
-                     
-                     <!-- Invoice Status Radial -->
-                     <div class="card bg-base-100 border border-base-200 shadow-sm">
-                         <div class="card-body items-center text-center p-4">
-                             <h4 class="text-xs font-bold uppercase opacity-60 mb-2">Invoice Status</h4>
-                             <div class="relative flex items-center justify-center mb-2">
-                                 @let total = getInvoiceTotal();
-                                 <div class="radial-progress text-success bg-base-200 border-4 border-base-200" [style.--value]="(clients().invoiceStatusSummary.paid / (total || 1)) * 100" [style.--size]="'6rem'" role="progressbar">
-                                    <span class="text-sm font-bold text-base-content">{{ (clients().invoiceStatusSummary.paid / (total || 1)) * 100 | number:'1.0-0' }}%</span>
-                                 </div>
-                             </div>
-                             <div class="flex gap-3 text-xs">
-                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-success"></div> Paid</div>
-                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-warning"></div> Pending</div>
-                                 <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-error"></div> Overdue</div>
-                             </div>
-                         </div>
-                     </div>
-                </div>
+      <!-- Log Time -->
+      <a routerLink="/app/timesheet" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-accent/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
+          <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-accent-content transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <span class="text-xs font-bold">Log Time</span>
+      </a>
 
-                <!-- Most Valuable Clients List -->
-                <div class="lg:col-span-1 card bg-base-100 border border-base-200">
-                    <div class="card-body p-0">
-                        <div class="p-4 font-bold border-b border-base-200">Top Clients (Revenue)</div>
-                        <ul class="menu p-2">
-                            @for(c of clients().mostValuableClients.slice(0,5); track c.name) {
-                                <li class="flex flex-row justify-between py-2 border-b border-base-100 last:border-0">
-                                    <span class="font-medium">{{ c.name }}</span>
-                                    <span class="font-bold text-primary">${{ c.value | number:'1.0-0' }}</span>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </div>
+      <!-- Invoice -->
+      <a routerLink="/app/invoices" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-success/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
+          <div class="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center group-hover:bg-success group-hover:text-success-content transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          </div>
+          <span class="text-xs font-bold">New Invoice</span>
+      </a>
 
-                <!-- Most Billed Time -->
-                 <div class="lg:col-span-1 card bg-base-100 border border-base-200">
-                    <div class="card-body p-0">
-                        <div class="p-4 font-bold border-b border-base-200">Most Billed Time</div>
-                         <div class="p-4 space-y-4">
-                            @for(c of clients().clientsWithMostBilledTime; track c.name) {
-                                <div>
-                                    <div class="flex justify-between text-xs mb-1">
-                                        <span>{{ c.name }}</span>
-                                        <span class="font-bold">{{ c.hours }} hrs</span>
-                                    </div>
-                                    <progress class="progress progress-secondary h-1.5" [value]="c.hours" [max]="getMaxClientHours()"></progress>
-                                </div>
-                            }
-                         </div>
-                    </div>
-                </div>
+      <!-- AI Plan Day -->
+      <button (click)="planMyDay()" class="btn h-auto py-3 btn-neutral shadow-lg flex flex-col items-center gap-2 group hover:scale-[1.02] transition-transform">
+          @if(isAiLoading()) {
+             <span class="loading loading-spinner loading-md"></span>
+          } @else {
+             <div class="w-10 h-10 rounded-full bg-base-100/10 flex items-center justify-center group-hover:bg-base-100/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+             </div>
+          }
+          <span class="text-xs font-bold">Plan My Day</span>
+      </button>
+  </div>
 
-                <!-- Avg Project Value -->
-                 <div class="lg:col-span-1 card bg-base-100 border border-base-200">
-                    <div class="card-body p-0">
-                        <div class="p-4 font-bold border-b border-base-200">Avg. Project Value</div>
-                        <ul class="menu p-2">
-                            @for(c of clients().projectValuePerClient; track c.name) {
-                                <li class="flex flex-row justify-between py-2 border-b border-base-100 last:border-0">
-                                    <span class="font-medium text-sm">{{ c.name }}</span>
-                                    <span class="font-bold text-sm opacity-70">${{ c.avgValue | number:'1.0-0' }}</span>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
-
-      <!-- SECTION 3: MEMBERS -->
-      <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200 mb-4" [class.collapse-open]="sections().members">
-        <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('members')">
-          <div class="p-2 bg-accent/10 text-accent rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
-          Team Performance
-        </div>
-        <div class="collapse-content">
-            <div class="divider my-0"></div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
-                <!-- Highlight Cards -->
-                <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <div class="stats shadow border border-base-200">
-                        <div class="stat">
-                            <div class="stat-figure text-accent">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-8 h-8 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z"></path></svg>
-                            </div>
-                            <div class="stat-title">Active Members</div>
-                            <div class="stat-value">{{ members().activeMembersCount }}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stats shadow border border-base-200">
-                        <div class="stat">
-                            <div class="stat-title">Most Profitable</div>
-                            <div class="stat-value text-lg text-primary truncate">{{ members().mostProfitableMember?.member?.name || 'N/A' }}</div>
-                            <div class="stat-desc font-bold text-success">${{ members().mostProfitableMember?.earnings | number:'1.0-0' }} generated</div>
-                        </div>
-                    </div>
-
-                    <div class="stats shadow border border-base-200">
-                        <div class="stat">
-                            <div class="stat-title">Most Hours</div>
-                            <div class="stat-value text-lg text-secondary truncate">{{ members().mostHoursLogged?.member?.name || 'N/A' }}</div>
-                            <div class="stat-desc font-bold">{{ members().mostHoursLogged?.hours | number:'1.0-0' }} hrs logged</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ranking Table -->
-                <div class="lg:col-span-3 card bg-base-100 border border-base-200">
-                     <div class="card-body p-0">
-                        <table class="table w-full">
-                            <thead class="bg-base-200">
-                                <tr>
-                                    <th class="w-12 text-center">Rank</th>
-                                    <th>Member</th>
-                                    <th class="text-right">Hours</th>
-                                    <th class="text-right">Revenue Generated</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for(rank of members().rankingByHours; track rank.member.id; let i = $index) {
-                                    <tr class="hover:bg-base-100">
-                                        <td class="text-center font-bold opacity-50">{{ i + 1 }}</td>
-                                        <td>
-                                            <div class="flex items-center gap-3">
-                                                <div class="avatar"><div class="mask mask-squircle w-8 h-8"><img [src]="rank.member.avatarUrl" /></div></div>
-                                                <div class="font-bold">{{ rank.member.name }}</div>
-                                            </div>
-                                        </td>
-                                        <td class="text-right font-mono">{{ rank.hours | number:'1.1-1' }}</td>
-                                        <td class="text-right font-bold text-success">${{ rank.earnings | number:'1.0-0' }}</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                     </div>
-                </div>
-            </div>
-        </div>
+  <!-- AI Suggestion Result -->
+  @if(aiSuggestion()) {
+      <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-900/20 dark:to-fuchsia-900/20 border border-violet-100 dark:border-violet-800 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div class="flex items-start gap-4">
+              <div class="p-2 bg-white dark:bg-base-200 rounded-lg shadow-sm text-violet-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              </div>
+              <div class="flex-1">
+                  <h3 class="font-bold text-lg mb-2 text-violet-900 dark:text-violet-100">Your AI Briefing</h3>
+                  <div class="prose text-sm leading-relaxed text-base-content/80 whitespace-pre-line font-medium">
+                      {{ aiSuggestion() }}
+                  </div>
+              </div>
+              <button class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100" (click)="aiSuggestion.set(null)">✕</button>
+          </div>
       </div>
   }
 
-  <!-- SECTION 4: TASKS (Visible to All, but filtered for Members) -->
-  <div class="collapse collapse-arrow bg-base-100 shadow-sm border border-base-200" [class.collapse-open]="sections().tasks">
-    <div class="collapse-title text-xl font-bold flex items-center gap-2 cursor-pointer" (click)="toggleSection('tasks')">
-      <div class="p-2 bg-info/10 text-info rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg></div>
-      {{ isAdmin() ? 'Task Activity' : 'My Recent Tasks' }}
-    </div>
-    <div class="collapse-content">
-        <div class="divider my-0"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
-            <!-- Recently Added -->
-            <div class="card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Recently Assigned</div>
-                    <ul class="menu p-2">
-                        @for(t of tasks().recentlyAddedTasks; track t.id) {
-                            <li class="border-b border-base-100 last:border-0">
-                                <a class="flex flex-col items-start gap-1">
-                                    <span class="font-medium">{{ t.title }}</span>
-                                    <span class="text-xs opacity-50">{{ t.createdAt | date:'short' }}</span>
-                                </a>
-                            </li>
-                        } @empty {
-                            <li class="disabled"><a>No recent tasks.</a></li>
-                        }
-                    </ul>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      
+      <!-- Main Column (Financials, Invoices, Tasks) -->
+      <div class="lg:col-span-2 flex flex-col gap-8">
+          
+          <!-- Financial Card (Graph View) -->
+          <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
+              <div class="card-body">
+                  <div class="flex justify-between items-start mb-6">
+                      <div>
+                          <h2 class="text-xl font-bold">This Month's Financials</h2>
+                          <div class="flex items-center gap-2 mt-1">
+                              <span class="text-xs opacity-60">Cumulative Trend</span>
+                              <div class="badge badge-sm badge-ghost font-mono">{{ currentMonthFinancials().profit >= 0 ? '+' : '' }}{{ currentMonthFinancials().profit | currency:'USD':'symbol':'1.0-0' }} Net</div>
+                          </div>
+                      </div>
+                      
+                      <!-- Legend -->
+                      <div class="flex gap-4 text-xs font-medium">
+                          <div class="flex items-center gap-2">
+                              <span class="w-3 h-3 rounded-full bg-success"></span>
+                              <span class="opacity-70">Revenue</span>
+                              <span class="font-bold ml-1 text-success">{{ currentMonthFinancials().revenue | currency:'USD':'symbol':'1.0-0' }}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                              <span class="w-3 h-3 rounded-full bg-warning"></span>
+                              <span class="opacity-70">Expenses</span>
+                              <span class="font-bold ml-1 text-warning">{{ currentMonthFinancials().expenses | currency:'USD':'symbol':'1.0-0' }}</span>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Graphic (D3 Area Chart) -->
+                  <div class="w-full h-64 relative group cursor-crosshair">
+                      <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" 
+                           class="w-full h-full overflow-visible"
+                           (mousemove)="onChartMouseMove($event)" 
+                           (mouseleave)="onChartMouseLeave()">
+                          
+                          <!-- Gradients -->
+                          <defs>
+                              <linearGradient id="gradRevenue" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0%" stop-color="oklch(var(--su))" stop-opacity="0.3"/>
+                                  <stop offset="100%" stop-color="oklch(var(--su))" stop-opacity="0"/>
+                              </linearGradient>
+                              <linearGradient id="gradExpense" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0%" stop-color="oklch(var(--wa))" stop-opacity="0.3"/>
+                                  <stop offset="100%" stop-color="oklch(var(--wa))" stop-opacity="0"/>
+                              </linearGradient>
+                          </defs>
+
+                          <!-- Grid Lines -->
+                          <line x1="0" [attr.y1]="chartHeight" [attr.x2]="chartWidth" [attr.y2]="chartHeight" stroke="currentColor" stroke-opacity="0.1" />
+                          <line x1="0" [attr.y1]="0" [attr.x2]="chartWidth" [attr.y2]="0" stroke="currentColor" stroke-opacity="0.05" stroke-dasharray="4" />
+
+                          <!-- Areas -->
+                          <path [attr.d]="financialChartPaths().revenueArea" fill="url(#gradRevenue)" class="transition-all duration-300" />
+                          <path [attr.d]="financialChartPaths().expenseArea" fill="url(#gradExpense)" class="transition-all duration-300" />
+
+                          <!-- Lines -->
+                          <path [attr.d]="financialChartPaths().revenueLine" fill="none" stroke="oklch(var(--su))" stroke-width="3" stroke-linecap="round" class="drop-shadow-sm" />
+                          <path [attr.d]="financialChartPaths().expenseLine" fill="none" stroke="oklch(var(--wa))" stroke-width="3" stroke-linecap="round" stroke-dasharray="4,4" class="drop-shadow-sm" />
+
+                          <!-- Hover Indicator -->
+                          @if(hoverData(); as h) {
+                              <!-- Vertical Line -->
+                              <line [attr.x1]="h.x" y1="0" [attr.x2]="h.x" [attr.y2]="chartHeight" stroke="currentColor" stroke-opacity="0.2" stroke-dasharray="2" />
+                              
+                              <!-- Dots -->
+                              <circle [attr.cx]="h.x" [attr.cy]="h.yRev" r="5" fill="oklch(var(--su))" stroke="white" stroke-width="2" />
+                              <circle [attr.cx]="h.x" [attr.cy]="h.yExp" r="5" fill="oklch(var(--wa))" stroke="white" stroke-width="2" />
+                          }
+                      </svg>
+
+                      <!-- Hover Tooltip (HTML Overlay) -->
+                      @if(hoverData(); as h) {
+                          <div class="absolute pointer-events-none bg-base-100 shadow-xl border border-base-200 p-3 rounded-lg text-xs z-10 w-40"
+                               [style.left.px]="h.x + 20" 
+                               [style.top.px]="50">
+                              <div class="font-bold mb-2 border-b border-base-200 pb-1">{{ h.date | date:'mediumDate' }}</div>
+                              <div class="flex justify-between items-center mb-1">
+                                  <span class="text-success font-medium">Revenue</span>
+                                  <span class="font-bold">{{ h.cumRevenue | currency:'USD':'symbol':'1.0-0' }}</span>
+                              </div>
+                              <div class="flex justify-between items-center">
+                                  <span class="text-warning font-medium">Expenses</span>
+                                  <span class="font-bold">{{ h.cumExpense | currency:'USD':'symbol':'1.0-0' }}</span>
+                              </div>
+                          </div>
+                      }
+                  </div>
+              </div>
+          </div>
+
+          <!-- Outstanding Invoices -->
+          <div class="card bg-base-100 shadow-sm border border-base-200">
+              <div class="card-body p-0">
+                  <div class="p-6 border-b border-base-200 flex justify-between items-center bg-base-200/20">
+                      <h2 class="text-lg font-bold">Outstanding Invoices</h2>
+                      <a routerLink="/app/invoices" class="btn btn-xs btn-ghost">View All</a>
+                  </div>
+                  <div class="divide-y divide-base-200">
+                      @for(inv of outstandingInvoices(); track inv.id) {
+                          <div class="p-4 hover:bg-base-100 transition-colors flex items-center justify-between gap-4">
+                              <div class="flex items-center gap-3">
+                                  <div class="w-10 h-10 rounded-lg bg-base-200 flex items-center justify-center font-bold text-xs opacity-70">
+                                      {{ inv.invoiceNumber | slice:4:8 }}
+                                  </div>
+                                  <div>
+                                      <div class="font-medium">{{ getClientName(inv.clientId) }}</div>
+                                      <div class="text-xs opacity-50">Due {{ inv.dueDate | date:'mediumDate' }}</div>
+                                  </div>
+                              </div>
+                              <div class="flex flex-col items-end gap-1">
+                                  <span class="font-bold">{{ inv.total | currency:'USD':'symbol':'1.0-0' }}</span>
+                                  <span class="badge badge-xs" [class.badge-error]="inv.status === 'Overdue'" [class.badge-warning]="inv.status === 'Pending'">{{ inv.status }}</span>
+                              </div>
+                          </div>
+                      } @empty {
+                          <div class="p-8 text-center opacity-50">
+                              <p>No outstanding invoices.</p>
+                          </div>
+                      }
+                  </div>
+              </div>
+          </div>
+
+          <!-- Priority Tasks -->
+          <div class="card bg-base-100 shadow-sm border border-base-200">
+              <div class="card-body p-0">
+                  <div class="p-6 border-b border-base-200 flex justify-between items-center bg-base-200/20">
+                      <h2 class="text-lg font-bold">High Priority Tasks</h2>
+                      <a routerLink="/app/tasks" class="btn btn-xs btn-ghost">View All</a>
+                  </div>
+                  
+                  <div class="divide-y divide-base-200">
+                      @for(task of priorityTasks(); track task.id) {
+                          <div class="p-4 hover:bg-base-100 transition-colors flex items-start gap-4 group">
+                              <div class="mt-1">
+                                  <div class="w-2 h-2 rounded-full bg-error"></div>
+                              </div>
+                              <div class="flex-1">
+                                  <div class="font-medium text-base-content/90 group-hover:text-primary transition-colors cursor-pointer">{{ task.title }}</div>
+                                  <div class="text-xs opacity-50 mt-1">{{ getProjectName(task.projectId) }}</div>
+                              </div>
+                              <div class="badge badge-sm badge-ghost">{{ task.status }}</div>
+                          </div>
+                      } @empty {
+                          <div class="p-8 text-center opacity-50">
+                              <p>No high priority tasks pending.</p>
+                          </div>
+                      }
+                  </div>
+              </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="card bg-base-100 shadow-sm border border-base-200">
+              <div class="card-body p-0">
+                  <div class="p-6 border-b border-base-200 flex justify-between items-center bg-base-200/20">
+                      <h2 class="text-lg font-bold">Recent Activity</h2>
+                  </div>
+                  <div class="divide-y divide-base-200">
+                      @for(task of recentActivity(); track task.id) {
+                          <div class="p-4 hover:bg-base-100 transition-colors flex items-center gap-4">
+                              <div class="text-xs font-mono opacity-50 w-24 text-right">{{ task.updatedAt | date:'MMM d, HH:mm' }}</div>
+                              <div class="flex-1">
+                                  <div class="text-sm">
+                                      <span class="font-medium">{{ task.title }}</span> updated to <span class="badge badge-xs badge-ghost">{{ task.status }}</span>
+                                  </div>
+                                  <div class="text-xs opacity-50 mt-0.5">{{ getProjectName(task.projectId) }}</div>
+                              </div>
+                          </div>
+                      } @empty {
+                          <div class="p-8 text-center opacity-50">
+                              <p>No recent activity.</p>
+                          </div>
+                      }
+                  </div>
+              </div>
+          </div>
+
+      </div>
+
+      <!-- Side Column (Meetings, Team Activity) -->
+      <div class="lg:col-span-1 flex flex-col gap-8">
+          
+          <!-- Upcoming Meetings -->
+          <div class="card bg-base-100 shadow-sm border border-base-200">
+              <div class="card-body p-0">
+                  <div class="p-5 border-b border-base-200 bg-base-200/20 flex justify-between items-center">
+                      <h2 class="text-lg font-bold">Upcoming Meetings</h2>
+                      <a routerLink="/app/meetings" class="btn btn-xs btn-ghost btn-circle">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                      </a>
+                  </div>
+                  <div class="divide-y divide-base-200">
+                      @for(meet of upcomingMeetings(); track meet.id) {
+                          <div class="p-4 flex gap-3 hover:bg-base-100 transition-colors">
+                              <div class="bg-primary/10 text-primary rounded-lg p-2 text-center min-w-[50px] flex flex-col justify-center">
+                                  <span class="text-[10px] font-bold uppercase">{{ meet.startTime | date:'MMM' }}</span>
+                                  <span class="text-lg font-bold leading-none">{{ meet.startTime | date:'dd' }}</span>
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                  <div class="font-bold text-sm truncate">{{ meet.title }}</div>
+                                  <div class="text-xs opacity-60 truncate">{{ meet.clientName }}</div>
+                                  <div class="text-xs opacity-50 mt-1 flex items-center gap-1">
+                                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                      {{ meet.startTime | date:'shortTime' }}
+                                  </div>
+                              </div>
+                          </div>
+                      } @empty {
+                          <div class="p-8 text-center opacity-50 text-sm">
+                              No meetings scheduled.
+                          </div>
+                      }
+                  </div>
+              </div>
+          </div>
+
+          <!-- Team Activity -->
+          <div class="card bg-base-100 shadow-sm border border-base-200">
+              <div class="card-body p-0">
+                  <div class="p-5 border-b border-base-200 bg-base-200/20">
+                      <h2 class="text-lg font-bold">Hours Logged</h2>
+                  </div>
+                  <div class="p-2">
+                      @for(item of teamActivity(); track item.member.id) {
+                          <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-base-200/50 transition-colors">
+                              <div class="avatar">
+                                  <div class="w-10 h-10 rounded-full ring ring-offset-2 ring-offset-base-100 ring-1 ring-base-300">
+                                      <img [src]="item.member.avatarUrl" />
+                                  </div>
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                  <div class="font-medium text-sm truncate">{{ item.member.name }}</div>
+                                  <div class="text-xs opacity-50">{{ item.member.role }}</div>
+                              </div>
+                              <div class="font-mono font-bold text-sm">{{ item.hours | number:'1.0-0' }}h</div>
+                          </div>
+                      }
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Shared Modals -->
+@if(isTaskModalOpen()) {
+    <app-task-modal (close)="isTaskModalOpen.set(false)"></app-task-modal>
+}
+
+@if(isProjectModalOpen()) {
+    <app-project-modal (close)="isProjectModalOpen.set(false)"></app-project-modal>
+}
+
+<!-- Expense Modal (Local specific to dashboard context still, or could be shared later) -->
+@if(isExpenseModalOpen()) {
+    <dialog class="modal modal-open">
+        <div class="modal-box shadow-2xl border border-base-200">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="isExpenseModalOpen.set(false)">✕</button>
+            <h3 class="font-bold text-lg mb-4">Quick Expense</h3>
+            <div class="flex flex-col gap-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Amount ($)</span></label>
+                    <input type="number" [ngModel]="newExpenseAmount()" (ngModelChange)="newExpenseAmount.set(+$event)" class="input input-bordered w-full focus:input-primary" placeholder="0.00" min="0">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Recipient</span></label>
+                    <input type="text" [ngModel]="newExpenseRecipient()" (ngModelChange)="newExpenseRecipient.set($event)" class="input input-bordered w-full" placeholder="e.g. Office Supplies Co.">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Description</span></label>
+                    <textarea [ngModel]="newExpenseDescription()" (ngModelChange)="newExpenseDescription.set($event)" class="textarea textarea-bordered h-24" placeholder="What is this for?"></textarea>
                 </div>
             </div>
-
-            <!-- Recently Changed -->
-            <div class="card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Recently Updated</div>
-                    <ul class="menu p-2">
-                         @for(t of tasks().recentlyChangedTasks; track t.id) {
-                            <li class="border-b border-base-100 last:border-0">
-                                <a class="flex flex-col items-start gap-1">
-                                    <div class="flex justify-between w-full">
-                                        <span class="font-medium truncate max-w-[150px]">{{ t.title }}</span>
-                                        <span class="badge badge-xs badge-outline">{{ t.status }}</span>
-                                    </div>
-                                    <span class="text-xs opacity-50">Updated {{ t.updatedAt | date:'short' }}</span>
-                                </a>
-                            </li>
-                        } @empty {
-                            <li class="disabled"><a>No recent updates.</a></li>
-                        }
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Board Activity -->
-            <div class="card bg-base-100 border border-base-200">
-                <div class="card-body p-0">
-                    <div class="p-4 font-bold border-b border-base-200 bg-base-200/30">Board Activity</div>
-                    <div class="p-4 space-y-4">
-                        @for(b of tasks().boardActivity; track b.name) {
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="font-medium">{{ b.name }}</span>
-                                    <span class="font-bold">{{ b.count }} changes</span>
-                                </div>
-                                <progress class="progress progress-info h-2" [value]="b.count" [max]="tasks().boardActivity[0].count"></progress>
-                            </div>
-                        } @empty {
-                             <div class="text-center py-8 opacity-50 text-sm">No activity recorded.</div>
-                        }
-                    </div>
-                </div>
+            <div class="modal-action">
+                <button class="btn btn-primary px-6" (click)="saveExpense()" [disabled]="!newExpenseAmount() || !newExpenseRecipient()">Record Expense</button>
             </div>
         </div>
-    </div>
-  </div>
-
-</div>
+    </dialog>
+}

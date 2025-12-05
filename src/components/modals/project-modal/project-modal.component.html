@@ -1,0 +1,123 @@
+
+<dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-4xl shadow-2xl border border-base-200">
+        <form method="dialog">
+            <button (click)="close.emit()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        
+        <h2 class="card-title border-b border-base-200 pb-2 mb-4">Create New Project</h2>
+        
+        <form (ngSubmit)="saveProject()">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="form-control sm:col-span-2">
+                    <label class="label"><span class="label-text font-medium">Project Name</span></label>
+                    <input type="text" class="input input-bordered focus:input-primary" [ngModel]="newProjectName()" (ngModelChange)="newProjectName.set($event)" name="projectName" required placeholder="e.g. Q4 Marketing Campaign">
+                </div>
+                <div class="form-control sm:col-span-2">
+                    <label class="label"><span class="label-text font-medium">Description</span></label>
+                    <textarea class="textarea textarea-bordered h-32 resize-none focus:textarea-primary" [ngModel]="newProjectDescription()" (ngModelChange)="newProjectDescription.set($event)" name="projectDescription" placeholder="Brief overview of the project scope..."></textarea>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Client</span></label>
+                    <select class="select select-bordered" [ngModel]="newProjectClientId()" (ngModelChange)="newProjectClientId.set(+$event)" name="projectClient" required>
+                        <option [ngValue]="null" disabled>Select Client</option>
+                        @for(client of clients(); track client.id){
+                            <option [ngValue]="client.id">{{ client.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">Status</span></label>
+                    <select class="select select-bordered" [ngModel]="newProjectStatus()" (ngModelChange)="newProjectStatus.set($event)" name="projectStatus">
+                        <option value="Active">Active</option>
+                        <option value="Paused">Paused</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                
+                <!-- Billing Type Selection -->
+                <div class="form-control sm:col-span-2 bg-base-200/30 p-4 rounded-lg border border-base-200">
+                    <label class="label"><span class="label-text font-bold">Billing Settings</span></label>
+                    <div class="flex gap-6 mb-4">
+                            <label class="cursor-pointer flex items-center gap-2">
+                            <input type="radio" name="billingType" class="radio radio-primary" [value]="'hourly'" [ngModel]="newProjectBillingType()" (ngModelChange)="newProjectBillingType.set($event)">
+                            <span class="label-text">Hourly Rate</span>
+                            </label>
+                            <label class="cursor-pointer flex items-center gap-2">
+                            <input type="radio" name="billingType" class="radio radio-primary" [value]="'fixed'" [ngModel]="newProjectBillingType()" (ngModelChange)="newProjectBillingType.set($event)">
+                            <span class="label-text">Fixed Price</span>
+                            </label>
+                    </div>
+                    
+                    @if(newProjectBillingType() === 'fixed') {
+                        <div class="form-control w-full max-w-xs">
+                            <label class="label"><span class="label-text font-medium">Total Project Price ($)</span></label>
+                            <input type="number" [ngModel]="newProjectFixedPrice()" (ngModelChange)="newProjectFixedPrice.set(+$event)" name="fixedPrice" class="input input-bordered w-full" min="0" placeholder="0.00">
+                        </div>
+                        <p class="text-xs opacity-60 mt-2">Flat fee project. Time logging is disabled for this project type.</p>
+                    } @else {
+                        <div class="form-control w-full max-w-xs">
+                            <label class="label"><span class="label-text font-medium">Default Hourly Rate ($/hr)</span></label>
+                            <input type="number" [ngModel]="newProjectDefaultRate()" (ngModelChange)="newProjectDefaultRate.set(+$event)" name="defaultRate" class="input input-bordered w-full" min="0" placeholder="0.00">
+                        </div>
+                        <p class="text-xs opacity-60 mt-2">This rate applies as a default. You can override it per team member below.</p>
+                    }
+                </div>
+            </div>
+            
+            <div class="divider text-xs font-bold opacity-50 uppercase mt-8">Team Allocation</div>
+            
+            <!-- Search -->
+            <div class="form-control mb-2">
+                <input type="text" [ngModel]="newProjectMemberSearch()" (ngModelChange)="newProjectMemberSearch.set($event); newProjectMemberPage.set(1)" placeholder="Search team members..." class="input input-bordered input-sm w-full" name="memberSearch">
+            </div>
+
+            <div class="bg-base-200/30 rounded-xl border border-base-200 p-4 space-y-2">
+                @for(member of paginatedNewProjectMembers(); track member.id){
+                    @let isChecked = newProjectMembers().includes(member.id);
+                    <div class="p-3 rounded-lg flex items-center justify-between gap-4 transition-colors" [class.bg-base-100]="isChecked" [class.shadow-sm]="isChecked">
+                    <div class="form-control flex-1">
+                        <label class="label cursor-pointer justify-start gap-3 py-0">
+                        <input type="checkbox" class="checkbox checkbox-primary" [checked]="isChecked" (change)="toggleMemberSelection(member.id, $any($event.target).checked)"/>
+                        <div class="flex items-center gap-3">
+                            <div class="avatar"><div class="w-8 rounded-full"><img [src]="member.avatarUrl" /></div></div>
+                            <div class="flex flex-col">
+                                <span class="font-medium text-sm">{{ member.name }}</span>
+                                <span class="text-xs opacity-50">{{ member.role }}</span>
+                            </div>
+                        </div>
+                        </label>
+                    </div>
+                    @if(isChecked && newProjectBillingType() === 'hourly'){
+                        <div class="form-control">
+                        <label class="input-group input-group-sm">
+                            <span>$</span>
+                            <input type="number" class="input input-bordered input-sm w-20" [ngModel]="newProjectRates()[member.id] ?? (newProjectDefaultRate() || member.defaultHourlyRate)" (ngModelChange)="updateMemberRate(member.id, +$event)" [name]="'rate_' + member.id">
+                            <span class="hidden sm:flex">/hr</span>
+                        </label>
+                        </div>
+                    }
+                    </div>
+                } @empty {
+                    <div class="text-center py-4 opacity-50 text-sm">No members found.</div>
+                }
+            </div>
+
+            @if(filteredNewProjectMembers().length > newProjectMemberPerPage()){
+                <div class="flex justify-center mt-4">
+                    <app-pagination 
+                    [currentPage]="newProjectMemberPage()"
+                    [totalItems]="filteredNewProjectMembers().length"
+                    [itemsPerPage]="newProjectMemberPerPage()"
+                    (pageChange)="onNewProjectMemberPageChange($event)">
+                    </app-pagination>
+                </div>
+            }
+
+            <div class="modal-action mt-8 pt-4 border-t border-base-200">
+                <button type="button" class="btn btn-ghost" (click)="close.emit()">Cancel</button>
+                <button type="submit" class="btn btn-primary px-8" [disabled]="!newProjectName() || !newProjectClientId()">Create Project</button>
+            </div>
+        </form>
+    </div>
+</dialog>

@@ -1,0 +1,324 @@
+<div class="container mx-auto pb-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold">Expenses</h1>
+            <p class="opacity-60 mt-1">Track outgoing payments to team members and contractors.</p>
+        </div>
+        <button (click)="openNewPaymentModal()" class="btn btn-primary shadow-lg shadow-primary/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+            New Expense
+        </button>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
+            <div class="stat-figure text-success opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase opacity-60">Paid This Month</div>
+            <div class="stat-value text-success">{{ totalPaidThisMonth() | currency:'USD':'symbol':'1.0-0' }}</div>
+        </div>
+        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
+            <div class="stat-figure text-warning opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase opacity-60">Pending Payouts</div>
+            <div class="stat-value text-warning">{{ pendingAmount() | currency:'USD':'symbol':'1.0-0' }}</div>
+        </div>
+        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
+            <div class="stat-figure text-primary opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase opacity-60">Payments Processed</div>
+            <div class="stat-value text-primary">{{ processedCount() }}</div>
+        </div>
+    </div>
+
+    <!-- Filters & Table -->
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-0">
+            <!-- Filters -->
+            <div class="flex flex-col sm:flex-row gap-4 p-4 border-b border-base-200 bg-base-200/30 items-center">
+                <div class="form-control w-full sm:w-auto">
+                    <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); currentPage.set(1)" class="select select-bordered select-sm">
+                        <option value="All">All Statuses</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                    </select>
+                </div>
+                <div class="form-control flex-1 w-full">
+                    <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); currentPage.set(1)" placeholder="Search by name or description..." class="input input-bordered input-sm w-full">
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="table w-full">
+                    <thead class="bg-base-100 text-base-content/70">
+                        <tr>
+                            <th class="pl-6">Recipient</th>
+                            <th>Role</th>
+                            <th>Description</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-right pr-6">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for(payment of paginatedPayments(); track payment.id) {
+                            <tr class="hover:bg-base-100 group transition-colors">
+                                <td class="pl-6 font-bold">{{ payment.recipientName }}</td>
+                                <td class="text-xs opacity-70">{{ payment.recipientRole }}</td>
+                                <td class="text-sm max-w-xs truncate opacity-80" [title]="payment.description">{{ payment.description }}</td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <!-- Method Icons -->
+                                        @if(payment.method === 'PayPal') {
+                                            <div class="w-6 h-6 rounded flex items-center justify-center bg-[#003087] text-white text-[10px] font-bold">P</div>
+                                        } @else if(payment.method === 'Wise') {
+                                            <div class="w-6 h-6 rounded flex items-center justify-center bg-[#9fe870] text-[#163300] text-[10px] font-bold">W</div>
+                                        } @else if(payment.method === 'Revolut') {
+                                            <div class="w-6 h-6 rounded flex items-center justify-center bg-black text-white text-[10px] font-bold">R</div>
+                                        } @else if(payment.method === 'Viva') {
+                                            <div class="w-6 h-6 rounded flex items-center justify-center bg-[#fdd32a] text-black text-[10px] font-bold">V</div>
+                                        } @else {
+                                            <div class="w-6 h-6 rounded flex items-center justify-center bg-base-300 text-base-content text-[10px] font-bold">M</div>
+                                        }
+                                        <span class="text-xs font-medium">{{ payment.method }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-xs font-mono opacity-60">{{ payment.date | date:'mediumDate' }}</td>
+                                <td><div class="badge badge-sm" [class]="getStatusClass(payment.status)">{{ payment.status }}</div></td>
+                                <td class="text-right pr-6 font-bold font-mono">{{ payment.amount | currency:payment.currency }}</td>
+                            </tr>
+                        } @empty {
+                            <tr><td colspan="7" class="text-center py-16 opacity-50">No expenses found.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if(filteredPayments().length > itemsPerPage()){
+                <div class="p-4 flex justify-center border-t border-base-200">
+                    <app-pagination 
+                        [currentPage]="currentPage()"
+                        [totalItems]="filteredPayments().length"
+                        [itemsPerPage]="itemsPerPage()"
+                        (pageChange)="onPageChange($event)">
+                    </app-pagination>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- New Payment Modal -->
+@if(isModalOpen()) {
+<dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-4xl shadow-2xl border border-base-200 p-0 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-base-100 p-6 border-b border-base-200 flex justify-between items-center">
+            <h3 class="font-bold text-lg">Record Expense / Payout</h3>
+            <button class="btn btn-sm btn-circle btn-ghost" (click)="closeModal()">✕</button>
+        </div>
+
+        <div class="flex flex-col md:flex-row h-[500px]">
+            <!-- Left Sidebar: Stepper -->
+            <div class="w-full md:w-64 bg-base-200/50 border-r border-base-200 p-6 flex flex-col">
+                <ul class="steps steps-vertical w-full">
+                    <li class="step" [class.step-primary]="currentStep() >= 1">Recipient</li>
+                    <li class="step" [class.step-primary]="currentStep() >= 2">Details</li>
+                    <li class="step" [class.step-primary]="currentStep() >= 3">Method</li>
+                </ul>
+                
+                <!-- Summary Preview (visible on step 3) -->
+                @if(currentStep() === 3) {
+                    <div class="mt-auto bg-base-100 p-4 rounded-lg border border-base-200 text-sm shadow-sm">
+                        <div class="font-bold mb-2 border-b border-base-200 pb-1">Summary</div>
+                        <div class="flex justify-between mb-1"><span class="opacity-60">To:</span> <span>{{recipientName()}}</span></div>
+                        <div class="flex justify-between mb-1"><span class="opacity-60">Amount:</span> <span class="font-bold">{{payAmount() | currency:payCurrency()}}</span></div>
+                    </div>
+                }
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 p-8 overflow-y-auto">
+                
+                <!-- STEP 1: RECIPIENT -->
+                @if(currentStep() === 1) {
+                    <div class="space-y-6">
+                        <h2 class="text-xl font-bold">Who are you paying?</h2>
+                        
+                        <!-- Recipient Source Toggle -->
+                        <div class="join w-full">
+                            <input class="join-item btn flex-1" type="radio" name="recipientType" aria-label="Existing Team Member" [checked]="newPayRecipientType() === 'existing'" (change)="newPayRecipientType.set('existing')" />
+                            <input class="join-item btn flex-1" type="radio" name="recipientType" aria-label="New Vendor/Contractor" [checked]="newPayRecipientType() === 'new'" (change)="newPayRecipientType.set('new')" />
+                        </div>
+
+                        @if(newPayRecipientType() === 'existing') {
+                            <div class="form-control">
+                                <label class="label font-medium">Select Team Member</label>
+                                <select [ngModel]="selectedMemberId()" (ngModelChange)="onMemberSelect(+$event)" class="select select-bordered w-full">
+                                    <option [ngValue]="null" disabled>Choose member...</option>
+                                    @for(member of members(); track member.id) {
+                                        <option [value]="member.id">{{ member.name }}</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">Name</span></label>
+                                <input type="text" [ngModel]="recipientName()" (ngModelChange)="recipientName.set($event)" class="input input-bordered" [readonly]="newPayRecipientType() === 'existing'">
+                            </div>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">Email</span></label>
+                                <input type="email" [ngModel]="recipientEmail()" (ngModelChange)="recipientEmail.set($event)" class="input input-bordered" [readonly]="newPayRecipientType() === 'existing'">
+                            </div>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">Category/Role</span></label>
+                                <input type="text" [ngModel]="recipientRole()" (ngModelChange)="recipientRole.set($event)" class="input input-bordered" placeholder="e.g. Software, Designer">
+                            </div>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">Bank/IBAN (Optional)</span></label>
+                                <input type="text" [ngModel]="recipientIban()" (ngModelChange)="recipientIban.set($event)" class="input input-bordered">
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- STEP 2: DETAILS -->
+                @if(currentStep() === 2) {
+                    <div class="space-y-6">
+                        <h2 class="text-xl font-bold">Payment Details</h2>
+                        
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="form-control col-span-2">
+                                <label class="label font-medium">Amount</label>
+                                <input type="number" [ngModel]="payAmount()" (ngModelChange)="payAmount.set(+$event)" class="input input-bordered text-lg" placeholder="0.00" min="0">
+                            </div>
+                            <div class="form-control">
+                                <label class="label font-medium">Currency</label>
+                                <select [ngModel]="payCurrency()" (ngModelChange)="payCurrency.set($event)" class="select select-bordered">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label font-medium">Description / Reference</label>
+                            <textarea [ngModel]="payDescription()" (ngModelChange)="payDescription.set($event)" class="textarea textarea-bordered h-32" placeholder="e.g. Design work for Project X - July Hours"></textarea>
+                        </div>
+                    </div>
+                }
+
+                <!-- STEP 3: METHOD -->
+                @if(currentStep() === 3) {
+                    <div class="space-y-6">
+                        <h2 class="text-xl font-bold">Select Payment Method</h2>
+                        <p class="opacity-60 text-sm">Orbit redirects you to the service provider to complete the transaction.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <!-- Wise -->
+                            <div class="card border-2 cursor-pointer hover:shadow-md transition-all bg-base-100" 
+                                 [class.border-success]="payMethod() === 'Wise'" 
+                                 [class.border-base-200]="payMethod() !== 'Wise'"
+                                 (click)="selectMethod('Wise')">
+                                <div class="card-body p-4 flex flex-row items-center gap-4">
+                                    <div class="w-12 h-12 rounded bg-[#9fe870] flex items-center justify-center text-[#163300] font-black text-xl">W</div>
+                                    <div>
+                                        <div class="font-bold">Wise</div>
+                                        <div class="text-xs opacity-60">Low fees, fast international transfer</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Revolut -->
+                            <div class="card border-2 cursor-pointer hover:shadow-md transition-all bg-base-100" 
+                                 [class.border-black]="payMethod() === 'Revolut'" 
+                                 [class.border-base-200]="payMethod() !== 'Revolut'"
+                                 (click)="selectMethod('Revolut')">
+                                <div class="card-body p-4 flex flex-row items-center gap-4">
+                                    <div class="w-12 h-12 rounded bg-black flex items-center justify-center text-white font-black text-xl">R</div>
+                                    <div>
+                                        <div class="font-bold">Revolut</div>
+                                        <div class="text-xs opacity-60">Instant internal transfers</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PayPal -->
+                            <div class="card border-2 cursor-pointer hover:shadow-md transition-all bg-base-100" 
+                                 [class.border-[#003087]]="payMethod() === 'PayPal'" 
+                                 [class.border-base-200]="payMethod() !== 'PayPal'"
+                                 (click)="selectMethod('PayPal')">
+                                <div class="card-body p-4 flex flex-row items-center gap-4">
+                                    <div class="w-12 h-12 rounded bg-[#003087] flex items-center justify-center text-white font-black text-xl">P</div>
+                                    <div>
+                                        <div class="font-bold">PayPal</div>
+                                        <div class="text-xs opacity-60">Global coverage</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Viva -->
+                            <div class="card border-2 cursor-pointer hover:shadow-md transition-all bg-base-100" 
+                                 [class.border-[#fdd32a]]="payMethod() === 'Viva'" 
+                                 [class.border-base-200]="payMethod() !== 'Viva'"
+                                 (click)="selectMethod('Viva')">
+                                <div class="card-body p-4 flex flex-row items-center gap-4">
+                                    <div class="w-12 h-12 rounded bg-[#fdd32a] flex items-center justify-center text-black font-black text-xl">V</div>
+                                    <div>
+                                        <div class="font-bold">Viva Wallet</div>
+                                        <div class="text-xs opacity-60">Business payments</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Manual -->
+                            <div class="card border-2 cursor-pointer hover:shadow-md transition-all bg-base-100 md:col-span-2" 
+                                 [class.border-neutral]="payMethod() === 'Manual'" 
+                                 [class.border-base-200]="payMethod() !== 'Manual'"
+                                 (click)="selectMethod('Manual')">
+                                <div class="card-body p-4 flex flex-row items-center gap-4">
+                                    <div class="w-12 h-12 rounded bg-base-300 flex items-center justify-center text-base-content font-black text-xl">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">Manual Bank Transfer</div>
+                                        <div class="text-xs opacity-60">I'll handle it in my banking app</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="modal-action p-6 bg-base-100 border-t border-base-200 m-0">
+            @if(currentStep() > 1) {
+                <button class="btn btn-ghost" (click)="prevStep()">Back</button>
+            }
+            @if(currentStep() < 3) {
+                <button class="btn btn-primary" (click)="nextStep()">Next Step</button>
+            }
+            @if(currentStep() === 3) {
+                <button class="btn btn-primary w-full md:w-auto" [disabled]="!payMethod()" (click)="processExternalRedirect()">
+                    Continue to {{ payMethod() || 'Provider' }}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                </button>
+            }
+        </div>
+    </div>
+</dialog>
+}

@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, inject, Signal, effect, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, Signal, effect, signal, computed } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
@@ -7,12 +7,13 @@ import { MockDataService, Project, TeamMember, Client } from '../../services/moc
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, NgClass, DatePipe } from '@angular/common';
+import { PaginationComponent } from '../shared/pagination/pagination.component';
 
 @Component({
   selector: 'app-project-detail',
   templateUrl: './project-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, DecimalPipe, NgClass, DatePipe],
+  imports: [FormsModule, RouterLink, DecimalPipe, NgClass, DatePipe, PaginationComponent],
 })
 export class ProjectDetailComponent {
   private route = inject(ActivatedRoute);
@@ -35,14 +36,21 @@ export class ProjectDetailComponent {
   // Editable Fields
   projectName = signal('');
   projectDescription = signal('');
-  projectStatus = signal<'Active' | 'Completed' | 'On Hold'>('Active');
+  projectStatus = signal<'Active' | 'Completed' | 'Paused'>('Active');
   projectClientId = signal<number | null>(null);
   allocatedMemberIds = signal<number[]>([]);
   memberRates = signal<{ [id: number]: number }>({});
+  projectFixedPrice = signal<number | undefined>(undefined);
+  projectDefaultRate = signal<number | undefined>(undefined);
 
   // Comments & Files
   newComment = signal('');
   isUploading = signal(false);
+
+  // Add Member Modal State
+  showAddMemberModal = signal(false);
+  addMemberPage = signal(1);
+  addMemberPerPage = signal(5);
 
   showSuccessToast = signal(false);
 
@@ -54,6 +62,8 @@ export class ProjectDetailComponent {
         this.projectDescription.set(p.description || '');
         this.projectStatus.set(p.status);
         this.projectClientId.set(p.clientId);
+        this.projectFixedPrice.set(p.fixedPrice);
+        this.projectDefaultRate.set(p.defaultRate);
         this.allocatedMemberIds.set([...p.allocatedTeamMemberIds]);
         this.memberRates.set({ ...p.memberRates });
       }
@@ -69,12 +79,47 @@ export class ProjectDetailComponent {
     return this.allMembers().find(m => m.id === id);
   }
 
-  // Form Actions
-  toggleMember(memberId: number, isChecked: boolean) {
-    this.allocatedMemberIds.update(ids => {
-      if (isChecked) return [...ids, memberId];
-      return ids.filter(id => id !== memberId);
-    });
+  // --- Team Management ---
+
+  // List of members NOT currently allocated (for the modal)
+  availableMembersToAdd = computed(() => {
+      const all = this.allMembers();
+      const currentIds = this.allocatedMemberIds();
+      return all.filter(m => !currentIds.includes(m.id));
+  });
+
+  paginatedAvailableMembers = computed(() => {
+      const members = this.availableMembersToAdd();
+      const start = (this.addMemberPage() - 1) * this.addMemberPerPage();
+      return members.slice(start, start + this.addMemberPerPage());
+  });
+
+  onAddMemberPageChange(page: number) {
+      this.addMemberPage.set(page);
+  }
+
+  openAddMemberModal() {
+      this.addMemberPage.set(1);
+      this.showAddMemberModal.set(true);
+  }
+
+  closeAddMemberModal() {
+      this.showAddMemberModal.set(false);
+  }
+
+  addMemberToProject(member: TeamMember) {
+      this.allocatedMemberIds.update(ids => [...ids, member.id]);
+      // Use project default rate if available, else member default
+      const rate = this.projectDefaultRate() ?? member.defaultHourlyRate;
+      this.memberRates.update(rates => ({ ...rates, [member.id]: rate }));
+  }
+
+  removeMemberFromProject(memberId: number) {
+      this.allocatedMemberIds.update(ids => ids.filter(id => id !== memberId));
+      this.memberRates.update(rates => {
+          const { [memberId]: removed, ...rest } = rates;
+          return rest;
+      });
   }
 
   updateRate(memberId: number, rate: number) {
@@ -89,7 +134,7 @@ export class ProjectDetailComponent {
     const finalRates: { [id: number]: number } = {};
     this.allocatedMemberIds().forEach(id => {
         const member = this.getMember(id);
-        finalRates[id] = this.memberRates()[id] ?? member?.defaultHourlyRate ?? 0;
+        finalRates[id] = this.memberRates()[id] ?? this.projectDefaultRate() ?? member?.defaultHourlyRate ?? 0;
     });
 
     const updatedProject: Project = {
@@ -98,6 +143,8 @@ export class ProjectDetailComponent {
         description: this.projectDescription(),
         status: this.projectStatus(),
         clientId: this.projectClientId()!,
+        fixedPrice: this.projectFixedPrice(),
+        defaultRate: this.projectDefaultRate(),
         allocatedTeamMemberIds: this.allocatedMemberIds(),
         memberRates: finalRates
     };
@@ -155,6 +202,30 @@ export class ProjectDetailComponent {
           input.value = ''; // Reset input
       }, 1000);
   }
+
+  projectActivity = computed(() => {
+      const p = this.project();
+      if (!p) return [];
+
+      const comments = (p.comments || []).map(c => ({
+          type: 'comment',
+          id: c.id,
+          date: c.createdAt,
+          content: c.text,
+          user: this.getMember(c.authorId)
+      }));
+
+      const files = (p.files || []).map(f => ({
+          type: 'file',
+          id: f.id,
+          date: f.uploadedAt,
+          content: f.name,
+          user: this.getMember(f.uploadedBy),
+          url: f.url
+      }));
+
+      return [...comments, ...files].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  });
 
   private triggerSuccessToast() {
     this.showSuccessToast.set(true);

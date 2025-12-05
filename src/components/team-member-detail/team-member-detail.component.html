@@ -1,53 +1,301 @@
 
 @if(member(); as m){
-<div class="container mx-auto">
-  <div class="flex items-center mb-8">
-    <a routerLink="/app/team" class="btn btn-ghost btn-circle mr-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-    </a>
-    <div class="avatar avatar-lg">
-      <div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-         <img [src]="m.avatarUrl" [alt]="m.name + ' avatar'" class="object-cover">
-      </div>
+<div class="container mx-auto pb-8">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center">
+        <a routerLink="/app/team" class="btn btn-ghost btn-circle mr-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </a>
+        <div>
+            <h1 class="text-3xl font-bold">Member Profile</h1>
+        </div>
     </div>
-    <div class="ml-4">
-      <h1 class="text-3xl font-bold">{{ m.name }}</h1>
-      <p class="opacity-75">{{ m.role }}</p>
+    <div class="flex gap-2">
+        <button class="btn btn-sm btn-ghost text-info" (click)="openEmailModal()" title="Send Email">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            Email
+        </button>
+        <button class="btn btn-sm btn-ghost text-warning" (click)="deactivateMember()" title="Activate/Deactivate">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+            {{ m.status === 'Active' ? 'Deactivate' : 'Activate' }}
+        </button>
+        <button class="btn btn-sm btn-ghost text-error" (click)="deleteMember()" title="Delete Member">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            Delete
+        </button>
     </div>
   </div>
 
-  <div class="card bg-base-100 shadow max-w-2xl mx-auto">
-    <div class="card-body">
-      <h2 class="card-title">Member Details</h2>
-      <div class="divider my-2"></div>
-      <div class="space-y-4">
-        <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Name</span></label>
-          <input type="text" class="input input-bordered" [ngModel]="memberName()" (ngModelChange)="memberName.set($event)">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Sidebar: Profile Info -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body items-center text-center p-6">
+                <div class="avatar mb-4">
+                    <div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                        <img [src]="m.avatarUrl" [alt]="m.name" class="object-cover">
+                    </div>
+                </div>
+                <h2 class="card-title text-2xl">{{ m.name }}</h2>
+                <p class="opacity-60">{{ m.role }}</p>
+                <div class="badge badge-sm mt-2" [class.badge-success]="m.status === 'Active'" [class.badge-ghost]="m.status !== 'Active'">{{ m.status }}</div>
+                
+                <div class="divider my-2"></div>
+                
+                <div class="w-full space-y-4 text-left">
+                    <div class="form-control">
+                        <label class="label py-0"><span class="label-text text-xs font-bold opacity-50 uppercase">Email</span></label>
+                        <div class="font-medium break-all flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            {{ m.email }}
+                        </div>
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-0"><span class="label-text text-xs font-bold opacity-50 uppercase">Hourly Rate</span></label>
+                        <div class="font-medium">${{ m.defaultHourlyRate }}/hr</div>
+                    </div>
+                </div>
+            </div>
         </div>
-         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Role</span></label>
-          <input type="text" class="input input-bordered" [ngModel]="memberRole()" (ngModelChange)="memberRole.set($event)">
+
+        <!-- Edit Form (Collapsible) -->
+        <div class="collapse collapse-arrow bg-base-100 border border-base-200 shadow-sm">
+            <input type="checkbox" /> 
+            <div class="collapse-title font-medium">
+                Edit Profile
+            </div>
+            <div class="collapse-content">
+                <div class="space-y-3 pt-2">
+                    <div class="form-control">
+                        <label class="label py-1 text-xs">Name</label>
+                        <input type="text" class="input input-bordered input-sm" [ngModel]="memberName()" (ngModelChange)="memberName.set($event)">
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-1 text-xs">Role</label>
+                        <input type="text" class="input input-bordered input-sm" [ngModel]="memberRole()" (ngModelChange)="memberRole.set($event)">
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-1 text-xs">Avatar</label>
+                        <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="file-input file-input-bordered file-input-sm w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-1 text-xs">Default Rate</label>
+                        <input type="number" class="input input-bordered input-sm" [ngModel]="memberDefaultRate()" (ngModelChange)="memberDefaultRate.set(+$event)">
+                    </div>
+                    <div class="flex justify-end mt-4">
+                        <button class="btn btn-sm btn-primary" (click)="saveMemberDetails()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
         </div>
-         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Avatar URL</span></label>
-          <input type="text" class="input input-bordered" [ngModel]="memberAvatarUrl()" (ngModelChange)="memberAvatarUrl.set($event)">
+    </div>
+
+    <!-- Right Content: Activity & Work -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Assigned Projects -->
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-0">
+                <div class="p-4 border-b border-base-200 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-base-200/30 gap-4">
+                    <h3 class="font-bold text-lg">Assigned Projects</h3>
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <select class="select select-bordered select-xs" [ngModel]="projectFilterClient()" (ngModelChange)="projectFilterClient.set($any($event)); projectsPage.set(1)">
+                            <option [ngValue]="null">All Clients</option>
+                            @for(client of clients(); track client.id){
+                                <option [ngValue]="client.id">{{ client.name }}</option>
+                            }
+                        </select>
+                        <input type="date" class="input input-bordered input-xs" [ngModel]="projectFilterDate()" (ngModelChange)="projectFilterDate.set($event); projectsPage.set(1)">
+                        <input type="text" placeholder="Search..." class="input input-bordered input-xs w-32" [ngModel]="projectSearch()" (ngModelChange)="projectSearch.set($event); projectsPage.set(1)">
+                    </div>
+                </div>
+                
+                @if(paginatedProjects().length > 0) {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                        @for(project of paginatedProjects(); track project.id) {
+                            <a [routerLink]="['/app/projects', project.id]" class="block p-3 rounded-xl border border-base-200 hover:border-primary hover:shadow-sm transition-all group bg-base-100">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="font-bold group-hover:text-primary transition-colors">{{ project.name }}</div>
+                                    <span class="badge badge-xs" [class.badge-success]="project.status === 'Active'" [class.badge-ghost]="project.status !== 'Active'">{{ project.status }}</span>
+                                </div>
+                                <div class="text-xs opacity-60 line-clamp-2">{{ project.description }}</div>
+                            </a>
+                        }
+                    </div>
+                    @if(filteredProjects().length > projectsPerPage()) {
+                        <div class="p-4 pt-0 flex justify-center">
+                            <app-pagination 
+                                [currentPage]="projectsPage()" 
+                                [totalItems]="filteredProjects().length" 
+                                [itemsPerPage]="projectsPerPage()" 
+                                (pageChange)="onProjectsPageChange($event)">
+                            </app-pagination>
+                        </div>
+                    }
+                } @else {
+                    <div class="p-8 text-center opacity-50 text-sm italic">No projects found matching filters.</div>
+                }
+            </div>
         </div>
-        <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Default Hourly Rate ($)</span></label>
-          <input type="number" class="input input-bordered" [ngModel]="memberDefaultRate()" (ngModelChange)="memberDefaultRate.set(+$event)" min="0">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Active Tasks -->
+            <div class="card bg-base-100 shadow-sm border border-base-200 h-full flex flex-col">
+                <div class="card-body p-0 flex flex-col h-full">
+                    <div class="p-4 border-b border-base-200 bg-base-200/30 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-lg">Current Tasks</h3>
+                            <span class="badge badge-sm">{{ memberTasks().length }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <select class="select select-bordered select-xs w-full sm:w-auto flex-1" [ngModel]="taskFilterClient()" (ngModelChange)="taskFilterClient.set($any($event)); tasksPage.set(1)">
+                                <option [ngValue]="null">Client</option>
+                                @for(client of clients(); track client.id){
+                                    <option [ngValue]="client.id">{{ client.name }}</option>
+                                }
+                            </select>
+                            <select class="select select-bordered select-xs w-full sm:w-auto flex-1" [ngModel]="taskFilterProject()" (ngModelChange)="taskFilterProject.set($any($event)); tasksPage.set(1)">
+                                <option [ngValue]="null">Project</option>
+                                @for(proj of assignedProjects(); track proj.id){
+                                    <option [ngValue]="proj.id">{{ proj.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <input type="text" placeholder="Search tasks..." class="input input-bordered input-xs w-full bg-base-100" [ngModel]="taskSearch()" (ngModelChange)="taskSearch.set($event); tasksPage.set(1)">
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto">
+                        @for(task of paginatedTasks(); track task.id) {
+                            <div class="p-3 border-b border-base-100 last:border-0 hover:bg-base-50">
+                                <div class="flex justify-between items-start gap-2">
+                                    <span class="text-sm font-medium leading-tight">{{ task.title }}</span>
+                                    <span class="badge badge-xs" 
+                                        [class.badge-error]="task.priority === 'High'"
+                                        [class.badge-warning]="task.priority === 'Medium'"
+                                        [class.badge-info]="task.priority === 'Low'">
+                                        {{ task.priority }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center mt-1">
+                                    <span class="text-[10px] opacity-50">{{ task.status }}</span>
+                                    <span class="text-[10px] opacity-40">{{ task.updatedAt | date:'shortDate' }}</span>
+                                </div>
+                            </div>
+                        } @empty {
+                            <div class="p-6 text-center opacity-50 text-sm">No tasks found.</div>
+                        }
+                    </div>
+                    
+                    @if(filteredTasks().length > tasksPerPage()) {
+                        <div class="p-2 flex justify-center border-t border-base-200 mt-auto">
+                            <app-pagination 
+                                [currentPage]="tasksPage()" 
+                                [totalItems]="filteredTasks().length" 
+                                [itemsPerPage]="tasksPerPage()" 
+                                (pageChange)="onTasksPageChange($event)">
+                            </app-pagination>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Logged Hours History -->
+            <div class="card bg-base-100 shadow-sm border border-base-200 h-full flex flex-col">
+                <div class="card-body p-0 flex flex-col h-full">
+                    <div class="p-4 border-b border-base-200 bg-base-200/30 space-y-2">
+                        <h3 class="font-bold text-lg mb-2">History</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <select class="select select-bordered select-xs w-full sm:w-auto flex-1" [ngModel]="historyFilterClient()" (ngModelChange)="historyFilterClient.set($any($event)); historyPage.set(1)">
+                                <option [ngValue]="null">Client</option>
+                                @for(client of clients(); track client.id){
+                                    <option [ngValue]="client.id">{{ client.name }}</option>
+                                }
+                            </select>
+                            <select class="select select-bordered select-xs w-full sm:w-auto flex-1" [ngModel]="historyFilterProject()" (ngModelChange)="historyFilterProject.set($any($event)); historyPage.set(1)">
+                                <option [ngValue]="null">Project</option>
+                                @for(proj of assignedProjects(); track proj.id){
+                                    <option [ngValue]="proj.id">{{ proj.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <input type="text" placeholder="Search history..." class="input input-bordered input-xs w-full bg-base-100" [ngModel]="historySearch()" (ngModelChange)="historySearch.set($event); historyPage.set(1)">
+                    </div>
+                    
+                    <div class="p-0 flex-1 overflow-y-auto">
+                        <table class="table table-xs w-full">
+                            <thead>
+                                <tr class="bg-base-200/50">
+                                    <th class="pl-4 py-3">Date</th>
+                                    <th>Project</th>
+                                    <th class="text-right pr-4">Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for(entry of paginatedHistory(); track $index) {
+                                    <tr class="hover:bg-base-50">
+                                        <td class="pl-4 text-xs opacity-70 py-3">{{ entry.date | date:'shortDate' }}</td>
+                                        <td class="py-3">
+                                            <div class="font-medium truncate max-w-[100px]">{{ entry.project }}</div>
+                                            <div class="text-[10px] opacity-50 truncate max-w-[100px]">{{ entry.description }}</div>
+                                        </td>
+                                        <td class="text-right pr-4 font-mono py-3">{{ entry.hours }}</td>
+                                    </tr>
+                                } @empty {
+                                    <tr><td colspan="3" class="text-center py-8 opacity-50 text-xs">No entries found.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if(filteredHistory().length > historyPerPage()) {
+                        <div class="p-2 flex justify-center border-t border-base-200 mt-auto">
+                            <app-pagination 
+                                [currentPage]="historyPage()" 
+                                [totalItems]="filteredHistory().length" 
+                                [itemsPerPage]="historyPerPage()" 
+                                (pageChange)="onHistoryPageChange($event)">
+                            </app-pagination>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="card-actions justify-end mt-4">
-        <button class="btn btn-primary" (click)="saveMemberDetails()">Save Changes</button>
-      </div>
     </div>
   </div>
 </div>
 } @else {
     <div class="flex justify-center items-center p-16">
-        <span class="loading loading-lg"></span>
+        <span class="loading loading-spinner loading-lg text-primary"></span>
     </div>
+}
+
+<!-- Email Modal -->
+@if(isEmailModalOpen()){
+  <dialog class="modal modal-open">
+    <div class="modal-box shadow-2xl border border-base-200">
+      <button (click)="closeEmailModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 class="font-bold text-lg mb-1">Send Email</h3>
+      <p class="text-sm opacity-70 mb-6">To: <span class="font-semibold">{{ member()?.name }}</span> ({{ member()?.email }})</p>
+      
+      <form (ngSubmit)="sendEmail()" class="space-y-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Subject</span></label>
+          <input type="text" [ngModel]="emailSubject()" (ngModelChange)="emailSubject.set($event)" name="subject" required class="input input-bordered w-full focus:input-primary" placeholder="e.g. Team Update">
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Message</span></label>
+          <textarea [ngModel]="emailBody()" (ngModelChange)="emailBody.set($event)" name="body" required class="textarea textarea-bordered h-32 focus:textarea-primary" placeholder="Write your message here..."></textarea>
+        </div>
+        <div class="modal-action mt-6">
+          <button type="button" (click)="closeEmailModal()" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-primary px-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            Send Message
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 }
 
 <!-- Success Toast -->
@@ -55,7 +303,7 @@
 <div class="toast toast-top toast-center">
   <div class="alert alert-success">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    <span>Member details saved successfully.</span>
+    <span>{{ toastMessage() }}</span>
   </div>
 </div>
 }

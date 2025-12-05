@@ -1,0 +1,145 @@
+
+<dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-3xl shadow-2xl border border-base-200">
+      <form method="dialog">
+          <button (click)="close.emit()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      </form>
+      
+      <h3 class="font-bold text-xl mb-6 pb-2 border-b border-base-200">{{ isEditMode() ? 'Task Details' : 'Create New Task' }}</h3>
+      
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Left/Top Side: Task Form -->
+        <div class="flex-1 space-y-5">
+           <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Title</span></label>
+                <input type="text" [ngModel]="taskTitle()" (ngModelChange)="taskTitle.set($event)" name="taskTitle" class="input input-bordered w-full focus:input-primary" placeholder="Enter task title">
+            </div>
+            
+             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Status</span></label>
+                    <select [ngModel]="taskStatus()" (ngModelChange)="taskStatus.set($event)" class="select select-bordered select-sm w-full">
+                        <option value="To Do">To Do</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                        @if(taskStatus() === 'Archived') {
+                            <option value="Archived" disabled>Archived</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Priority</span></label>
+                    <select [ngModel]="taskPriority()" (ngModelChange)="taskPriority.set($event)" class="select select-bordered select-sm w-full">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+             </div>
+
+             <div class="form-control">
+                <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Assignee</span></label>
+                <select [ngModel]="taskAssignedMemberId()" (ngModelChange)="taskAssignedMemberId.set(+$event)" class="select select-bordered select-sm w-full">
+                    <option [ngValue]="null">Unassigned</option>
+                    @for(member of allMembers(); track member.id){
+                        <option [ngValue]="member.id">{{ member.name }}</option>
+                    }
+                </select>
+             </div>
+            
+             <!-- Hierarchy -->
+             <div class="bg-base-200/50 p-4 rounded-xl border border-base-200 space-y-3">
+                 <div class="text-xs font-bold opacity-50 uppercase tracking-wider mb-1">Location</div>
+                 <div class="form-control">
+                    <select [ngModel]="taskClientId()" (ngModelChange)="taskClientId.set(+$event); taskProjectId.set(null); taskBoardId.set(null)" class="select select-bordered select-xs w-full" [disabled]="isEditMode() || prefilledContext()">
+                        <option [ngValue]="null" disabled>Select Client</option>
+                        @for(client of clients(); track client.id){
+                            <option [ngValue]="client.id">{{ client.name }}</option>
+                        }
+                    </select>
+                 </div>
+                 <div class="form-control">
+                    <select [ngModel]="taskProjectId()" (ngModelChange)="taskProjectId.set(+$event); taskBoardId.set(null)" class="select select-bordered select-xs w-full" [disabled]="isEditMode() || !taskClientId() || prefilledContext()">
+                        <option [ngValue]="null" disabled>Select Project</option>
+                         @for(project of taskModalProjects(); track project.id){
+                            <option [ngValue]="project.id">{{ project.name }}</option>
+                        }
+                    </select>
+                 </div>
+                 <div class="form-control">
+                    <select [ngModel]="taskBoardId()" (ngModelChange)="taskBoardId.set($event)" class="select select-bordered select-xs w-full" [disabled]="isEditMode() || !taskProjectId() || prefilledContext()">
+                        <option [ngValue]="null">No Board (Backlog)</option>
+                         @for(board of taskModalBoards(); track board.id){
+                            <option [ngValue]="board.id">{{ board.name }}</option>
+                        }
+                    </select>
+                 </div>
+             </div>
+        </div>
+        
+        <!-- Right/Bottom Side: Comments -->
+        @if(isEditMode()) {
+        <div class="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-base-200 pt-6 md:pt-0 md:pl-6 min-h-[350px]">
+            <h4 class="font-bold text-sm mb-4 flex items-center gap-2 opacity-80">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                Comments & Activity
+            </h4>
+            
+            <!-- Comment List -->
+            <div class="flex-grow overflow-y-auto max-h-[300px] space-y-4 mb-4 pr-2 custom-scrollbar">
+                @for(comment of currentTaskComments(); track comment.id) {
+                    @let author = getMemberById(comment.authorId);
+                    <div class="flex gap-3">
+                        <div class="avatar mt-1">
+                            <div class="w-8 h-8 rounded-full ring ring-1 ring-base-200">
+                                <img [src]="author?.avatarUrl || 'https://picsum.photos/seed/unknown/50/50'" [alt]="author?.name" class="object-cover">
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                             <div class="bg-base-200 p-3 rounded-2xl rounded-tl-none text-sm relative group">
+                                <div class="font-semibold text-xs opacity-70 mb-1 flex justify-between">
+                                    <span>{{ author?.name || 'Unknown' }}</span>
+                                    <span class="font-normal opacity-50">{{ comment.createdAt | date:'short' }}</span>
+                                </div>
+                                <div class="text-base-content/90 leading-relaxed">{{ comment.text }}</div>
+                             </div>
+                        </div>
+                    </div>
+                } @empty {
+                    <div class="flex flex-col items-center justify-center h-32 text-center opacity-50 text-sm border-2 border-dashed border-base-200 rounded-xl">
+                        <span>No comments yet.</span>
+                        <span class="text-xs mt-1">Start the conversation!</span>
+                    </div>
+                }
+            </div>
+            
+            <!-- Add Comment -->
+            <div class="form-control relative mt-auto">
+                <textarea [ngModel]="newCommentText()" (ngModelChange)="newCommentText.set($event)" class="textarea textarea-bordered pr-12 w-full resize-none focus:textarea-primary" rows="2" placeholder="Write a comment..."></textarea>
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 bottom-2 text-primary hover:bg-primary/10" (click)="addComment()" [disabled]="!newCommentText().trim()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                </button>
+            </div>
+        </div>
+        }
+      </div>
+
+      <div class="modal-action flex justify-between items-center mt-8 pt-4 border-t border-base-200">
+        <!-- Archive Option (Left) -->
+        <div>
+            @if(isEditMode() && taskStatus() !== 'Archived') {
+                <button type="button" (click)="archiveTask()" class="btn btn-ghost btn-sm">
+                    Archive Task
+                </button>
+            }
+        </div>
+
+        <!-- Save Actions (Right) -->
+        <div class="flex gap-3">
+            <button type="button" (click)="close.emit()" class="btn btn-ghost">Cancel</button>
+            <button type="button" (click)="saveTask()" class="btn btn-primary shadow-md shadow-primary/20" [disabled]="!taskTitle() || !taskAssignedMemberId() || !taskProjectId()">{{ isEditMode() ? 'Save Changes' : 'Create Task' }}</button>
+        </div>
+      </div>
+    </div>
+</dialog>

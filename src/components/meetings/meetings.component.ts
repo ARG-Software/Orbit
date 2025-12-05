@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, CommonModule } from '@angular/common';
@@ -23,11 +24,19 @@ export class MeetingsComponent {
   clients = this.dataService.getClients();
   currentUser = this.authService.currentUser;
 
-  // Filter
-  filterPlatform = signal<'All' | 'Google Meet' | 'Zoom'>('All');
+  // Tab State
+  activeTab = signal<'upcoming' | 'history'>('upcoming');
+
+  // History Filters
+  filterHistoryDate = signal<string>('');
+  filterHistoryPlatform = signal<'All' | 'Google Meet' | 'Zoom' | 'Phone' | 'In-Person'>('All');
+  filterHistoryClientId = signal<number | null>(null);
 
   // Modal State
   isModalOpen = signal(false);
+  
+  // Expanded Notes State
+  expandedNotes = signal<Set<string>>(new Set());
   
   // Form State
   meetTitle = signal('');
@@ -40,43 +49,56 @@ export class MeetingsComponent {
   meetDescription = signal('');
 
   // Computations
-  filteredMeetings = computed(() => {
-      const all = this.meetings();
-      const filter = this.filterPlatform();
-      
-      // Sort: Upcoming first, then by date
-      let sorted = [...all].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
-      
-      if (filter !== 'All') {
-          sorted = sorted.filter(m => m.platform === filter);
-      }
-      return sorted;
-  });
-
+  
+  // Upcoming: Only future meetings, simple platform filter removed in favor of clean view
   upcomingMeetings = computed(() => {
       const now = new Date();
-      return this.filteredMeetings().filter(m => m.endTime > now);
+      // Sort: Sooner first
+      return this.meetings()
+        .filter(m => m.endTime > now)
+        .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   });
   
   // Pagination for Upcoming
   upcomingPage = signal(1);
-  upcomingPerPage = signal(4);
+  upcomingPerPage = signal(6);
   paginatedUpcoming = computed(() => {
       const upcoming = this.upcomingMeetings();
       const start = (this.upcomingPage() - 1) * this.upcomingPerPage();
       return upcoming.slice(start, start + this.upcomingPerPage());
   });
   
-  pastMeetings = computed(() => {
+  // History: Past meetings with comprehensive filters
+  historyMeetings = computed(() => {
       const now = new Date();
-      return this.filteredMeetings().filter(m => m.endTime <= now).reverse(); // Most recent past first
+      let filtered = this.meetings().filter(m => m.endTime <= now);
+      
+      const dateFilter = this.filterHistoryDate();
+      const platformFilter = this.filterHistoryPlatform();
+      const clientFilter = this.filterHistoryClientId();
+
+      if (dateFilter) {
+          const filterDay = new Date(dateFilter).toDateString();
+          filtered = filtered.filter(m => new Date(m.startTime).toDateString() === filterDay);
+      }
+
+      if (platformFilter !== 'All') {
+          filtered = filtered.filter(m => m.platform === platformFilter);
+      }
+
+      if (clientFilter) {
+          filtered = filtered.filter(m => m.clientId === clientFilter);
+      }
+
+      // Sort: Most recent past first
+      return filtered.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
   });
 
   // Pagination for History
   historyPage = signal(1);
-  historyPerPage = signal(5);
+  historyPerPage = signal(10);
   paginatedHistory = computed(() => {
-      const past = this.pastMeetings();
+      const past = this.historyMeetings();
       const start = (this.historyPage() - 1) * this.historyPerPage();
       return past.slice(start, start + this.historyPerPage());
   });
@@ -137,7 +159,6 @@ export class MeetingsComponent {
       const platform = this.meetPlatform();
       
       if (platform === 'Google Meet') {
-          // Check integration settings (simulated)
           const user = this.currentUser();
           if (user && !user.googleMeetConnected) {
               if (!confirm("You haven't connected Google Meet in Settings. Proceed with a mock link?")) return;
@@ -172,6 +193,22 @@ export class MeetingsComponent {
       }
   }
 
+  toggleNote(id: string) {
+      this.expandedNotes.update(notes => {
+          const newSet = new Set(notes);
+          if (newSet.has(id)) {
+              newSet.delete(id);
+          } else {
+              newSet.add(id);
+          }
+          return newSet;
+      });
+  }
+
+  isNoteExpanded(id: string): boolean {
+      return this.expandedNotes().has(id);
+  }
+
   // Helpers
   onUpcomingPageChange(page: number) {
       this.upcomingPage.set(page);
@@ -179,6 +216,13 @@ export class MeetingsComponent {
 
   onHistoryPageChange(page: number) {
       this.historyPage.set(page);
+  }
+  
+  resetHistoryFilters() {
+      this.filterHistoryDate.set('');
+      this.filterHistoryPlatform.set('All');
+      this.filterHistoryClientId.set(null);
+      this.historyPage.set(1);
   }
 
   private generateRandomString(length: number): string {

@@ -1,36 +1,65 @@
 
 import { Component, ChangeDetectionStrategy, inject, signal, Signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, TeamMember } from '../../services/mock-data.service';
+import { MockDataService, TeamMember, Project, Task } from '../../services/mock-data.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 import { RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-team',
   templateUrl: './team.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PaginationComponent, RouterLink],
+  imports: [FormsModule, PaginationComponent, RouterLink, DecimalPipe],
 })
 export class TeamComponent {
   private dataService = inject(MockDataService);
 
   members = this.dataService.getTeamMembers();
+  projects = this.dataService.getProjects();
+  tasks = this.dataService.getAllTasks();
   
-  // Pagination (Set to 8 to match Client 2 rows logic, assuming 4 cols)
+  // Pagination (Increased density allows for more items)
   currentPage = signal(1);
-  itemsPerPage = signal(8); 
+  itemsPerPage = signal(12); 
 
   paginatedMembers = computed(() => {
     const members = this.members();
     const startIndex = (this.currentPage() - 1) * this.itemsPerPage();
     const endIndex = startIndex + this.itemsPerPage();
-    return members.slice(startIndex, endIndex);
+    return members.slice(startIndex, startIndex + this.itemsPerPage());
   });
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
   }
 
+  // --- Metrics Calculation ---
+  getMemberStats(memberId: number) {
+      const memberTasks = this.tasks().filter(t => t.assignedMemberId === memberId && t.status !== 'Completed');
+      const activeProjects = this.projects().filter(p => p.allocatedTeamMemberIds.includes(memberId) && p.status === 'Active');
+      
+      // Calculate hours for current month
+      let hoursThisMonth = 0;
+      
+      this.projects().forEach(project => {
+          Object.entries(project.hours).forEach(([weekId, days]) => {
+              Object.values(days).forEach((entry: any) => {
+                  if (entry.memberId === memberId) {
+                      hoursThisMonth += entry.hours;
+                  }
+              });
+          });
+      });
+
+      return {
+          activeTasks: memberTasks.length,
+          projectCount: activeProjects.length,
+          hoursLogged: hoursThisMonth
+      };
+  }
+
+  // --- Modal State ---
   isModalOpen = signal(false);
   showSuccessToast = signal(false);
   toastMessage = signal('');
@@ -40,6 +69,12 @@ export class TeamComponent {
   memberRole = signal('');
   memberAvatarUrl = signal('');
   memberDefaultRate = signal(0);
+
+  // --- Email Modal State ---
+  isEmailModalOpen = signal(false);
+  selectedMemberForEmail = signal<TeamMember | null>(null);
+  emailSubject = signal('');
+  emailBody = signal('');
 
   private resetForm(): void {
     this.memberName.set('');
@@ -83,7 +118,7 @@ export class TeamComponent {
       role: this.memberRole(),
       avatarUrl: this.memberAvatarUrl(),
       defaultHourlyRate: this.memberDefaultRate(),
-      status: 'Active' // Directly active since invite flow is removed
+      status: 'Active' 
     });
 
     this.showToast(`Member ${this.memberName()} added successfully!`);
@@ -99,14 +134,40 @@ export class TeamComponent {
 
   toggleStatus(member: TeamMember): void {
     const newStatus = member.status === 'Active' ? 'Inactive' : 'Active';
-    
-    // If they were invited (legacy data), toggling sets to Inactive or Active
     if (member.status === 'Invited') {
         this.dataService.updateTeamMember({ ...member, status: 'Inactive' });
     } else {
         this.dataService.updateTeamMember({ ...member, status: newStatus });
     }
     this.showToast(`Member status updated.`);
+  }
+
+  // --- Email Logic ---
+
+  openEmailModal(member: TeamMember): void {
+    this.selectedMemberForEmail.set(member);
+    this.emailSubject.set('');
+    this.emailBody.set('');
+    this.isEmailModalOpen.set(true);
+  }
+
+  closeEmailModal(): void {
+    this.isEmailModalOpen.set(false);
+    this.selectedMemberForEmail.set(null);
+  }
+
+  sendEmail(): void {
+    const member = this.selectedMemberForEmail();
+    if (!member || !this.emailSubject() || !this.emailBody()) return;
+
+    // Simulation of sending email
+    console.log(`Sending email to ${member.email}`, {
+      subject: this.emailSubject(),
+      body: this.emailBody()
+    });
+
+    this.closeEmailModal();
+    this.showToast('Email sent successfully!');
   }
 
   private showToast(message: string) {

@@ -67,6 +67,11 @@ export const APP_ROUTES: Routes = [
         canActivate: [adminGuard] 
       },
       {
+        path: 'expenses',
+        loadComponent: () => import('./components/payments/payments.component').then(c => c.PaymentsComponent),
+        canActivate: [adminGuard]
+      },
+      {
         path: 'estimation',
         loadComponent: () => import('./components/estimation/estimation.component').then(c => c.EstimationComponent),
         canActivate: [adminGuard]

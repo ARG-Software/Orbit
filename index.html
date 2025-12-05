@@ -1,11 +1,12 @@
+
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="silk">
 <head>
   <meta charset="utf-8" />
   <title>Orbit - Freelance OS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Orbit Favicon (SVG Data URI) -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22><path d=%22M12 21a9 9 0 1 0-9-9c0 1.48.36 2.88.99 4.12%22 stroke=%22%237c3aed%22 stroke-width=%222.5%22 stroke-linecap=%22round%22/><circle cx=%2212%22 cy=%2212%22 r=%223.5%22 fill=%22%237c3aed%22/><circle cx=%2220.4%22 cy=%228.6%22 r=%222.5%22 fill=%22%230ea5e9%22/></svg>" />
+  <!-- Orbit Favicon (SVG Data URI) - Updated to Fuchsia/Violet Theme -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22><path d=%22M12 21a9 9 0 1 0-9-9c0 1.48.36 2.88.99 4.12%22 stroke=%22%23d946ef%22 stroke-width=%222.5%22 stroke-linecap=%22round%22/><circle cx=%2212%22 cy=%2212%22 r=%223.5%22 fill=%22%23d946ef%22/><circle cx=%2220.4%22 cy=%228.6%22 r=%222.5%22 fill=%22%238b5cf6%22/></svg>" />
   
   <!-- DaisyUI Styles -->
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
@@ -13,46 +14,28 @@
   <!-- TailwindCSS JIT via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+  
   <!-- UI Color Configuration -->
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
           },
+          colors: {
+            orbit: "#d946ef",
+          }
         }
       },
       daisyui: {
         themes: [
-          {
-            light: {
-              "primary": "#4f46e5",   // Indigo 600 - Professional & Trustworthy
-              "secondary": "#0ea5e9", // Sky 500 - Vibrant
-              "accent": "#ec4899",    // Pink 500 - Modern pop
-              "neutral": "#1e293b",   // Slate 800
-              "base-100": "#ffffff",  // Pure White
-              "base-200": "#f8fafc",  // Slate 50 - Airy, clean background
-              "base-300": "#e2e8f0",  // Slate 200
-              "info": "#3b82f6",
-              "success": "#10b981",
-              "warning": "#f59e0b",
-              "error": "#ef4444",
-            },
-            dark: {
-              "primary": "#8b5cf6",   // Violet 500
-              "secondary": "#22d3ee", // Cyan 400
-              "accent": "#f472b6",    // Pink 400
-              "neutral": "#1e293b",
-              "base-100": "#0f172a",  // Slate 900
-              "base-200": "#1e293b",  // Slate 800
-              "base-300": "#334155",  // Slate 700
-              "info": "#60a5fa",
-              "success": "#34d399",
-              "warning": "#fbbf24",
-              "error": "#f87171",
-            }
-          },
+          "dim",
+          "pastel"
         ],
       }
     }
@@ -75,7 +58,9 @@
     "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.12?external=rxjs",
     "@angular/router": "https://next.esm.sh/@angular/router@^20.3.12?external=rxjs",
     "@angular/forms": "https://next.esm.sh/@angular/forms@^20.3.12?external=rxjs",
-    "@angular/core/rxjs/interop": "https://next.esm.sh/@angular/core@^20.3.12/rxjs/interop?external=rxjs"
+    "@angular/core/rxjs/interop": "https://next.esm.sh/@angular/core@^20.3.12/rxjs/interop?external=rxjs",
+    "@google/genai": "https://next.esm.sh/@google/genai@^1.31.0?external=rxjs",
+    "d3": "https://next.esm.sh/d3@^7.9.0?external=rxjs"
   }
 }
 </script>

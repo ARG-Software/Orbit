@@ -1,7 +1,7 @@
 
 import { Component, ChangeDetectionStrategy, inject, Signal, computed, signal, effect } from '@angular/core';
-import { AsyncPipe, DecimalPipe, DatePipe, NgIf } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AsyncPipe, DecimalPipe, DatePipe, NgIf, CurrencyPipe, NgClass } from '@angular/common';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { MockDataService, Client, TeamMember, Project } from '../../services/mock-data.service';
@@ -12,12 +12,14 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-client-detail',
   templateUrl: './client-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AsyncPipe, RouterLink, DecimalPipe, DatePipe, PaginationComponent, FormsModule, NgIf],
+  imports: [AsyncPipe, RouterLink, DecimalPipe, DatePipe, PaginationComponent, FormsModule, NgIf, CurrencyPipe, NgClass],
 })
 export class ClientDetailComponent {
   private route: ActivatedRoute = inject(ActivatedRoute);
+  private router: Router = inject(Router);
   private dataService = inject(MockDataService);
 
+  // Data Signals
   client: Signal<Client | undefined> = toSignal(
     this.route.paramMap.pipe(
       map(params => Number(params.get('id'))),
@@ -32,8 +34,43 @@ export class ClientDetailComponent {
     ), { initialValue: [] }
   );
 
+  invoices = this.dataService.getInvoices();
+  meetings = this.dataService.getMeetings();
   allMembers = this.dataService.getTeamMembers();
   
+  // UI State
+  activeTab = signal<'projects' | 'invoices' | 'meetings'>('projects');
+
+  // Client Stats Computation
+  clientStats = computed(() => {
+      const c = this.client();
+      if (!c) return null;
+      
+      const clientInvoices = this.invoices().filter(i => i.clientId === c.id);
+      const totalRevenue = clientInvoices.filter(i => i.status === 'Paid').reduce((acc, i) => acc + i.total, 0);
+      const outstandingAmount = clientInvoices.filter(i => i.status === 'Pending' || i.status === 'Overdue').reduce((acc, i) => acc + i.total, 0);
+      
+      const activeProjects = this.projects().filter(p => p.status === 'Active').length;
+      
+      const now = new Date();
+      const upcomingMeetings = this.meetings().filter(m => m.clientId === c.id && m.startTime > now).length;
+
+      return { totalRevenue, outstandingAmount, activeProjects, upcomingMeetings };
+  });
+
+  // Filtered Lists for Tabs
+  clientInvoicesList = computed(() => {
+      const id = this.client()?.id;
+      if (!id) return [];
+      return this.invoices().filter(i => i.clientId === id).sort((a, b) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime());
+  });
+
+  clientMeetingsList = computed(() => {
+      const id = this.client()?.id;
+      if (!id) return [];
+      return this.meetings().filter(m => m.clientId === id).sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+  });
+
   // Form state signals for Client Details
   clientName = signal('');
   clientContact = signal('');
@@ -43,10 +80,11 @@ export class ClientDetailComponent {
   clientColor = signal('#6366f1');
   clientStatus = signal<'Active' | 'Paused'>('Active');
   clientTaxRate = signal(0);
+  clientNotes = signal('');
   
-  // Pagination for Projects
+  // Pagination
   currentPage = signal(1);
-  itemsPerPage = signal(5);
+  itemsPerPage = signal(6);
 
   paginatedProjects = computed(() => {
     const all = this.projects();
@@ -55,6 +93,12 @@ export class ClientDetailComponent {
   });
 
   showSuccessToast = signal(false);
+  toastMessage = signal('');
+
+  // --- Email Modal State ---
+  isEmailModalOpen = signal(false);
+  emailSubject = signal('');
+  emailBody = signal('');
 
   constructor() {
     effect(() => {
@@ -68,6 +112,7 @@ export class ClientDetailComponent {
         this.clientColor.set(c.color || '#6366f1');
         this.clientStatus.set(c.status);
         this.clientTaxRate.set(c.defaultTaxRate || 0);
+        this.clientNotes.set(c.notes || '');
       }
     }, { allowSignalWrites: true });
   }
@@ -86,6 +131,7 @@ export class ClientDetailComponent {
       color: this.clientColor(),
       status: this.clientStatus(),
       defaultTaxRate: this.clientTaxRate(),
+      notes: this.clientNotes(),
     };
 
     this.dataService.updateClient(updatedClient);
@@ -96,7 +142,49 @@ export class ClientDetailComponent {
     this.currentPage.set(page);
   }
 
+  deleteClient(): void {
+      const c = this.client();
+      if (c && confirm('Are you sure you want to delete this client? All data will be lost.')) {
+          this.dataService.deleteClient(c.id);
+          this.router.navigate(['/app/clients']);
+      }
+  }
+
+  toggleStatus(): void {
+      const c = this.client();
+      if (c) {
+          const newStatus = c.status === 'Active' ? 'Paused' : 'Active';
+          this.dataService.updateClient({ ...c, status: newStatus });
+          this.triggerSuccessToast(`Client ${newStatus === 'Active' ? 'Resumed' : 'Paused'}`);
+      }
+  }
+
+  // --- Email Logic ---
+  openEmailModal(): void {
+    this.emailSubject.set('');
+    this.emailBody.set('');
+    this.isEmailModalOpen.set(true);
+  }
+
+  closeEmailModal(): void {
+    this.isEmailModalOpen.set(false);
+  }
+
+  sendEmail(): void {
+    const c = this.client();
+    if (!c || !this.emailSubject() || !this.emailBody()) return;
+
+    console.log(`Sending email to ${c.contact}`, {
+      subject: this.emailSubject(),
+      body: this.emailBody()
+    });
+
+    this.closeEmailModal();
+    this.triggerSuccessToast('Email sent successfully!');
+  }
+
   private triggerSuccessToast(message: string) {
+    this.toastMessage.set(message);
     this.showSuccessToast.set(true);
     setTimeout(() => this.showSuccessToast.set(false), 3000);
   }

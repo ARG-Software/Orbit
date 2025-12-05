@@ -3,27 +3,45 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-bold">Invoices</h1>
-            <p class="opacity-60 mt-1">Create, track, and manage your billing.</p>
+            <p class="opacity-60 mt-1">Manage client billing and revenue.</p>
+        </div>
+    </div>
+
+    <!-- Metrics Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
+            <div class="stat-figure text-warning opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase opacity-60">Outstanding Amount</div>
+            <div class="stat-value text-warning">{{ totalOutstanding() | currency:'USD':'symbol':'1.0-0' }}</div>
+        </div>
+        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
+            <div class="stat-figure text-success opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase opacity-60">Invoices Processed</div>
+            <div class="stat-value text-success">{{ processedCount() }}</div>
         </div>
     </div>
 
     <div role="tablist" class="tabs tabs-lifted">
-      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'create'" (click)="activeTab.set('create')">Create Invoice</a>
-      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">Invoice History</a>
+      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'create'" (click)="activeTab.set('create')">Create New</a>
+      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">History</a>
     </div>
 
     @if (activeTab() === 'create') {
         <div class="card bg-base-100 shadow -mt-px rounded-t-none">
             <div class="card-body">
                 
-                <!-- 1. Payment Method Panel (Moved to Top) -->
+                <!-- 1. Payment Method Panel -->
                 <div class="card bg-base-100/50 mb-8 border border-base-200">
                     <div class="card-body">
-                        <h2 class="card-title border-b border-base-content/10 pb-3">1. Select Payment Method</h2>
+                        <h2 class="card-title border-b border-base-content/10 pb-3">1. Payment Method</h2>
                         <div class="mt-4 flex flex-wrap gap-2">
                             <div class="btn-group">
                                 <button (click)="selectedPaymentMethod.set('manual')" class="btn" [class.btn-active]="selectedPaymentMethod() === 'manual'">
-                                    Manual
+                                    Manual / Bank
                                 </button>
                                 <button (click)="selectedPaymentMethod.set('paypal')" class="btn" [class.btn-active]="selectedPaymentMethod() === 'paypal'" [disabled]="!user()?.paypalConnected" title="{{!user()?.paypalConnected ? 'Connect PayPal in Settings' : 'Bill via PayPal'}}">
                                     PayPal
@@ -42,13 +60,14 @@
                 <!-- 2. Configuration Panel -->
                 <div class="card bg-base-100/50 mb-8 border border-base-200">
                     <div class="card-body">
-                        <h2 class="card-title border-b border-base-content/10 pb-3">2. Configuration</h2>
+                        <h2 class="card-title border-b border-base-content/10 pb-3">2. Details</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            
                             <!-- Client Selection -->
                             <div class="form-control">
                                 <label for="client" class="label"><span class="label-text font-semibold">Select Client</span></label>
                                 <select id="client" [ngModel]="selectedClientId()" (ngModelChange)="selectedClientId.set($event)" class="select select-bordered w-full">
-                                    <option [ngValue]="null" disabled>Choose a client...</option>
+                                    <option [ngValue]="null">-- Manual Entry (No Client) --</option>
                                     @for(client of clients(); track client.id){
                                         <option [ngValue]="client.id">{{ client.name }}</option>
                                     }
@@ -57,7 +76,7 @@
 
                             <!-- Date Range Selection -->
                             <div class="form-control">
-                                <label class="label"><span class="label-text font-semibold">Billing Period</span></label>
+                                <label class="label"><span class="label-text font-semibold">Period</span></label>
                                 <div class="flex items-center gap-2">
                                     <input type="date" [ngModel]="invoiceStartDate()" (ngModelChange)="invoiceStartDate.set($event)" class="input input-bordered w-full" placeholder="Start Date">
                                     <span class="opacity-50 font-bold">→</span>
@@ -65,13 +84,46 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Manual Client Details (Visible if no client selected) -->
+                        @if(selectedClientId() === null) {
+                            <div class="mt-4 p-4 bg-base-200/50 rounded-lg border border-base-200">
+                                <h3 class="font-bold text-sm mb-3 opacity-70 uppercase">Manual Client Details</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text">Name</span></label>
+                                        <input type="text" [ngModel]="manualClientName()" (ngModelChange)="manualClientName.set($event)" class="input input-bordered input-sm" placeholder="Client Name">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text">Email</span></label>
+                                        <input type="email" [ngModel]="manualClientEmail()" (ngModelChange)="manualClientEmail.set($event)" class="input input-bordered input-sm" placeholder="client@example.com">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text">Address</span></label>
+                                        <input type="text" [ngModel]="manualClientAddress()" (ngModelChange)="manualClientAddress.set($event)" class="input input-bordered input-sm" placeholder="Billing Address">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text">Tax Number</span></label>
+                                        <input type="text" [ngModel]="manualClientTaxNumber()" (ngModelChange)="manualClientTaxNumber.set($event)" class="input input-bordered input-sm" placeholder="Tax ID / VAT Number">
+                                    </div>
+                                </div>
+                            </div>
+                        }
 
-                        <!-- Project Selection (Only visible if client selected) -->
-                        @if(selectedClientId() && clientProjects().length > 0) {
+                        <!-- Due Date Config -->
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div class="form-control">
+                                <label class="label"><span class="label-text font-semibold">Invoice Due Date</span></label>
+                                <input type="date" [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" class="input input-bordered w-full">
+                            </div>
+                        </div>
+
+                        <!-- Project Selection -->
+                        @if(relevantProjects().length > 0) {
                             <div class="mt-6">
-                                <label class="label"><span class="label-text font-semibold">Select Projects to Bill</span></label>
+                                <label class="label"><span class="label-text font-semibold">Select Projects</span></label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    @for(project of clientProjects(); track project.id) {
+                                    @for(project of relevantProjects(); track project.id) {
                                         @let isSelected = selectedProjectIds().includes(project.id);
                                         <div class="form-control border border-base-200 rounded-lg px-4 py-2 hover:bg-base-200/30 transition-colors" [class.border-primary]="isSelected" [class.bg-primary/5]="isSelected">
                                             <label class="label cursor-pointer justify-start gap-3">
@@ -87,7 +139,7 @@
                                 <p class="text-xs opacity-60 mt-2 ml-1">Hours logged for selected projects within the dates above will be automatically added.</p>
                             </div>
                         } @else if (selectedClientId()) {
-                             <div class="mt-4 alert alert-warning text-sm">No projects found for this client.</div>
+                             <div class="mt-4 alert alert-warning text-sm">No projects found for this selection.</div>
                         }
                     </div>
                 </div>
@@ -95,35 +147,27 @@
                 <!-- 3. Review & Generate Panel -->
                 <div class="card bg-base-100/50 border border-base-200">
                     <div class="card-body">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center p-2 border-b border-base-content/10 print:hidden">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center p-2 border-b border-base-content/10 print:hidden gap-3">
                             <h2 class="card-title mb-3 sm:mb-0">3. Review & Generate</h2>
-                            <div class="flex items-center space-x-3">
-                                <button (click)="generateInvoice()" class="btn btn-primary flex-1 sm:flex-none" [disabled]="!canGenerateInvoice()">
-                                    @if(selectedPaymentMethod() === 'manual') {
-                                        Generate Invoice
-                                    } @else {
-                                        Process via {{ selectedPaymentMethod() | titlecase }}
-                                    }
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button (click)="generateInvoice()" class="btn btn-outline btn-primary flex-1 sm:flex-none" [disabled]="!canGenerateInvoice()">
+                                    Generate Only
                                 </button>
-                                @if(selectedPaymentMethod() === 'manual') {
-                                    <button (click)="printInvoice()" [disabled]="!canGenerateInvoice()"
-                                        class="btn btn-outline flex-1 sm:flex-none">
-                                        Print / Save
-                                    </button>
-                                }
+                                <button (click)="generateAndSend()" class="btn btn-primary flex-1 sm:flex-none shadow-lg shadow-primary/20" [disabled]="!canGenerateInvoice()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                    Generate & Send
+                                </button>
                             </div>
                         </div>
                     
                         <div id="invoice-preview" class="p-2 sm:p-4 md:p-6">
-                            @if (!selectedClientId()) {
+                            @if (!selectedClientId() && (!manualClientName() || !manualClientEmail())) {
                                 <div class="text-center py-20 opacity-75">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                    <h3 class="mt-2 text-lg font-medium">No Client Selected</h3>
-                                    <p class="mt-1 text-sm">Please select a client from the dropdown above to begin.</p>
+                                    <h3 class="mt-2 text-lg font-medium">Missing Details</h3>
+                                    <p class="mt-1 text-sm">Please select a client or enter details manually.</p>
                                 </div>
                             } @else {
-                                
-                                <!-- LOGIC BRANCH: MANUAL (Full Invoice) vs EXTERNAL (Simple List) -->
                                 
                                 @if(selectedPaymentMethod() === 'manual') {
                                     <!-- FULL FORMAL INVOICE TEMPLATE -->
@@ -131,7 +175,7 @@
                                     <!-- Invoice Header -->
                                     <div class="flex justify-between items-start mb-10">
                                         <div>
-                                            <h1 class="text-4xl font-bold text-primary tracking-tight">INVOICE</h1>
+                                            <h1 class="text-4xl font-bold text-primary tracking-tight uppercase">INVOICE</h1>
                                             <p class="opacity-75 mt-1">#{{ invoiceNumber() }}</p>
                                         </div>
                                         <div class="text-right">
@@ -143,7 +187,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Client Info & Dates -->
+                                    <!-- Info & Dates -->
                                     <div class="grid grid-cols-2 gap-8 mb-10">
                                         <div>
                                             <h3 class="text-sm font-semibold opacity-75 uppercase tracking-wider">Bill To</h3>
@@ -151,26 +195,32 @@
                                                 <p class="font-bold mt-2">{{ client.name }}</p>
                                                 <p class="text-sm opacity-75">{{ client.contact }}</p>
                                                 <p class="text-sm opacity-75">{{ client.address }}</p>
+                                                <p class="text-sm opacity-75">{{ client.taxNumber }}</p>
+                                            } @else {
+                                                <p class="font-bold mt-2">{{ manualClientName() }}</p>
+                                                <p class="text-sm opacity-75">{{ manualClientEmail() }}</p>
+                                                <p class="text-sm opacity-75">{{ manualClientAddress() }}</p>
+                                                <p class="text-sm opacity-75">{{ manualClientTaxNumber() }}</p>
                                             }
                                         </div>
                                         <div class="text-right">
                                             <h3 class="text-sm font-semibold opacity-75 uppercase tracking-wider">Details</h3>
                                             <p class="text-sm mt-2"><span class="font-medium">Period:</span> {{ invoiceStartDate() | date:'shortDate' }} - {{ invoiceEndDate() | date:'shortDate' }}</p>
-                                            <p class="text-sm"><span class="font-medium">Invoice Date:</span> {{ invoiceDate() | date:'mediumDate' }}</p>
+                                            <p class="text-sm"><span class="font-medium">Date:</span> {{ invoiceDate() | date:'mediumDate' }}</p>
                                             <p class="text-sm"><span class="font-medium">Due Date:</span> {{ dueDate() | date:'mediumDate' }}</p>
                                         </div>
                                     </div>
 
-                                    <!-- Items Table (Manual) -->
+                                    <!-- Items Table -->
                                     <div class="overflow-x-auto">
                                     <table class="table table-sm">
                                         <thead>
                                             <tr>
                                                 <th>Description</th>
-                                                <th class="text-center w-24">Hours/Qty</th>
+                                                <th class="text-center w-24">Qty/Hours</th>
                                                 <th class="text-center w-28">Rate</th>
                                                 <th class="text-right w-32">Amount</th>
-                                                <th class="w-12 print:hidden"></th> <!-- For remove button -->
+                                                <th class="w-12 print:hidden"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -190,7 +240,7 @@
                                                         <input type="text" [ngModel]="item.description" (ngModelChange)="updateCustomItem(i, 'description', $event)" name="desc_{{i}}" placeholder="Item description" class="input input-bordered input-sm w-full">
                                                     </td>
                                                     <td class="p-1">
-                                                        <input type="number" [ngModel]="item.quantity" (ngModelChange)="updateCustomItem(i, 'quantity', $event)" name="qty_{{i}}" placeholder="1" class="input input-bordered input-sm w-full text-center">
+                                                        <input type="number" [ngModel]="item.quantity" (ngModelChange)="updateCustomItem(i, 'quantity', $event)" name="qty_{{i}}" placeholder="1" class="input input-bordered input-sm w-full text-center" [disabled]="item.type === 'fixed'">
                                                     </td>
                                                     <td class="p-1">
                                                         <input type="number" [ngModel]="item.rate" (ngModelChange)="updateCustomItem(i, 'rate', $event)" name="rate_{{i}}" placeholder="0.00" class="input input-bordered input-sm w-full text-center">
@@ -209,7 +259,7 @@
                                                     <td colspan="5" class="py-16 text-center opacity-75">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                                         <h3 class="mt-2 font-medium">No Billable Items</h3>
-                                                        <p class="text-xs">Select projects with logged hours in the date range or add a custom item.</p>
+                                                        <p class="text-xs">Select projects with logged hours or add custom items manually.</p>
                                                     </td>
                                                 </tr>
                                             }
@@ -217,19 +267,19 @@
                                     </table>
                                     </div>
                                     
-                                    <!-- Add Item Button (Manual Only) -->
+                                    <!-- Add Item Buttons -->
                                     <div class="mt-4 print:hidden flex gap-2">
-                                        <button (click)="addCustomItem()" class="btn btn-ghost btn-sm text-primary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            Add Line Item
+                                        <button (click)="addCustomItem('hourly')" class="btn btn-ghost btn-sm text-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            Add Hourly Item
                                         </button>
-                                        <button (click)="openBillTaskModal()" class="btn btn-ghost btn-sm text-primary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                                            Bill Tasks
+                                        <button (click)="addCustomItem('fixed')" class="btn btn-ghost btn-sm text-secondary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                            Add Fixed Price Item
                                         </button>
                                     </div>
 
-                                    <!-- Totals (Manual) -->
+                                    <!-- Totals -->
                                     @if(loggedHoursItems().length > 0 || customItems().length > 0) {
                                     <div class="flex justify-end mt-6">
                                         <div class="w-full max-w-sm space-y-3 text-sm">
@@ -258,19 +308,12 @@
                                     }
 
                                 } @else {
-                                    <!-- EXTERNAL PAYMENT (Simple List) -->
+                                    <!-- EXTERNAL PAYMENT (Simple List) - Mostly for quick validation -->
                                     <div class="bg-base-200/20 rounded-xl p-6 border border-base-200">
                                         <div class="flex items-center gap-3 mb-6">
-                                            <div class="w-12 h-12 rounded-full bg-base-100 flex items-center justify-center shadow-sm">
-                                                @if(selectedPaymentMethod() === 'paypal') {
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8.332 9.068c.28-.734.72-1.42 1.32-2.032.813-.84 1.833-1.285 3.013-1.285 1.013 0 1.893.33 2.587.955.56.5.88 1.18.92 1.94.04.593-.16 1.14-.54 1.58-.354.407-.84.71-1.42.88l-.214.062c-.28.08-.52.174-.72.282-.2.107-.36.24-.48.39-.147.18-.254.387-.32.614-.067.227-.1.48-.1.747 0 .147.013.287.04.42.027.133.08.26.16.38.107.12.24.22.4.3.16.08.347.12.56.12.387 0 .747-.093 1.08-.28.187-.107.36-.24.52-.4.16-.16.307-.347.44-.56.093-.173.16-.353.2-.54.027-.106.04-.22.04-.34 0-.46-.147-.88-.44-1.254-.427-.52-1.027-.88-1.774-1.066-.48-.12-.867-.26-1.16-.42-.32-.173-.56-.393-.72-.66-.187-.313-.28-.68-.28-1.093 0-.627.227-1.193.68-1.694.587-.653 1.427-1 2.494-1 .827 0 1.58.24 2.22.68.627.44 1.067 1.08 1.28 1.88.107.413.147.827.107 1.227-.053.533-.24 1.013-.534 1.413-.106.147-.226.28-.36.4l-.173.147c-.453.373-.92.68-1.387.906-.187.093-.36.193-.52.3-.213.133-.393.28-.533.44-.133.16-.24.32-.32.493-.053.133-.08.26-.08.387v.026c.213-.013.4-.027.56-.027.973 0 1.827.24 2.534.694.04.026.106.093.186.2l.147.16c.467.547.774 1.2.894 1.94.133.88.013 1.734-.347 2.534-.653 1.453-1.853 2.493-3.48 2.893H9.868c-2.413 0-4.333-.68-5.6-2.013C3.212 16.022 3 14.555 3 12.822c0-1.293.307-2.48.9-3.58.187-.347.4-.667.654-.96z"/></svg>
-                                                } @else {
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.33,11.29,12.71,2.75a.51.51,0,0,0-.71,0L4.67,11.29a.5.5,0,0,0,0,.7l6.62,8.54a.51.51,0,0,0,.71,0l7.33-8.54A.5.5,0,0,0,19.33,11.29ZM12.35,3.47l5.4,7.31-4,1.42-5.74-5.3Zm-1,15.75-5-7.2,4.6-1.55,5.1,5.25Zm.49-8.4,2.55,2.9,1.1-3.6Zm-1.12-1.3,3.75-3.3-2.6-3.1Z"/></svg>
-                                                }
-                                            </div>
                                             <div>
                                                 <h3 class="font-bold text-lg">Billable Items for {{ selectedPaymentMethod() | titlecase }}</h3>
-                                                <p class="text-sm opacity-70">Review the items before processing payment.</p>
+                                                <p class="text-sm opacity-70">Review the items before processing.</p>
                                             </div>
                                         </div>
 
@@ -295,31 +338,14 @@
                                                             <td class="text-right font-bold">{{ item.quantity }}</td>
                                                         </tr>
                                                     }
-                                                    @if(!loggedHoursItems().length && !customItems().length) {
-                                                        <tr>
-                                                            <td colspan="2" class="py-8 text-center opacity-60 italic">No items to bill.</td>
-                                                        </tr>
-                                                    }
                                                 </tbody>
                                                 <tfoot>
                                                     <tr class="bg-base-200/50">
-                                                        <td class="font-bold text-lg text-right">Total to Charge:</td>
+                                                        <td class="font-bold text-lg text-right">Total:</td>
                                                         <td class="font-bold text-lg text-right text-primary">${{ total() | number:'1.2-2' }}</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
-                                        </div>
-                                        
-                                        <!-- Custom Items Add Button (External) -->
-                                        <div class="mt-4 flex gap-2">
-                                            <button (click)="addCustomItem()" class="btn btn-ghost btn-sm text-primary">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                Add Item
-                                            </button>
-                                            <button (click)="openBillTaskModal()" class="btn btn-ghost btn-sm text-primary">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                                                Bill Tasks
-                                            </button>
                                         </div>
                                     </div>
                                 }
@@ -338,7 +364,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end p-4 mb-6 border border-base-200 rounded-lg bg-base-200/30">
                     <div class="form-control">
                         <label class="label"><span class="label-text">Client</span></label>
-                        <select [ngModel]="historyFilterClientId()" (ngModelChange)="historyFilterClientId.set($event)" class="select select-bordered">
+                        <select [ngModel]="historyFilterClientId()" (ngModelChange)="historyFilterClientId.set($event); historyCurrentPage.set(1)" class="select select-bordered">
                             <option [ngValue]="null">All Clients</option>
                             @for(client of clients(); track client.id){
                                 <option [ngValue]="client.id">{{ client.name }}</option>
@@ -347,7 +373,7 @@
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">Project</span></label>
-                        <select [ngModel]="historyFilterProjectId()" (ngModelChange)="historyFilterProjectId.set($event)" class="select select-bordered" [disabled]="!historyFilterClientId()">
+                        <select [ngModel]="historyFilterProjectId()" (ngModelChange)="historyFilterProjectId.set($event); historyCurrentPage.set(1)" class="select select-bordered" [disabled]="!historyFilterClientId()">
                             <option [ngValue]="null">All Projects</option>
                             @for(project of projectsForClientFilter(); track project.id){
                                 <option [ngValue]="project.id">{{ project.name }}</option>
@@ -356,16 +382,17 @@
                     </div>
                      <div class="form-control">
                         <label class="label"><span class="label-text">Start Date</span></label>
-                        <input type="date" [ngModel]="historyFilterStartDate()" (ngModelChange)="historyFilterStartDate.set($event)" class="input input-bordered">
+                        <input type="date" [ngModel]="historyFilterStartDate()" (ngModelChange)="historyFilterStartDate.set($event); historyCurrentPage.set(1)" class="input input-bordered">
                     </div>
                      <div class="form-control">
                         <label class="label"><span class="label-text">End Date</span></label>
-                        <input type="date" [ngModel]="historyFilterEndDate()" (ngModelChange)="historyFilterEndDate.set($event)" class="input input-bordered">
+                        <input type="date" [ngModel]="historyFilterEndDate()" (ngModelChange)="historyFilterEndDate.set($event); historyCurrentPage.set(1)" class="input input-bordered">
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">Status</span></label>
-                        <select [ngModel]="historyFilterStatus()" (ngModelChange)="historyFilterStatus.set($event)" class="select select-bordered">
-                            <option value="All">All Statuses</option>
+                        <select [ngModel]="historyFilterStatus()" (ngModelChange)="historyFilterStatus.set($event); historyCurrentPage.set(1)" class="select select-bordered">
+                            <option value="All">All</option>
+                            <option value="Generated">Generated</option>
                             <option value="Paid">Paid</option>
                             <option value="Pending">Pending</option>
                             <option value="Overdue">Overdue</option>
@@ -381,39 +408,50 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Invoice #</th>
+                                <th>ID</th>
                                 <th>Client</th>
                                 <th>Project(s)</th>
                                 <th>Date</th>
-                                <th>Due Date</th>
-                                <th class="text-center">Status</th>
+                                <th>Status</th>
                                 <th class="text-right">Amount</th>
+                                <th class="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @for(invoice of paginatedHistoryInvoices(); track invoice.id){
                                 <tr>
-                                    <td class="font-medium">{{ invoice.invoiceNumber }}</td>
-                                    <td>{{ getClientName(invoice.clientId) }}</td>
+                                    <td class="font-medium text-xs">{{ invoice.invoiceNumber }}</td>
+                                    <td>{{ getRecipientName(invoice) }}</td>
                                     <td class="text-sm max-w-xs truncate" [title]="getProjectNames(invoice.projectIds)">{{ getProjectNames(invoice.projectIds) }}</td>
                                     <td>{{ invoice.invoiceDate | date:'mediumDate' }}</td>
-                                    <td>{{ invoice.dueDate | date:'mediumDate' }}</td>
                                     <td class="text-center">
                                         <select [ngModel]="invoice.status" (ngModelChange)="updateInvoiceStatus(invoice, $event)" 
                                                 class="select select-bordered select-xs w-full max-w-[110px] font-bold"
                                                 [class.text-success]="invoice.status === 'Paid'"
                                                 [class.text-warning]="invoice.status === 'Pending'"
-                                                [class.text-error]="invoice.status === 'Overdue'">
+                                                [class.text-error]="invoice.status === 'Overdue'"
+                                                [class.text-info]="invoice.status === 'Generated'">
+                                            <option value="Generated" class="text-info">Generated</option>
                                             <option value="Paid" class="text-success">Paid</option>
                                             <option value="Pending" class="text-warning">Pending</option>
                                             <option value="Overdue" class="text-error">Overdue</option>
                                         </select>
                                     </td>
                                     <td class="text-right font-semibold">${{ invoice.total | number:'1.2-2' }}</td>
+                                    <td class="text-right flex gap-2 justify-end">
+                                        @if(invoice.status === 'Generated') {
+                                            <button class="btn btn-sm btn-circle btn-ghost text-primary" (click)="sendInvoiceFromHistory(invoice)" title="Send Invoice">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                            </button>
+                                        }
+                                        <button class="btn btn-sm btn-circle btn-ghost" (click)="downloadInvoice(invoice)" title="Download PDF">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                        </button>
+                                    </td>
                                 </tr>
                             } @empty {
                                 <tr>
-                                    <td colspan="7" class="text-center py-12 opacity-75">
+                                    <td colspan="8" class="text-center py-12 opacity-75">
                                         No invoices found matching your criteria.
                                     </td>
                                 </tr>
@@ -437,47 +475,6 @@
         </div>
     }
 </div>
-
-<!-- Bill Tasks Modal -->
-@if (isBillTaskModalOpen()) {
-  <dialog class="modal modal-open">
-    <div class="modal-box w-11/12 max-w-3xl">
-      <button (click)="closeBillTaskModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-      <h3 class="font-bold text-lg">Bill Completed Tasks</h3>
-      <p class="text-sm opacity-75 mb-4">Select tasks and enter the hours to add them to the invoice.</p>
-      
-      <div class="max-h-96 overflow-y-auto pr-2 space-y-2">
-        @for (item of (tasksToBill() | keyvalue); track item.key) {
-           @let taskItem = item.value;
-            <div class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4" [class.bg-base-200]="taskItem.selected" [class.bg-base-100]="!taskItem.selected">
-                <div class="form-control flex-1">
-                    <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" class="checkbox checkbox-primary" [checked]="taskItem.selected" (change)="toggleTaskForBilling(taskItem.task.id)" />
-                    <span class="label-text">{{ taskItem.task.title }}</span>
-                    </label>
-                </div>
-                @if (taskItem.selected) {
-                    <div class="form-control">
-                    <label class="input-group">
-                        <input type="number" class="input input-bordered w-24" [ngModel]="taskItem.hours" (ngModelChange)="updateBillingHoursForTask(taskItem.task.id, +$event)" [name]="'hours_' + taskItem.task.id" placeholder="Hours">
-                        <span>hrs</span>
-                    </label>
-                    </div>
-                }
-            </div>
-        } @empty {
-            <p class="text-center py-8 opacity-75">No completed, unbilled tasks found for this client's projects.</p>
-        }
-      </div>
-
-      <div class="modal-action mt-6">
-        <button type="button" class="btn" (click)="closeBillTaskModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="addSelectedTasksToInvoice()">Add to Invoice</button>
-      </div>
-    </div>
-  </dialog>
-}
-
 
 <style>
 @media print {

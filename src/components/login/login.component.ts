@@ -3,81 +3,58 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, NgClass],
 })
 export class LoginComponent {
   private router: Router = inject(Router);
   private authService = inject(AuthService);
 
-  // UI State
-  showForgotPassword = signal(false);
+  // Form Data
+  email = signal('');
+  password = signal('');
   
-  // Form & Feedback State
+  // Feedback
   errorMessage = signal<string | null>(null);
-  successMessage = signal<string | null>(null);
   isSubmitting = signal(false);
 
-  async login(form: NgForm) {
-    if (form.invalid || this.isSubmitting()) return;
+  async login() {
+    if (!this.email() || !this.password() || this.isSubmitting()) return;
     
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
-    this.successMessage.set(null);
 
-    const { email, password } = form.value;
-    const result = await this.authService.login(email, password);
+    const result = await this.authService.login(this.email(), this.password());
     
     if (result.success) {
       this.router.navigate(['/app/dashboard']);
     } else {
       this.errorMessage.set(result.message || 'Login failed. Please try again.');
+      this.isSubmitting.set(false);
     }
-    this.isSubmitting.set(false);
   }
-  
+
   async loginWithGoogle() {
     if (this.isSubmitting()) return;
-
+    
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
-    
+
+    // Simulate network delay for effect
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     const result = await this.authService.loginWithGoogle();
     
     if (result.success) {
       this.router.navigate(['/app/dashboard']);
     } else {
-      this.errorMessage.set(result.message || 'Google login failed. Please try again.');
+      this.errorMessage.set(result.message || 'Google login failed.');
+      this.isSubmitting.set(false);
     }
-    this.isSubmitting.set(false);
-  }
-
-  async requestPasswordReset(form: NgForm) {
-    if (form.invalid || this.isSubmitting()) return;
-
-    this.isSubmitting.set(true);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    const { resetEmail } = form.value;
-    const result = await this.authService.resetPassword(resetEmail);
-
-    if (result.success) {
-      this.successMessage.set(result.message || 'Reset link sent.');
-      form.reset();
-    } else {
-      this.errorMessage.set(result.message || 'Failed to send reset link.');
-    }
-    this.isSubmitting.set(false);
-  }
-
-  toggleForgotPassword() {
-    this.showForgotPassword.update(v => !v);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
   }
 }

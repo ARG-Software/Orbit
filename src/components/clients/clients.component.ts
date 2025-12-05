@@ -4,23 +4,25 @@ import { Router, RouterLink } from '@angular/router';
 import { MockDataService, Client } from '../../services/mock-data.service';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
-import { NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage, CurrencyPipe, DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-clients',
   templateUrl: './clients.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, PaginationComponent],
+  imports: [RouterLink, FormsModule, PaginationComponent, CurrencyPipe, DecimalPipe],
 })
 export class ClientsComponent {
   private dataService = inject(MockDataService);
   private router = inject(Router);
 
   clients = this.dataService.getClients();
+  invoices = this.dataService.getInvoices();
+  projects = this.dataService.getProjects();
   
   // Pagination
   currentPage = signal(1);
-  itemsPerPage = signal(8);
+  itemsPerPage = signal(12); // Increased for higher density
 
   paginatedClients = computed(() => {
     const clients = this.clients();
@@ -31,6 +33,16 @@ export class ClientsComponent {
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
+  }
+
+  // Helper to get stats per client for the card
+  getClientStats(clientId: number) {
+      const clientInvoices = this.invoices().filter(i => i.clientId === clientId && i.status === 'Paid');
+      const totalRevenue = clientInvoices.reduce((sum, inv) => sum + inv.total, 0);
+      
+      const activeProjects = this.projects().filter(p => p.clientId === clientId && p.status === 'Active').length;
+      
+      return { totalRevenue, activeProjects };
   }
 
   // --- Add Client Modal State ---
@@ -45,6 +57,7 @@ export class ClientsComponent {
   clientLogoUrl = signal(''); // Will hold data URL or string
   clientColor = signal('#6366f1'); // Default color
   clientTaxRate = signal<number>(0);
+  clientNotes = signal('');
 
   // --- Email Modal State ---
   isEmailModalOpen = signal(false);
@@ -65,6 +78,7 @@ export class ClientsComponent {
     this.clientLogoUrl.set('');
     this.clientColor.set('#6366f1');
     this.clientTaxRate.set(0);
+    this.clientNotes.set('');
   }
 
   openAddModal(): void {
@@ -105,6 +119,7 @@ export class ClientsComponent {
         logoUrl: this.clientLogoUrl(),
         color: this.clientColor(),
         defaultTaxRate: this.clientTaxRate(),
+        notes: this.clientNotes(),
     };
 
     this.dataService.addClient(clientData);
@@ -117,6 +132,12 @@ export class ClientsComponent {
       this.dataService.deleteClient(clientId);
       this.triggerSuccessToast('Client deleted.');
     }
+  }
+
+  toggleStatus(client: Client): void {
+    const newStatus = client.status === 'Active' ? 'Paused' : 'Active';
+    this.dataService.updateClient({ ...client, status: newStatus });
+    this.triggerSuccessToast(`Client ${newStatus === 'Active' ? 'Resumed' : 'Paused'}`);
   }
 
   navigateToClient(clientId: number): void {

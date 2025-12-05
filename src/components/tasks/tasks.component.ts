@@ -1,3 +1,4 @@
+
 import {
   Component,
   ChangeDetectionStrategy,
@@ -8,7 +9,6 @@ import {
   WritableSignal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
 import {
   MockDataService,
   Client,
@@ -16,18 +16,18 @@ import {
   TeamMember,
   Task,
   Board,
-  TaskComment
 } from '../../services/mock-data.service';
 import { AuthService } from '../../services/auth.service';
 import { RouterLink } from '@angular/router';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 import { DatePipe } from '@angular/common';
+import { TaskModalComponent } from '../modals/task-modal/task-modal.component';
 
 @Component({
   selector: 'app-tasks',
   templateUrl: './tasks.component.html',
   styleUrl: './tasks.component.css',
-  imports: [FormsModule, RouterLink, PaginationComponent, DatePipe],
+  imports: [FormsModule, RouterLink, PaginationComponent, DatePipe, TaskModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TasksComponent {
@@ -35,7 +35,7 @@ export class TasksComponent {
   private authService = inject(AuthService);
 
   // --- Tabs State ---
-  activeTab = signal<'board' | 'history'>('board');
+  activeTab = signal<'list' | 'board' | 'archive'>('list');
 
   // --- Master Data Signals ---
   clients = this.dataService.getClients();
@@ -46,31 +46,124 @@ export class TasksComponent {
   currentUser = this.authService.currentUser;
 
   // ==========================================
-  // TAB 1: BOARDS & TASKS
+  // TAB 1: TASK LIST (Active Global)
+  // ==========================================
+  
+  listFilterClientId = signal<number | null>(null);
+  listFilterProjectId = signal<number | null>(null);
+  listFilterBoardId = signal<string | null>(null);
+  listFilterStatus = signal<string>('All');
+  listFilterPriority = signal<string>('All');
+  listFilterMemberId = signal<number | null>(null);
+  
+  listPage = signal(1);
+  listPerPage = signal(10);
+
+  // Derived options for List filters
+  projectsForListFilter = computed(() => {
+    const clientId = this.listFilterClientId();
+    if (!clientId) return this.allProjects();
+    return this.allProjects().filter(p => p.clientId === clientId);
+  });
+
+  boardsForListFilter = computed(() => {
+      const projectId = this.listFilterProjectId();
+      if (projectId) return this.allBoards().filter(b => b.projectId === projectId);
+      const clientId = this.listFilterClientId();
+      if (clientId) {
+          const pIds = this.allProjects().filter(p => p.clientId === clientId).map(p => p.id);
+          return this.allBoards().filter(b => pIds.includes(b.projectId));
+      }
+      return this.allBoards();
+  });
+
+  filteredTaskList = computed(() => {
+    let tasks = this.allTasks().filter(t => t.status !== 'Archived');
+    
+    const clientId = this.listFilterClientId();
+    const projectId = this.listFilterProjectId();
+    const boardId = this.listFilterBoardId();
+    const status = this.listFilterStatus();
+    const priority = this.listFilterPriority();
+    const memberId = this.listFilterMemberId();
+
+    if (clientId) {
+        const clientProjectIds = this.allProjects().filter(p => p.clientId === clientId).map(p => p.id);
+        tasks = tasks.filter(t => clientProjectIds.includes(t.projectId));
+    }
+    if (projectId) {
+        tasks = tasks.filter(t => t.projectId === projectId);
+    }
+    if (boardId) {
+        tasks = tasks.filter(t => t.boardId === boardId);
+    }
+    if (status !== 'All') {
+        tasks = tasks.filter(t => t.status === status);
+    }
+    if (priority !== 'All') {
+        tasks = tasks.filter(t => t.priority === priority);
+    }
+    if (memberId) {
+        tasks = tasks.filter(t => t.assignedMemberId === memberId);
+    }
+
+    // Sort: Newest modified first
+    return [...tasks].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  });
+
+  paginatedListTasks = computed(() => {
+    const tasks = this.filteredTaskList();
+    const startIndex = (this.listPage() - 1) * this.listPerPage();
+    return tasks.slice(startIndex, startIndex + this.listPerPage());
+  });
+
+  onListPageChange(page: number) {
+    this.listPage.set(page);
+  }
+  
+  resetListFilters() {
+      this.listFilterClientId.set(null);
+      this.listFilterProjectId.set(null);
+      this.listFilterBoardId.set(null);
+      this.listFilterStatus.set('All');
+      this.listFilterPriority.set('All');
+      this.listFilterMemberId.set(null);
+      this.listPage.set(1);
+  }
+
+  // ==========================================
+  // TAB 2: BOARDS & TASKS (Kanban)
   // ==========================================
 
   // Navigation State
-  // If selectedBoardId is null, we show the Board List.
-  // If selectedBoardId is set, we show the Task View (Kanban/List).
   selectedBoardId: WritableSignal<string | null> = signal(null);
   
-  // Context for the currently selected board (derived for convenience in Task Add Modal)
+  // Context for the currently selected board
   selectedClientId: WritableSignal<number | null> = signal(null);
   selectedProjectId: WritableSignal<number | null> = signal(null);
   
-  // --- Board List View & Filtering ---
+  // Board List Filtering
   boardFilterClientId = signal<number | null>(null);
   boardFilterProjectId = signal<number | null>(null);
   boardListPage = signal(1);
-  boardListPerPage = signal(6);
+  boardListPerPage = signal(9); 
+
+  // Board Detail Filtering
+  boardFilterMemberId = signal<number | null>(null);
 
   availableProjectsForBoardFilter = computed(() => {
     const cId = this.boardFilterClientId();
     if (!cId) return [];
     return this.allProjects().filter(p => p.clientId === cId);
   });
+
+  projectMembersForBoardFilter = computed(() => {
+    const pId = this.selectedProjectId();
+    if (!pId) return [];
+    const project = this.allProjects().find(p => p.id === pId);
+    return project ? this.allMembers().filter(m => project.allocatedTeamMemberIds.includes(m.id)) : [];
+  });
   
-  // Process Boards with extra metadata (client name, project name, task count, COLOR)
   boardsList = computed(() => {
     const boards = this.allBoards();
     const projects = this.allProjects();
@@ -80,7 +173,7 @@ export class TasksComponent {
     return boards.map(board => {
         const project = projects.find(p => p.id === board.projectId);
         const client = clients.find(c => c.id === project?.clientId);
-        const taskCount = tasks.filter(t => t.boardId === board.id).length;
+        const taskCount = tasks.filter(t => t.boardId === board.id && t.status !== 'Archived').length;
         return {
             ...board,
             projectName: project?.name || 'Unknown Project',
@@ -95,21 +188,15 @@ export class TasksComponent {
   
   filteredBoards = computed(() => {
       let list = this.boardsList();
-      
-      // Filter by Client
       if (this.boardFilterClientId()) {
           list = list.filter(b => b.clientId === this.boardFilterClientId());
       }
-
-      // Filter by Project
       if (this.boardFilterProjectId()) {
           list = list.filter(b => b.projectId === this.boardFilterProjectId());
       }
-
       return list;
   });
 
-  // Paginated Board List
   paginatedBoardsList = computed(() => {
       const boards = this.filteredBoards();
       const startIndex = (this.boardListPage() - 1) * this.boardListPerPage();
@@ -126,7 +213,6 @@ export class TasksComponent {
       this.boardListPage.set(1);
   }
 
-  // Board Navigation
   viewBoard(boardId: string) {
       const board = this.allBoards().find(b => b.id === boardId);
       if (board) {
@@ -136,6 +222,7 @@ export class TasksComponent {
               this.selectedProjectId.set(project.id);
           }
           this.selectedBoardId.set(boardId);
+          this.boardFilterMemberId.set(null);
           this.boardPage.set(1);
       }
   }
@@ -146,7 +233,7 @@ export class TasksComponent {
       this.selectedClientId.set(null);
   }
 
-  // Board CRUD State
+  // Board Actions
   isBoardModalOpen = signal(false);
   isBoardEditMode = signal(false);
   editingBoardId = signal<string | null>(null);
@@ -154,7 +241,6 @@ export class TasksComponent {
   boardModalProjectId = signal<number | null>(null);
   boardModalName = signal('');
 
-  // Computed for Board Modal
   boardModalProjects = computed(() => {
       const cId = this.boardModalClientId();
       if (cId) return this.allProjects().filter(p => p.clientId === cId);
@@ -163,9 +249,7 @@ export class TasksComponent {
 
   openBoardModal(board?: Board) {
       this.isBoardEditMode.set(!!board);
-      
       if (board) {
-          // Edit Mode
           this.editingBoardId.set(board.id);
           const project = this.allProjects().find(p => p.id === board.projectId);
           if (project) {
@@ -174,13 +258,11 @@ export class TasksComponent {
           this.boardModalProjectId.set(board.projectId);
           this.boardModalName.set(board.name);
       } else {
-          // Create Mode
           this.editingBoardId.set(null);
           this.boardModalClientId.set(null);
           this.boardModalProjectId.set(null);
           this.boardModalName.set('');
       }
-      
       this.isBoardModalOpen.set(true);
   }
   
@@ -214,31 +296,33 @@ export class TasksComponent {
       }
   }
 
-  // --- Task View (Kanban/List) ---
-  
+  // Board Detail View
   workViewMode = signal<'kanban' | 'list'>('kanban');
 
-  // Filtered tasks for the *selected board*
   filteredBoardTasks = computed(() => {
-    let tasks = this.allTasks();
+    let tasks = this.allTasks().filter(t => t.status !== 'Archived'); // Filter out archived
     const boardId = this.selectedBoardId();
+    const memberId = this.boardFilterMemberId();
 
     if (boardId) {
         tasks = tasks.filter(t => t.boardId === boardId);
     } else {
-        // Should not happen in detail view, but fallback
         return [];
     }
 
-    // Sort by updatedAt descending (Newest first)
+    if (memberId) {
+        tasks = tasks.filter(t => t.assignedMemberId === memberId);
+    }
+
     return [...tasks].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   });
   
+  totalBoardTasks = computed(() => this.filteredBoardTasks().length);
+
   currentBoardName = computed(() => {
       return this.allBoards().find(b => b.id === this.selectedBoardId())?.name || 'Board';
   });
 
-  // Pagination (List View)
   boardPage = signal(1);
   boardPerPage = signal(10);
 
@@ -252,179 +336,135 @@ export class TasksComponent {
       this.boardPage.set(page);
   }
 
-  // Columns for Kanban
   tasksToDo = computed(() => this.filteredBoardTasks().filter((t) => t.status === 'To Do'));
   tasksInProgress = computed(() => this.filteredBoardTasks().filter((t) => t.status === 'In Progress'));
   tasksOnHold = computed(() => this.filteredBoardTasks().filter((t) => t.status === 'On Hold'));
   tasksCompleted = computed(() => this.filteredBoardTasks().filter((t) => t.status === 'Completed'));
 
-  // --- Task Actions State ---
+  // ==========================================
+  // TAB 3: ARCHIVE
+  // ==========================================
+  
+  archiveFilterClientId = signal<number | null>(null);
+  archiveFilterProjectId = signal<number | null>(null);
+  archiveFilterBoardId = signal<string | null>(null);
+  archiveFilterMemberId = signal<number | null>(null);
+  
+  archivePage = signal(1);
+  archivePerPage = signal(10);
+
+  // Derived options for Archive filters
+  boardsForArchiveFilter = computed(() => {
+      const projectId = this.archiveFilterProjectId();
+      if (projectId) return this.allBoards().filter(b => b.projectId === projectId);
+      return this.allBoards();
+  });
+
+  filteredArchiveTasks = computed(() => {
+    // Base source is ONLY archived tasks
+    let tasks = this.allTasks().filter(t => t.status === 'Archived');
+    
+    const clientId = this.archiveFilterClientId();
+    const projectId = this.archiveFilterProjectId();
+    const boardId = this.archiveFilterBoardId();
+    const memberId = this.archiveFilterMemberId();
+
+    if (clientId) {
+        const clientProjectIds = this.allProjects().filter(p => p.clientId === clientId).map(p => p.id);
+        tasks = tasks.filter(t => clientProjectIds.includes(t.projectId));
+    }
+    if (projectId) {
+        tasks = tasks.filter(t => t.projectId === projectId);
+    }
+    if (boardId) {
+        tasks = tasks.filter(t => t.boardId === boardId);
+    }
+    if (memberId) {
+        tasks = tasks.filter(t => t.assignedMemberId === memberId);
+    }
+
+    return [...tasks].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  });
+
+  paginatedArchiveTasks = computed(() => {
+    const tasks = this.filteredArchiveTasks();
+    const startIndex = (this.archivePage() - 1) * this.archivePerPage();
+    return tasks.slice(startIndex, startIndex + this.archivePerPage());
+  });
+
+  onArchivePageChange(page: number) {
+    this.archivePage.set(page);
+  }
+  
+  resetArchiveFilters() {
+      this.archiveFilterClientId.set(null);
+      this.archiveFilterProjectId.set(null);
+      this.archiveFilterBoardId.set(null);
+      this.archiveFilterMemberId.set(null);
+      this.archivePage.set(1);
+  }
+
+  // ==========================================
+  // SHARED TASK ACTIONS (Create, Edit, Delete, Archive)
+  // ==========================================
+  
   isModalOpen = signal(false);
-  isEditMode = signal(false);
-  editingTaskId = signal<string | null>(null);
-  
-  // Task Form State
-  taskTitle = signal('');
-  taskClientId = signal<number | null>(null);
-  taskProjectId = signal<number | null>(null);
-  taskBoardId = signal<string | null>(null);
-  taskAssignedMemberId = signal<number | null>(null);
-  taskStatus = signal<Task['status']>('To Do');
-  taskPriority = signal<Task['priority']>('Medium');
-  
-  // Comments State
-  currentTaskComments = signal<TaskComment[]>([]);
-  newCommentText = signal('');
+  taskToEdit = signal<Task | null>(null);
+  taskModalContext = signal<{ clientId: number, projectId: number, boardId: string } | null>(null);
 
-  // Computed for Add Task Modal Dropdowns
-  taskModalProjects = computed(() => {
-      const cId = this.taskClientId();
-      if (cId) return this.allProjects().filter(p => p.clientId === cId);
-      return [];
-  });
-
-  taskModalBoards = computed(() => {
-      const pId = this.taskProjectId();
-      if (pId) return this.allBoards().filter(b => b.projectId === pId);
-      return [];
-  });
-
-  // --- Task CRUD ---
   openAddTaskModal(): void {
-    this.resetForm();
-    this.isEditMode.set(false);
-    this.currentTaskComments.set([]);
-    
-    // Pre-fill based on current board context
-    if (this.selectedClientId()) {
-        this.taskClientId.set(this.selectedClientId());
+    this.taskToEdit.set(null);
+    // If in board view, lock context
+    if (this.activeTab() === 'board' && this.selectedBoardId()) {
+        this.taskModalContext.set({
+            clientId: this.selectedClientId()!,
+            projectId: this.selectedProjectId()!,
+            boardId: this.selectedBoardId()!
+        });
+    } else {
+        this.taskModalContext.set(null);
     }
-    if (this.selectedProjectId()) {
-        this.taskProjectId.set(this.selectedProjectId());
-    }
-    if (this.selectedBoardId()) {
-        this.taskBoardId.set(this.selectedBoardId());
-    }
-    
     this.isModalOpen.set(true);
   }
 
   openEditTaskModal(task: Task): void {
-    this.resetForm();
-    this.isEditMode.set(true);
-    this.editingTaskId.set(task.id);
-
-    // Populate form with task details
-    this.taskTitle.set(task.title);
-    this.taskStatus.set(task.status);
-    this.taskPriority.set(task.priority);
-    this.taskAssignedMemberId.set(task.assignedMemberId);
-    this.currentTaskComments.set(task.comments || []);
-    
-    // Resolve hierarchy for dropdowns
-    const project = this.getProjectById(task.projectId);
-    if (project) {
-        this.taskClientId.set(project.clientId);
-        this.taskProjectId.set(task.projectId);
-        this.taskBoardId.set(task.boardId);
-    }
-
+    this.taskToEdit.set(task);
+    this.taskModalContext.set(null);
     this.isModalOpen.set(true);
   }
 
   closeModal(): void {
     this.isModalOpen.set(false);
-    this.resetForm();
-  }
-
-  private resetForm(): void {
-    this.isEditMode.set(false);
-    this.editingTaskId.set(null);
-    this.taskTitle.set('');
-    this.taskClientId.set(null);
-    this.taskProjectId.set(null);
-    this.taskBoardId.set(null);
-    this.taskAssignedMemberId.set(null);
-    this.taskStatus.set('To Do');
-    this.taskPriority.set('Medium');
-    this.newCommentText.set('');
-    this.currentTaskComments.set([]);
-  }
-
-  saveTask(): void {
-    if (!this.taskTitle() || this.taskAssignedMemberId() === null || this.taskProjectId() === null || this.taskBoardId() === null) {
-      return;
-    }
-
-    const taskData = {
-      projectId: this.taskProjectId()!,
-      boardId: this.taskBoardId()!,
-      title: this.taskTitle(),
-      assignedMemberId: this.taskAssignedMemberId()!,
-      status: this.taskStatus(),
-      priority: this.taskPriority(),
-      isBilled: false,
-    };
-
-    if (this.isEditMode() && this.editingTaskId()) {
-        // Update existing task
-        const existingTask = this.allTasks().find(t => t.id === this.editingTaskId());
-        this.dataService.updateTask({
-            ...taskData,
-            id: this.editingTaskId()!,
-            updatedAt: new Date(),
-            isBilled: existingTask?.isBilled ?? false,
-            comments: existingTask?.comments ?? [],
-            createdAt: existingTask?.createdAt ?? new Date()
-        });
-    } else {
-        // Create new task
-        this.dataService.addTask(taskData);
-    }
-    
-    this.closeModal();
+    this.taskToEdit.set(null);
+    this.taskModalContext.set(null);
   }
 
   deleteTask(taskId: string): void {
-    if (confirm('Are you sure you want to delete this task? This cannot be undone.')) {
+    if (confirm('Are you sure you want to delete this task permanently? This cannot be undone.')) {
       this.dataService.deleteTask(taskId);
-      if (this.isModalOpen() && this.editingTaskId() === taskId) {
-          this.closeModal();
-      }
     }
+  }
+
+  archiveTask(taskId: string): void {
+      const task = this.allTasks().find(t => t.id === taskId);
+      if (task) {
+          this.dataService.updateTask({ ...task, status: 'Archived' });
+      }
+  }
+
+  restoreTask(taskId: string): void {
+      const task = this.allTasks().find(t => t.id === taskId);
+      if (task) {
+          this.dataService.updateTask({ ...task, status: 'To Do' });
+      }
   }
 
   updateTaskStatus(task: Task, newStatus: Task['status']): void {
     if (task.status === newStatus) return;
-    const updatedTask = { ...task, status: newStatus };
-    this.dataService.updateTask(updatedTask);
+    this.dataService.updateTask({ ...task, status: newStatus });
   }
 
-  addComment(): void {
-    const taskId = this.editingTaskId();
-    const text = this.newCommentText().trim();
-    
-    if (!taskId || !text) return;
-    
-    // Assuming current user is a team member or we map it. 
-    const user = this.currentUser();
-    const authorId = user ? user.id : 0; 
-
-    this.dataService.addTaskComment(taskId, {
-        authorId,
-        text,
-    });
-
-    // Update local view immediately
-    const updatedTask = this.allTasks().find(t => t.id === taskId);
-    if (updatedTask) {
-        this.currentTaskComments.set(updatedTask.comments);
-    }
-    
-    this.newCommentText.set('');
-  }
-
-  // --- Drag and Drop ---
+  // Drag and Drop
   draggedTask: Task | null = null;
 
   onDragStart(event: DragEvent, task: Task) {
@@ -451,74 +491,24 @@ export class TasksComponent {
     event.preventDefault();
     const target = event.currentTarget as HTMLElement;
     target.classList.remove('drag-over');
-
     if (this.draggedTask && this.draggedTask.status !== newStatus) {
       this.updateTaskStatus(this.draggedTask, newStatus);
     }
     this.draggedTask = null;
   }
   
-  // ==========================================
-  // TAB 2: HISTORY (Global)
-  // ==========================================
-  
-  historyFilterClientId = signal<number | null>(null);
-  historyFilterProjectId = signal<number | null>(null);
-  historyFilterStatus = signal<string>('All');
-  
-  historyPage = signal(1);
-  historyPerPage = signal(10);
-
-  projectsForHistoryFilter = computed(() => {
-    const clientId = this.historyFilterClientId();
-    if (!clientId) return [];
-    return this.allProjects().filter(p => p.clientId === clientId);
-  });
-
-  filteredHistoryTasks = computed(() => {
-    let tasks = this.allTasks();
-    const clientId = this.historyFilterClientId();
-    const projectId = this.historyFilterProjectId();
-    const status = this.historyFilterStatus();
-
-    if (clientId) {
-        const clientProjectIds = this.allProjects().filter(p => p.clientId === clientId).map(p => p.id);
-        tasks = tasks.filter(t => clientProjectIds.includes(t.projectId));
-    }
-    if (projectId) {
-        tasks = tasks.filter(t => t.projectId === projectId);
-    }
-    if (status !== 'All') {
-        tasks = tasks.filter(t => t.status === status);
-    }
-    // Consistent sorting: Newest modified first
-    return [...tasks].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-  });
-
-  paginatedHistoryTasks = computed(() => {
-    const tasks = this.filteredHistoryTasks();
-    const startIndex = (this.historyPage() - 1) * this.historyPerPage();
-    return tasks.slice(startIndex, startIndex + this.historyPerPage());
-  });
-
-  onHistoryPageChange(page: number) {
-    this.historyPage.set(page);
-  }
-  
-  resetHistoryFilters() {
-      this.historyFilterClientId.set(null);
-      this.historyFilterProjectId.set(null);
-      this.historyFilterStatus.set('All');
-      this.historyPage.set(1);
-  }
-
-  // --- Shared Helpers ---
+  // Shared Helpers
   getMemberById(id: number): TeamMember | undefined {
     return this.allMembers().find((m) => m.id === id);
   }
 
   getProjectById(id: number): Project | undefined {
       return this.allProjects().find(p => p.id === id);
+  }
+  
+  getBoardById(id: string | null): Board | undefined {
+      if (!id) return undefined;
+      return this.allBoards().find(b => b.id === id);
   }
   
   getClientById(id: number): Client | undefined {
@@ -539,5 +529,52 @@ export class TasksComponent {
       'Medium': 'badge-warning',
       'Low': 'badge-info'
     }[priority] || 'badge-ghost';
+  }
+
+  getStatusBorderClass(status: string): string {
+    switch (status) {
+      case 'To Do': return 'border-l-base-300'; // Changed to grey/neutral
+      case 'In Progress': return 'border-l-primary';
+      case 'On Hold': return 'border-l-warning'; 
+      case 'Completed': return 'border-l-success';
+      case 'Archived': return 'border-l-neutral';
+      default: return 'border-l-base-200';
+    }
+  }
+
+  // Calculate percentage of tasks for this column vs total on board
+  getColumnPercentage(count: number): number {
+    const total = this.totalBoardTasks();
+    return total === 0 ? 0 : (count / total) * 100;
+  }
+
+  getColumnFillClass(status: string): string {
+    switch (status) {
+      case 'To Do': return 'bg-neutral';
+      case 'In Progress': return 'bg-primary';
+      case 'On Hold': return 'bg-warning';
+      case 'Completed': return 'bg-success';
+      default: return 'bg-base-200';
+    }
+  }
+
+  getColumnContainerClass(status: string, count: number): string {
+      // Base styling for the container (pill shape, flex layout, border)
+      const baseClasses = 'w-14 rounded-full flex flex-col items-center py-4 gap-4 h-full shrink-0 relative overflow-hidden transition-all duration-300 border-2 ';
+      
+      // Determine border color based on status
+      let borderColor = '';
+      switch(status) {
+          case 'To Do': borderColor = 'border-base-300'; break;
+          case 'In Progress': borderColor = 'border-primary/50'; break;
+          case 'On Hold': borderColor = 'border-warning/50'; break;
+          case 'Completed': borderColor = 'border-success/50'; break;
+          default: borderColor = 'border-base-200';
+      }
+
+      // If empty, dashed line as outline. If has tasks, solid.
+      const borderStyle = count === 0 ? 'border-dashed bg-transparent' : 'border-solid bg-base-100/30';
+
+      return baseClasses + borderColor + ' ' + borderStyle;
   }
 }

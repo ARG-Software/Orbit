@@ -129,10 +129,12 @@
                                                     <textarea [ngModel]="task.description" (ngModelChange)="updateTask(section.id, task.id, 'description', $event)" class="textarea textarea-sm textarea-ghost w-full focus:textarea-bordered resize-none leading-tight" rows="1" placeholder="Details..."></textarea>
                                                 </td>
                                                 <td class="p-2 align-top">
-                                                    <input type="number" [ngModel]="task.hours" (ngModelChange)="updateTask(section.id, task.id, 'hours', +$event)" class="input input-sm input-bordered w-full text-center focus:input-primary" min="0" step="0.5">
+                                                    <!-- Added CSS classes to hide spinners -->
+                                                    <input type="number" [ngModel]="task.hours" (ngModelChange)="updateTask(section.id, task.id, 'hours', +$event)" class="input input-sm input-bordered w-full text-center focus:input-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="0" step="0.5">
                                                 </td>
                                                 <td class="p-2 align-top">
-                                                    <input type="number" [ngModel]="task.rate" (ngModelChange)="updateTask(section.id, task.id, 'rate', +$event)" class="input input-sm input-bordered w-full text-center focus:input-primary" min="0">
+                                                    <!-- Added CSS classes to hide spinners -->
+                                                    <input type="number" [ngModel]="task.rate" (ngModelChange)="updateTask(section.id, task.id, 'rate', +$event)" class="input input-sm input-bordered w-full text-center focus:input-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="0">
                                                 </td>
                                                 <td class="text-right font-medium pr-0 align-top pt-3">
                                                     {{ task.hours * task.rate | number:'1.0-0' }}

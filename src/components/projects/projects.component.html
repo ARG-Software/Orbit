@@ -5,200 +5,147 @@
       <h1 class="text-3xl font-bold">Projects</h1>
       <p class="opacity-60 mt-1">Manage all your projects, track status, and team allocation.</p>
     </div>
+    <button class="btn btn-primary shadow-lg shadow-primary/20" (click)="isProjectModalOpen.set(true)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        New Project
+    </button>
   </div>
 
-  <!-- Tabs -->
-  <div role="tablist" class="tabs tabs-boxed bg-base-200 mb-6 w-fit">
-    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'list'" (click)="activeTab.set('list')">All Projects</a>
-    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'add'" (click)="activeTab.set('add')">New Project</a>
+  <!-- Filters -->
+  <div class="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-base-100 rounded-xl border border-base-200 shadow-sm">
+    <div class="form-control flex-1">
+        <input type="text" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); currentPage.set(1)" placeholder="Search projects..." class="input input-bordered w-full">
+    </div>
+    <div class="form-control w-full md:w-48">
+        <select [ngModel]="filterClient()" (ngModelChange)="filterClient.set($any($event)); currentPage.set(1)" class="select select-bordered w-full">
+            <option [ngValue]="null">All Clients</option>
+            @for(client of clients(); track client.id){
+                <option [ngValue]="client.id">{{ client.name }}</option>
+            }
+        </select>
+    </div>
+    <div class="form-control w-full md:w-48">
+        <select [ngModel]="filterMember()" (ngModelChange)="filterMember.set($any($event)); currentPage.set(1)" class="select select-bordered w-full">
+            <option [ngValue]="null">All Freelancers</option>
+            @for(member of members(); track member.id){
+                <option [ngValue]="member.id">{{ member.name }}</option>
+            }
+        </select>
+    </div>
   </div>
 
-  @if (activeTab() === 'list') {
-      <!-- Filters -->
-      <div class="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-base-100 rounded-xl border border-base-200 shadow-sm">
-        <div class="form-control flex-1">
-            <input type="text" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); currentPage.set(1)" placeholder="Search projects..." class="input input-bordered w-full">
-        </div>
-        <div class="form-control w-full md:w-48">
-            <select [ngModel]="filterClient()" (ngModelChange)="filterClient.set($any($event)); currentPage.set(1)" class="select select-bordered w-full">
-                <option [ngValue]="null">All Clients</option>
-                @for(client of clients(); track client.id){
-                    <option [ngValue]="client.id">{{ client.name }}</option>
-                }
-            </select>
-        </div>
-        <div class="form-control w-full md:w-48">
-            <select [ngModel]="filterMember()" (ngModelChange)="filterMember.set($any($event)); currentPage.set(1)" class="select select-bordered w-full">
-                <option [ngValue]="null">All Freelancers</option>
-                @for(member of members(); track member.id){
-                    <option [ngValue]="member.id">{{ member.name }}</option>
-                }
-            </select>
-        </div>
-      </div>
-
-      <!-- Projects Table -->
-      <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="table w-full">
-                <thead class="bg-base-200/50 text-base-content/70">
-                    <tr>
-                        <th class="w-1/3 pl-6">Project Name</th>
-                        <th>Client</th>
-                        <th>Status</th>
-                        <th>Team</th>
-                        <th class="text-right pr-6">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for(project of paginatedProjects(); track project.id) {
-                        @let client = getClient(project.clientId);
-                        <tr class="hover:bg-base-100 transition-colors group cursor-pointer" [routerLink]="['/app/projects', project.id]">
-                            <td class="pl-6">
-                                <div class="font-bold text-base">{{ project.name }}</div>
-                                @if(project.description) {
-                                    <div class="text-sm opacity-50 truncate max-w-xs">{{ project.description }}</div>
-                                }
-                            </td>
-                            <td>
-                                @if(client) {
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-2.5 h-2.5 rounded-full" [style.background-color]="client.color"></div>
-                                        <span class="font-medium">{{ client.name }}</span>
-                                    </div>
-                                } @else {
-                                    <span class="opacity-40 italic">Unknown</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="badge badge-sm" 
-                                    [class.badge-success]="project.status === 'Active'"
-                                    [class.badge-warning]="project.status === 'On Hold'"
-                                    [class.badge-neutral]="project.status === 'Completed'">
-                                    {{ project.status }}
+  <!-- Projects Table -->
+  <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="table w-full">
+            <thead class="bg-base-200/50 text-base-content/70">
+                <tr>
+                    <th class="w-1/3 pl-6">Project Name</th>
+                    <th>Client</th>
+                    <th>Status</th>
+                    <th>Type & Value</th>
+                    <th>Team</th>
+                    <th class="text-right pr-6">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(project of paginatedProjects(); track project.id) {
+                    @let client = getClient(project.clientId);
+                    <tr class="hover:bg-base-100 transition-colors group cursor-pointer" [routerLink]="['/app/projects', project.id]">
+                        <td class="pl-6">
+                            <div class="font-bold text-base">{{ project.name }}</div>
+                            @if(project.description) {
+                                <div class="text-sm opacity-50 truncate max-w-xs">{{ project.description }}</div>
+                            }
+                        </td>
+                        <td>
+                            @if(client) {
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2.5 h-2.5 rounded-full" [style.background-color]="client.color"></div>
+                                    <span class="font-medium">{{ client.name }}</span>
                                 </div>
-                            </td>
-                            <td>
-                                <div class="avatar-group -space-x-3 rtl:space-x-reverse">
-                                    @for(mId of project.allocatedTeamMemberIds.slice(0, 4); track mId) {
-                                        @let member = getMember(mId);
-                                        @if(member) {
-                                            <div class="avatar border-base-100" [title]="member.name">
-                                                <div class="w-8">
-                                                    <img [src]="member.avatarUrl" [alt]="member.name" />
-                                                </div>
-                                            </div>
-                                        }
-                                    }
-                                    @if(project.allocatedTeamMemberIds.length > 4) {
-                                        <div class="avatar placeholder border-base-100">
-                                            <div class="w-8 bg-neutral text-neutral-content">
-                                                <span class="text-xs">+{{ project.allocatedTeamMemberIds.length - 4 }}</span>
+                            } @else {
+                                <span class="opacity-40 italic">Unknown</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="badge badge-sm" 
+                                [class.badge-success]="project.status === 'Active'"
+                                [class.badge-warning]="project.status === 'Paused'"
+                                [class.badge-neutral]="project.status === 'Completed'">
+                                {{ project.status }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex flex-col">
+                                <span class="badge badge-sm badge-ghost mb-1 w-fit">{{ project.billingType === 'fixed' ? 'Fixed' : 'Hourly' }}</span>
+                                <span class="text-xs font-mono opacity-70">
+                                    {{ project.billingType === 'fixed' ? (project.fixedPrice | currency) : (project.defaultRate ? (project.defaultRate | currency) + '/hr' : 'Var. Rates') }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="avatar-group -space-x-3 rtl:space-x-reverse">
+                                @for(mId of project.allocatedTeamMemberIds.slice(0, 4); track mId) {
+                                    @let member = getMember(mId);
+                                    @if(member) {
+                                        <div class="avatar border-base-100" [title]="member.name">
+                                            <div class="w-8">
+                                                <img [src]="member.avatarUrl" [alt]="member.name" />
                                             </div>
                                         </div>
                                     }
-                                    @if(project.allocatedTeamMemberIds.length === 0) {
-                                        <span class="text-xs opacity-40 italic py-1">No team assigned</span>
-                                    }
-                                </div>
-                            </td>
-                            <td class="text-right pr-6">
-                                <button class="btn btn-ghost btn-sm text-primary">View</button>
-                            </td>
-                        </tr>
-                    } @empty {
-                        <tr>
-                            <td colspan="5" class="text-center py-16 opacity-50">
-                                No projects found matching your filters.
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-      </div>
-
-      @if(filteredProjects().length > itemsPerPage()){
-        <div class="flex justify-center mt-8">
-            <app-pagination 
-            [currentPage]="currentPage()"
-            [totalItems]="filteredProjects().length"
-            [itemsPerPage]="itemsPerPage()"
-            (pageChange)="onPageChange($event)">
-            </app-pagination>
-        </div>
-      }
-  } @else {
-      <!-- Add Project Form -->
-      <div class="card bg-base-100 shadow-md border border-base-200 max-w-3xl mx-auto">
-        <div class="card-body">
-            <h2 class="card-title border-b border-base-200 pb-2 mb-4">Create New Project</h2>
-            <form (ngSubmit)="saveProject()">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div class="form-control sm:col-span-2">
-                        <label class="label"><span class="label-text font-medium">Project Name</span></label>
-                        <input type="text" class="input input-bordered focus:input-primary" [ngModel]="newProjectName()" (ngModelChange)="newProjectName.set($event)" name="projectName" required placeholder="e.g. Q4 Marketing Campaign">
-                    </div>
-                    <div class="form-control sm:col-span-2">
-                        <label class="label"><span class="label-text font-medium">Description</span></label>
-                        <textarea class="textarea textarea-bordered h-32 resize-none focus:textarea-primary" [ngModel]="newProjectDescription()" (ngModelChange)="newProjectDescription.set($event)" name="projectDescription" placeholder="Brief overview of the project scope..."></textarea>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text font-medium">Client</span></label>
-                        <select class="select select-bordered" [ngModel]="newProjectClientId()" (ngModelChange)="newProjectClientId.set(+$event)" name="projectClient" required>
-                            <option [ngValue]="null" disabled>Select Client</option>
-                            @for(client of clients(); track client.id){
-                                <option [ngValue]="client.id">{{ client.name }}</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text font-medium">Status</span></label>
-                        <select class="select select-bordered" [ngModel]="newProjectStatus()" (ngModelChange)="newProjectStatus.set($event)" name="projectStatus">
-                            <option value="Active">Active</option>
-                            <option value="On Hold">On Hold</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="divider text-xs font-bold opacity-50 uppercase mt-8">Team Allocation</div>
-                
-                <div class="bg-base-200/30 rounded-xl border border-base-200 p-4 max-h-80 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
-                    @for(member of members(); track member.id){
-                        @let isChecked = newProjectMembers().includes(member.id);
-                        <div class="p-3 rounded-lg flex items-center justify-between gap-4 transition-colors" [class.bg-base-100]="isChecked" [class.shadow-sm]="isChecked">
-                        <div class="form-control flex-1">
-                            <label class="label cursor-pointer justify-start gap-3 py-0">
-                            <input type="checkbox" class="checkbox checkbox-primary" [checked]="isChecked" (change)="toggleMemberSelection(member.id, $any($event.target).checked)"/>
-                            <div class="flex items-center gap-3">
-                                <div class="avatar"><div class="w-8 rounded-full"><img [src]="member.avatarUrl" /></div></div>
-                                <div class="flex flex-col">
-                                    <span class="font-medium text-sm">{{ member.name }}</span>
-                                    <span class="text-xs opacity-50">{{ member.role }}</span>
-                                </div>
+                                }
+                                @if(project.allocatedTeamMemberIds.length > 4) {
+                                    <div class="avatar placeholder border-base-100">
+                                        <div class="w-8 bg-neutral text-neutral-content">
+                                            <span class="text-xs">+{{ project.allocatedTeamMemberIds.length - 4 }}</span>
+                                        </div>
+                                    </div>
+                                }
+                                @if(project.allocatedTeamMemberIds.length === 0) {
+                                    <span class="text-xs opacity-40 italic py-1">No team assigned</span>
+                                }
                             </div>
-                            </label>
-                        </div>
-                        @if(isChecked){
-                            <div class="form-control">
-                            <label class="input-group input-group-sm">
-                                <span>$</span>
-                                <input type="number" class="input input-bordered input-sm w-20" [ngModel]="newProjectRates()[member.id] ?? member.defaultHourlyRate" (ngModelChange)="updateMemberRate(member.id, +$event)" [name]="'rate_' + member.id">
-                                <span class="hidden sm:flex">/hr</span>
-                            </label>
-                            </div>
-                        }
-                        </div>
-                    }
-                </div>
+                        </td>
+                        <td class="text-right pr-6">
+                            <button class="btn btn-ghost btn-sm text-primary">View</button>
+                        </td>
+                    </tr>
+                } @empty {
+                    <tr>
+                        <td colspan="6" class="text-center py-16 opacity-50">
+                            No projects found matching your filters.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+  </div>
 
-                <div class="card-actions justify-end mt-8 border-t border-base-200 pt-4">
-                    <button type="button" class="btn btn-ghost" (click)="resetForm(); activeTab.set('list')">Cancel</button>
-                    <button type="submit" class="btn btn-primary px-8" [disabled]="!newProjectName() || !newProjectClientId()">Create Project</button>
-                </div>
-            </form>
-        </div>
-      </div>
+  @if(filteredProjects().length > itemsPerPage()){
+    <div class="flex justify-center mt-8">
+        <app-pagination 
+        [currentPage]="currentPage()"
+        [totalItems]="filteredProjects().length"
+        [itemsPerPage]="itemsPerPage()"
+        (pageChange)="onPageChange($event)">
+        </app-pagination>
+    </div>
   }
 </div>
+
+@if(isProjectModalOpen()) {
+    <app-project-modal (close)="isProjectModalOpen.set(false)" (saved)="onProjectSaved()"></app-project-modal>
+}
+
+<!-- Success Toast -->
+@if(showSuccessToast()){
+<div class="toast toast-top toast-center z-50">
+  <div class="alert alert-success shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span>Project created successfully.</span>
+  </div>
+</div>
+}

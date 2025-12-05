@@ -1,143 +1,325 @@
 
 @if(client(); as c){
 <div class="container mx-auto">
-  <!-- Header -->
-  <div class="flex items-center mb-8">
-    <a routerLink="/app/clients" class="btn btn-ghost btn-circle mr-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-    </a>
-    <div class="avatar avatar-lg">
-      <div class="w-16 rounded-full ring ring-offset-base-100 ring-offset-2" [style.--tw-ring-color]="c.color">
-        <img [src]="c.logoUrl" alt="{{ c.name }} logo" class="object-cover">
+  
+  <!-- Top Section: Header & Summary Stats -->
+  <div class="mb-8">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div class="flex items-center">
+            <a routerLink="/app/clients" class="btn btn-ghost btn-circle mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </a>
+            <div class="avatar avatar-md">
+            <div class="w-12 h-12 rounded-full ring ring-offset-base-100 ring-offset-2" [style.--tw-ring-color]="c.color">
+                <img [src]="c.logoUrl" alt="{{ c.name }} logo" class="object-cover">
+            </div>
+            </div>
+            <div class="ml-4">
+            <h1 class="text-3xl font-bold">{{ c.name }}</h1>
+            <div class="flex items-center gap-2 text-sm opacity-70">
+                <span>{{ c.contact }}</span>
+                <span>•</span>
+                <span class="badge badge-xs font-medium" [class.badge-success]="c.status === 'Active'" [class.badge-warning]="c.status === 'Paused'">{{ c.status }}</span>
+            </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-sm btn-ghost text-info" (click)="openEmailModal()" title="Send Email">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                Email
+            </button>
+            <button class="btn btn-sm btn-ghost text-warning" (click)="toggleStatus()" title="Pause/Resume">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {{ c.status === 'Active' ? 'Pause' : 'Resume' }}
+            </button>
+            <button class="btn btn-sm btn-ghost text-error" (click)="deleteClient()" title="Delete Client">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                Delete
+            </button>
+        </div>
       </div>
-    </div>
-    <div class="ml-4">
-      <h1 class="text-3xl font-bold">{{ c.name }}</h1>
-      <p class="opacity-75">{{ c.contact }}</p>
-    </div>
+
+      <!-- Summary Panel -->
+      @let stats = clientStats();
+      @if(stats) {
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl py-4">
+              <div class="stat-figure text-success opacity-20">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+              </div>
+              <div class="stat-title text-xs font-bold uppercase opacity-60">Total Revenue</div>
+              <div class="stat-value text-2xl text-success">{{ stats.totalRevenue | currency:'USD':'symbol':'1.0-0' }}</div>
+          </div>
+          
+          <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl py-4">
+              <div class="stat-figure text-warning opacity-20">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <div class="stat-title text-xs font-bold uppercase opacity-60">Outstanding</div>
+              <div class="stat-value text-2xl text-warning">{{ stats.outstandingAmount | currency:'USD':'symbol':'1.0-0' }}</div>
+          </div>
+
+          <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl py-4">
+              <div class="stat-figure text-primary opacity-20">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+              </div>
+              <div class="stat-title text-xs font-bold uppercase opacity-60">Active Projects</div>
+              <div class="stat-value text-2xl">{{ stats.activeProjects }}</div>
+          </div>
+
+          <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl py-4">
+              <div class="stat-figure text-secondary opacity-20">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </div>
+              <div class="stat-title text-xs font-bold uppercase opacity-60">Next Meeting</div>
+              <div class="stat-value text-2xl text-secondary">{{ stats.upcomingMeetings }}</div>
+          </div>
+      </div>
+      }
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Left Column: Client Details -->
-    <div class="lg:col-span-1 flex flex-col gap-8">
-      <div class="card bg-base-100 shadow border border-t-4" [style.border-color]="c.color">
-        <div class="card-body">
-          <h2 class="card-title">Client Details</h2>
-          <div class="divider my-2"></div>
-          <div class="space-y-4">
-            <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Name</span></label>
-              <input type="text" class="input input-bordered" [ngModel]="clientName()" (ngModelChange)="clientName.set($event)">
-            </div>
-             <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Email</span></label>
-              <input type="email" class="input input-bordered" [ngModel]="clientContact()" (ngModelChange)="clientContact.set($event)">
-            </div>
-             <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Phone</span></label>
-              <input type="tel" class="input input-bordered" [ngModel]="clientPhone()" (ngModelChange)="clientPhone.set($event)">
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Address</span></label>
-              <input type="text" class="input input-bordered" [ngModel]="clientAddress()" (ngModelChange)="clientAddress.set($event)">
-            </div>
-             <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Tax Number</span></label>
-              <input type="text" class="input input-bordered" [ngModel]="clientTaxNumber()" (ngModelChange)="clientTaxNumber.set($event)">
-            </div>
-             <div class="form-control">
-                <label class="label"><span class="label-text font-medium">Brand Color</span></label>
-                <div class="flex gap-2">
-                  <input type="color" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" class="input input-bordered w-16 p-1 h-12 cursor-pointer">
-                  <input type="text" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" class="input input-bordered flex-1 uppercase">
+    <!-- Left Column: Client Profile & Settings (1/3) -->
+    <div class="lg:col-span-1 flex flex-col gap-6">
+        <div class="card bg-base-100 shadow-sm border border-base-200 h-fit">
+            <div class="card-body p-4">
+                <h2 class="font-bold text-lg mb-4 flex justify-between items-center">
+                    Client Profile
+                    <button class="btn btn-xs btn-primary" (click)="saveClientDetails()">Save Changes</button>
+                </h2>
+                
+                <!-- Accordion Group -->
+                <div class="join join-vertical w-full border border-base-200 rounded-xl">
+                    
+                    <!-- Section 1: Identity -->
+                    <div class="collapse collapse-arrow join-item border-base-200 border-b">
+                        <input type="radio" name="client-details-accordion" checked="checked" /> 
+                        <div class="collapse-title text-sm font-medium">Identity</div>
+                        <div class="collapse-content text-sm space-y-3 pt-2">
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Name</label>
+                                <input type="text" class="input input-bordered input-sm" [ngModel]="clientName()" (ngModelChange)="clientName.set($event)">
+                            </div>
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Status</label>
+                                <select class="select select-bordered select-sm" [ngModel]="clientStatus()" (ngModelChange)="clientStatus.set($event)">
+                                    <option value="Active">Active</option>
+                                    <option value="Paused">Paused</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Contact -->
+                    <div class="collapse collapse-arrow join-item border-base-200 border-b">
+                        <input type="radio" name="client-details-accordion" /> 
+                        <div class="collapse-title text-sm font-medium">Contact Information</div>
+                        <div class="collapse-content text-sm space-y-3 pt-2">
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Email</label>
+                                <input type="email" class="input input-bordered input-sm" [ngModel]="clientContact()" (ngModelChange)="clientContact.set($event)">
+                            </div>
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Phone</label>
+                                <input type="tel" class="input input-bordered input-sm" [ngModel]="clientPhone()" (ngModelChange)="clientPhone.set($event)">
+                            </div>
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Address</label>
+                                <input type="text" class="input input-bordered input-sm" [ngModel]="clientAddress()" (ngModelChange)="clientAddress.set($event)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Financials -->
+                    <div class="collapse collapse-arrow join-item border-base-200 border-b">
+                        <input type="radio" name="client-details-accordion" /> 
+                        <div class="collapse-title text-sm font-medium">Financial Settings</div>
+                        <div class="collapse-content text-sm space-y-3 pt-2">
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Tax Number</label>
+                                <input type="text" class="input input-bordered input-sm" [ngModel]="clientTaxNumber()" (ngModelChange)="clientTaxNumber.set($event)">
+                            </div>
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Default Tax Rate (%)</label>
+                                <input type="number" class="input input-bordered input-sm" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" step="0.1" min="0">
+                            </div>
+                            <div class="form-control">
+                                <label class="label py-1 text-xs opacity-70">Brand Color</label>
+                                <div class="flex gap-2">
+                                    <input type="color" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" class="input input-bordered w-10 p-0 h-8 cursor-pointer">
+                                    <input type="text" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" class="input input-bordered input-sm flex-1 uppercase">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Notes -->
+                    <div class="collapse collapse-arrow join-item border-base-200">
+                        <input type="radio" name="client-details-accordion" /> 
+                        <div class="collapse-title text-sm font-medium">Notes</div>
+                        <div class="collapse-content pt-2">
+                            <textarea class="textarea textarea-bordered w-full h-32 text-sm" placeholder="Private client notes..." [ngModel]="clientNotes()" (ngModelChange)="clientNotes.set($event)"></textarea>
+                        </div>
+                    </div>
                 </div>
-             </div>
-             <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Default Tax Rate (%)</span></label>
-              <input type="number" class="input input-bordered" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" step="0.1" min="0">
             </div>
-             <div class="form-control">
-              <label class="label"><span class="label-text font-medium">Status</span></label>
-              <select class="select select-bordered" [ngModel]="clientStatus()" (ngModelChange)="clientStatus.set($event)">
-                <option value="Active">Active</option>
-                <option value="Paused">Paused</option>
-              </select>
-            </div>
-          </div>
-          <div class="card-actions justify-end mt-4">
-            <button class="btn btn-primary" (click)="saveClientDetails()">Save Changes</button>
-          </div>
         </div>
-      </div>
     </div>
 
-    <!-- Right Column: Projects -->
-    <div class="lg:col-span-2 flex flex-col gap-8">
-      <!-- Projects -->
-      <div class="card bg-base-100 shadow">
-        <div class="card-body">
-           <div class="flex justify-between items-center mb-4">
-             <h2 class="card-title">Projects</h2>
-             <div class="text-sm opacity-60" *ngIf="projects().length > 0">{{ projects().length }} total</div>
-           </div>
-           <div class="space-y-4">
-              @for(project of paginatedProjects(); track project.id){
-                <a [routerLink]="['/app/projects', project.id]" class="card card-compact bg-base-200/50 hover:bg-base-200 transition-colors cursor-pointer border border-transparent hover:border-base-300">
-                   <div class="card-body">
-                      <div class="flex justify-between items-start">
-                         <div>
-                            <h3 class="font-bold text-lg">{{ project.name }}</h3>
-                            <span class="badge badge-sm mt-1" [class]="getStatusClass(project.status)">{{ project.status }}</span>
-                         </div>
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                      </div>
-                      <div class="divider my-1"></div>
-                      <div class="flex items-center justify-between">
-                         <span class="text-sm font-medium opacity-70">Assigned Team:</span>
-                         <div class="avatar-group -space-x-3 rtl:space-x-reverse">
-                            @for(memberId of project.allocatedTeamMemberIds.slice(0, 5); track memberId){
-                               @let member = getMemberById(memberId);
-                               @if(member){
-                                 <div class="avatar border-base-200" title="{{ member.name }}">
-                                    <div class="w-8">
-                                       <img [src]="member.avatarUrl" [alt]="member.name" />
+    <!-- Right Column: Activity Feed (2/3) -->
+    <div class="lg:col-span-2 flex flex-col gap-6">
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-0">
+                <!-- Tabs -->
+                <div role="tablist" class="tabs tabs-lifted tabs-lg px-4 pt-4 bg-base-200/30 border-b border-base-200">
+                    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'projects'" [class.font-bold]="activeTab() === 'projects'" (click)="activeTab.set('projects')">Projects</a>
+                    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'invoices'" [class.font-bold]="activeTab() === 'invoices'" (click)="activeTab.set('invoices')">Invoices</a>
+                    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'meetings'" [class.font-bold]="activeTab() === 'meetings'" (click)="activeTab.set('meetings')">Meetings</a>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6">
+                    
+                    <!-- Projects Tab -->
+                    @if(activeTab() === 'projects') {
+                        <div class="space-y-3">
+                            @for(project of paginatedProjects(); track project.id){
+                                <a [routerLink]="['/app/projects', project.id]" class="card card-compact bg-base-100 border border-base-200 hover:border-primary/50 transition-all duration-200 hover:shadow-md cursor-pointer group">
+                                <div class="card-body flex-row items-center justify-between">
+                                    <div>
+                                        <h3 class="font-bold text-base group-hover:text-primary transition-colors">{{ project.name }}</h3>
+                                        <span class="badge badge-xs mt-1" [class]="getStatusClass(project.status)">{{ project.status }}</span>
                                     </div>
-                                 </div>
-                               }
-                            }
-                            @if(project.allocatedTeamMemberIds.length > 5){
-                                <div class="avatar placeholder border-base-200">
-                                    <div class="w-8 bg-neutral text-neutral-content">
-                                      <span class="text-xs">+{{ project.allocatedTeamMemberIds.length - 5 }}</span>
+                                    
+                                    <div class="flex items-center gap-6">
+                                        <!-- Team Avatars -->
+                                        <div class="avatar-group -space-x-3 rtl:space-x-reverse hidden sm:flex">
+                                            @for(memberId of project.allocatedTeamMemberIds.slice(0, 4); track memberId){
+                                                @let member = getMemberById(memberId);
+                                                @if(member){
+                                                    <div class="avatar border-base-100" title="{{ member.name }}">
+                                                        <div class="w-8">
+                                                            <img [src]="member.avatarUrl" [alt]="member.name" />
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                                     </div>
                                 </div>
+                                </a>
+                            } @empty {
+                                <div class="text-center py-10 opacity-60 italic">No projects found.</div>
                             }
-                         </div>
-                      </div>
-                   </div>
-                </a>
-              } @empty {
-                <p class="text-center opacity-75 py-8 bg-base-200/30 rounded-lg">This client has no projects.</p>
-              }
-           </div>
+                        </div>
+                        
+                        @if(projects().length > itemsPerPage()){
+                            <div class="flex justify-center mt-6">
+                            <app-pagination 
+                                [currentPage]="currentPage()"
+                                [totalItems]="projects().length"
+                                [itemsPerPage]="itemsPerPage()"
+                                (pageChange)="onPageChange($event)">
+                            </app-pagination>
+                            </div>
+                        }
+                    }
 
-           @if(projects().length > itemsPerPage()){
-             <div class="flex justify-center mt-4">
-               <app-pagination 
-                 [currentPage]="currentPage()"
-                 [totalItems]="projects().length"
-                 [itemsPerPage]="itemsPerPage()"
-                 (pageChange)="onPageChange($event)">
-               </app-pagination>
-             </div>
-           }
+                    <!-- Invoices Tab -->
+                    @if(activeTab() === 'invoices') {
+                        <div class="overflow-x-auto">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Number</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for(inv of clientInvoicesList(); track inv.id) {
+                                        <tr class="hover:bg-base-100">
+                                            <td class="font-mono font-medium">{{ inv.invoiceNumber }}</td>
+                                            <td>{{ inv.invoiceDate | date:'mediumDate' }}</td>
+                                            <td>
+                                                <span class="badge badge-sm" [class.badge-success]="inv.status === 'Paid'" [class.badge-warning]="inv.status === 'Pending'" [class.badge-error]="inv.status === 'Overdue'">
+                                                    {{ inv.status }}
+                                                </span>
+                                            </td>
+                                            <td class="text-right font-bold">{{ inv.total | currency:'USD':'symbol':'1.2-2' }}</td>
+                                        </tr>
+                                    } @empty {
+                                        <tr><td colspan="4" class="text-center py-8 opacity-50">No invoices yet.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    <!-- Meetings Tab -->
+                    @if(activeTab() === 'meetings') {
+                        <ul class="space-y-2">
+                            @for(meeting of clientMeetingsList(); track meeting.id) {
+                                <li class="flex items-center justify-between p-3 bg-base-200/50 rounded-lg border border-base-200">
+                                    <div class="flex items-center gap-4">
+                                        <div class="bg-base-100 p-2 rounded-lg text-center border border-base-200 min-w-[50px]">
+                                            <div class="text-[10px] font-bold uppercase text-primary">{{ meeting.startTime | date:'MMM' }}</div>
+                                            <div class="text-lg font-bold leading-none">{{ meeting.startTime | date:'dd' }}</div>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold">{{ meeting.title }}</div>
+                                            <div class="text-xs opacity-60">{{ meeting.startTime | date:'shortTime' }} • {{ meeting.platform }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="badge badge-ghost badge-sm">{{ meeting.status }}</div>
+                                </li>
+                            } @empty {
+                                <div class="text-center py-8 opacity-50">No meetings scheduled.</div>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
         </div>
-      </div>
     </div>
   </div>
 </div>
 } @else {
-    <p class="text-center opacity-75">Loading client details...</p>
+    <div class="flex justify-center items-center h-64">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+}
+
+<!-- Email Modal -->
+@if(isEmailModalOpen()){
+  <dialog class="modal modal-open">
+    <div class="modal-box shadow-2xl border border-base-200">
+      <button (click)="closeEmailModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 class="font-bold text-lg mb-1">Send Email</h3>
+      <p class="text-sm opacity-70 mb-6">To: <span class="font-semibold">{{ client()?.name }}</span> ({{ client()?.contact }})</p>
+      
+      <form (ngSubmit)="sendEmail()" class="space-y-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Subject</span></label>
+          <input type="text" [ngModel]="emailSubject()" (ngModelChange)="emailSubject.set($event)" name="subject" required class="input input-bordered w-full focus:input-primary" placeholder="e.g. Project Update">
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Message</span></label>
+          <textarea [ngModel]="emailBody()" (ngModelChange)="emailBody.set($event)" name="body" required class="textarea textarea-bordered h-32 focus:textarea-primary" placeholder="Write your message here..."></textarea>
+        </div>
+        <div class="modal-action mt-6">
+          <button type="button" (click)="closeEmailModal()" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-primary px-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            Send Message
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 }
 
 <!-- Success Toast -->
@@ -145,7 +327,7 @@
 <div class="toast toast-top toast-center">
   <div class="alert alert-success">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    <span>Client saved successfully.</span>
+    <span>{{ toastMessage() }}</span>
   </div>
 </div>
 }

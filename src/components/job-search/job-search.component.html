@@ -1,130 +1,226 @@
 
 <div class="container mx-auto">
-  @if (hasPreferences()) {
-    <!-- Job Board View -->
+  <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
     <div>
-      <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
-        <div>
-            <h1 class="text-3xl font-bold">Job Board</h1>
-            <p class="opacity-75 mt-1">Showing jobs based on your preferences.</p>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-4">
-            <input type="text" placeholder="Search by title, company, or tag..." class="input input-bordered w-full sm:w-64" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
-            <button class="btn btn-ghost" (click)="editPreferences()">Edit Preferences</button>
-        </div>
-      </div>
+        <h1 class="text-3xl font-bold">Job Board</h1>
+        <p class="opacity-75 mt-1">Find and manage your next opportunity.</p>
+    </div>
+  </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @for(job of paginatedJobs(); track job.id){
-          <div class="card bg-base-100 shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
-            <div class="card-body">
-                <div class="flex items-start gap-4">
-                    <div class="avatar">
-                        <div class="w-12 rounded-lg">
-                            <img [src]="job.companyLogo" [alt]="job.company + ' logo'">
+  <!-- Main Tabs (Invoices Style) -->
+  <div role="tablist" class="tabs tabs-lifted">
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'search'" (click)="activeTab.set('search')">Search Jobs</a>
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'saved'" (click)="activeTab.set('saved')">
+        Saved Jobs 
+        @if(bookmarkedJobIds().size > 0) {
+            <span class="badge badge-sm badge-primary ml-2">{{ bookmarkedJobIds().size }}</span>
+        }
+    </a>
+  </div>
+
+  <!-- Content Card -->
+  <div class="card bg-base-100 shadow -mt-px rounded-t-none border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+        
+        @if(activeTab() === 'search') {
+            <!-- Top Filter Bar -->
+            <div class="bg-base-200/40 rounded-xl p-4 mb-6 border border-base-200">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
+                    
+                    <!-- Filter Inputs -->
+                    <div class="form-control w-full">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Keywords</span></label>
+                        <input type="text" [ngModel]="filterKeywords()" (ngModelChange)="filterKeywords.set($event); searchPage.set(1)" placeholder="Title, company, tags..." class="input input-bordered input-sm w-full bg-base-100">
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Location</span></label>
+                        <input type="text" [ngModel]="filterLocation()" (ngModelChange)="filterLocation.set($event); searchPage.set(1)" placeholder="e.g. New York" class="input input-bordered input-sm w-full bg-base-100">
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Interest</span></label>
+                        <input type="text" [ngModel]="filterInterest()" (ngModelChange)="filterInterest.set($event); searchPage.set(1)" placeholder="e.g. React, Design" class="input input-bordered input-sm w-full bg-base-100">
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Work Model</span></label>
+                        <select [ngModel]="filterWorkModel()" (ngModelChange)="filterWorkModel.set($event); searchPage.set(1)" class="select select-bordered select-sm w-full bg-base-100">
+                            <option value="any">Any</option>
+                            <option value="Remote">Remote</option>
+                            <option value="Hybrid">Hybrid</option>
+                            <option value="On-site">On-site</option>
+                        </select>
+                    </div>
+
+                    <!-- Salary Range -->
+                    <div class="form-control w-full">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Min. Salary: ${{ filterSalaryMin() | number:'1.0-0' }}</span></label>
+                        <input type="range" min="30000" max="200000" step="5000" [ngModel]="filterSalaryMin()" (ngModelChange)="filterSalaryMin.set(+$event); searchPage.set(1)" class="range range-xs range-primary">
+                    </div>
+
+                    <!-- Saved Filters Dropdown & Action -->
+                    <div class="form-control w-full">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Load Saved Filter</span></label>
+                        <div class="flex gap-2">
+                            <select class="select select-bordered select-sm w-full bg-base-100" [ngModel]="selectedFilterName()" (ngModelChange)="applySavedFilter($any($event))">
+                                <option [ngValue]="null" disabled>Select filter...</option>
+                                @for(filter of savedFilters(); track filter.name) {
+                                    <option [value]="filter.name">{{ filter.name }}</option>
+                                }
+                            </select>
+                            @if(selectedFilterName()) {
+                                <button class="btn btn-sm btn-square btn-ghost text-error" (click)="deleteCurrentFilter()" title="Delete saved filter">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            }
                         </div>
                     </div>
-                    <div>
-                         <h2 class="card-title text-base">{{ job.title }}</h2>
-                         <p class="text-sm font-medium opacity-80">{{ job.company }}</p>
+
+                    <!-- Buttons (Aligned Bottom) -->
+                    <div class="flex gap-2 md:col-span-2 lg:col-span-2 justify-end items-center pb-0.5 self-end">
+                        <button class="btn btn-sm btn-ghost font-normal text-xs" (click)="resetFilters()">Reset</button>
+                        <button class="btn btn-sm btn-primary btn-outline" (click)="openSaveFilterModal()">Save Filter</button>
                     </div>
                 </div>
-              
-              <div class="my-3 text-sm space-y-2">
-                <div class="flex items-center gap-2 opacity-75">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span>{{ job.location }} ({{ job.workModel }})</span>
-                </div>
-                <div class="flex items-center gap-2 opacity-75">
-                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
-                   <span>{{ job.salary.min / 1000 }}k - {{ job.salary.max / 1000 }}k {{ job.salary.currency }}</span>
-                </div>
-              </div>
+            </div>
 
-              <div class="card-actions justify-between items-center">
-                <div class="text-xs opacity-60">{{ timeSince(job.postedDate) }}</div>
-                <button class="btn btn-primary btn-sm" (click)="viewJobDetails(job)">View Details</button>
-              </div>
+            <!-- Results List (Simplified & Clean) -->
+            <div class="flex flex-col border border-base-200 rounded-xl bg-base-100 overflow-hidden">
+                @for(job of paginatedSearchJobs(); track job.id){
+                    <div class="p-6 border-b border-base-200 last:border-0 hover:bg-base-50 transition-colors group relative cursor-pointer" (click)="viewJobDetails(job)">
+                        <div class="flex justify-between items-start gap-4">
+                            <!-- Job Info -->
+                            <div class="flex-1 min-w-0 space-y-1">
+                                <!-- Title -->
+                                <h3 class="text-lg font-bold text-primary">{{ job.title }}</h3>
+                                
+                                <!-- Metadata Line -->
+                                <div class="text-xs text-base-content/70 font-medium flex flex-wrap gap-2 items-center">
+                                    <span class="font-bold text-base-content">{{ job.company }}</span>
+                                    <span class="opacity-40">•</span>
+                                    <span>{{ job.location }}</span>
+                                    <span class="opacity-40">•</span>
+                                    <span>{{ job.workModel }}</span>
+                                    <span class="opacity-40">•</span>
+                                    <span>{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</span>
+                                </div>
+
+                                <!-- Description -->
+                                <p class="text-sm opacity-80 line-clamp-2 max-w-4xl mt-2 leading-relaxed">
+                                    {{ job.description }}
+                                </p>
+                            </div>
+
+                            <!-- Actions (Heart Only) -->
+                            <div class="flex flex-col shrink-0 ml-2">
+                                <button class="btn btn-circle btn-sm btn-ghost border border-base-200 hover:border-primary hover:text-primary hover:bg-base-100" (click)="$event.stopPropagation(); toggleBookmark(job.id)" [class.text-primary]="isBookmarked(job.id)" [class.border-primary]="isBookmarked(job.id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [attr.fill]="isBookmarked(job.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                } @empty {
+                    <div class="col-span-full card bg-base-100/50 border border-dashed border-base-300 py-12">
+                        <div class="card-body text-center opacity-60">
+                            <p>No jobs found matching your criteria.</p>
+                            <button class="btn btn-link btn-sm" (click)="resetFilters()">Clear Filters</button>
+                        </div>
+                    </div>
+                }
             </div>
-          </div>
-        } @empty {
-          <div class="md:col-span-2 lg:col-span-3 card bg-base-100/50">
-            <div class="card-body text-center opacity-75">
-              <p>No jobs found matching your criteria.</p>
-            </div>
-          </div>
+            
+            @if(filteredJobs().length > searchPerPage()){
+                <div class="flex justify-center mt-8 border-t border-base-200 pt-4">
+                    <app-pagination 
+                        [currentPage]="searchPage()"
+                        [totalItems]="filteredJobs().length"
+                        [itemsPerPage]="searchPerPage()"
+                        (pageChange)="onSearchPageChange($event)">
+                    </app-pagination>
+                </div>
+            }
         }
-      </div>
-       @if(filteredJobs().length > itemsPerPage()){
-        <div class="flex justify-center mt-8">
-          <app-pagination 
-            [currentPage]="currentPage()"
-            [totalItems]="filteredJobs().length"
-            [itemsPerPage]="itemsPerPage()"
-            (pageChange)="onPageChange($event)">
-          </app-pagination>
-        </div>
-      }
+
+        @if(activeTab() === 'saved') {
+            <div class="flex flex-col border border-base-200 rounded-xl bg-base-100 overflow-hidden">
+                @for(job of paginatedSavedJobs(); track job.id) {
+                    <div class="p-6 border-b border-base-200 last:border-0 hover:bg-base-50 transition-colors group relative cursor-pointer" (click)="viewJobDetails(job)">
+                        <div class="flex justify-between items-start gap-4">
+                            <div class="flex-1 space-y-1">
+                                <h3 class="text-lg font-bold text-primary">{{ job.title }}</h3>
+                                <div class="text-xs text-base-content/70 font-medium flex flex-wrap gap-2 items-center">
+                                    <span class="font-bold text-base-content">{{ job.company }}</span>
+                                    <span class="opacity-40">•</span>
+                                    <span>{{ job.location }}</span>
+                                    <span class="opacity-40">•</span>
+                                    <span>{{ job.workModel }}</span>
+                                    <span class="opacity-40">•</span>
+                                    <span>{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</span>
+                                </div>
+                                <p class="text-sm opacity-80 line-clamp-2 max-w-4xl mt-2 leading-relaxed">
+                                    {{ job.description }}
+                                </p>
+                            </div>
+                            <div class="flex flex-col shrink-0 ml-2">
+                                <button class="btn btn-circle btn-sm btn-ghost border border-base-200 hover:border-error hover:text-error hover:bg-base-100" (click)="$event.stopPropagation(); toggleBookmark(job.id)" title="Remove Bookmark">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current text-primary" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                } @empty {
+                    <div class="col-span-full text-center py-16 opacity-50 bg-base-200/30 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                        <p>No saved jobs yet.</p>
+                        <button class="btn btn-link btn-sm" (click)="activeTab.set('search')">Browse Jobs</button>
+                    </div>
+                }
+            </div>
+
+            @if(savedJobs().length > savedPerPage()){
+                <div class="flex justify-center mt-8 border-t border-base-200 pt-4">
+                    <app-pagination 
+                        [currentPage]="savedPage()"
+                        [totalItems]="savedJobs().length"
+                        [itemsPerPage]="savedPerPage()"
+                        (pageChange)="onSavedPageChange($event)">
+                    </app-pagination>
+                </div>
+            }
+        }
     </div>
-  } @else {
-    <!-- Preferences Form View -->
-    <div class="flex items-center justify-center py-12">
-      <div class="card w-full max-w-2xl bg-base-100 shadow-xl">
-        <form class="card-body" (ngSubmit)="savePreferences()">
-          <h2 class="card-title text-2xl">Set Your Job Preferences</h2>
-          <p class="opacity-75 mb-4">Tell us what you're looking for to get started.</p>
-          <div class="space-y-4">
-            <div class="form-control">
-              <label class="label"><span class="label-text">Preferred Location</span></label>
-              <input type="text" [ngModel]="prefLocation()" (ngModelChange)="prefLocation.set($event)" name="location" placeholder="e.g., San Francisco, CA or Remote" required class="input input-bordered">
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Work Model</span></label>
-              <select [ngModel]="prefWorkModel()" (ngModelChange)="prefWorkModel.set($event)" name="workModel" class="select select-bordered">
-                <option value="any">Any</option>
-                <option value="remote">Remote</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="on-site">On-site</option>
-              </select>
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Areas of Interest</span></label>
-              <input type="text" [ngModel]="prefInterests()" (ngModelChange)="prefInterests.set($event)" name="interests" placeholder="e.g., Frontend, UI/UX, Project Management" required class="input input-bordered">
-              <label class="label"><span class="label-text-alt">Separate interests with a comma</span></label>
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Expected Annual Salary ({{ prefExpectedSalary() | number:'1.0-0' }} USD)</span></label>
-              <input type="range" min="30000" max="250000" step="5000" [ngModel]="prefExpectedSalary()" (ngModelChange)="prefExpectedSalary.set(+$event)" name="salary" class="range range-primary">
-            </div>
-          </div>
-          <div class="card-actions justify-end mt-6">
-            <button type="submit" class="btn btn-primary">Save and Find Jobs</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
+  </div>
 </div>
 
 <!-- Job Details Modal -->
 @if (selectedJob(); as job) {
   <dialog class="modal modal-open">
-    <div class="modal-box w-11/12 max-w-3xl">
+    <div class="modal-box w-11/12 max-w-3xl shadow-2xl border border-base-200">
        <button (click)="closeJobDetails()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-       <div class="flex items-center gap-4 mb-4">
-          <div class="avatar"><div class="w-16 rounded-xl"><img [src]="job.companyLogo" [alt]="job.company + ' logo'"></div></div>
+       <div class="flex items-center gap-4 mb-6">
+          <div class="avatar"><div class="w-16 rounded-xl shadow-sm border border-base-200 p-1"><img [src]="job.companyLogo" [alt]="job.company + ' logo'" class="rounded-lg"></div></div>
           <div>
             <h3 class="font-bold text-xl">{{ job.title }}</h3>
             <p class="font-semibold text-primary">{{ job.company }}</p>
-            <p class="text-sm opacity-75">{{ job.location }} ({{ job.workModel }})</p>
+            <div class="flex gap-2 text-sm opacity-75 mt-1">
+                <span>{{ job.location }}</span>
+                <span>•</span>
+                <span>{{ job.workModel }}</span>
+            </div>
           </div>
        </div>
-       <div class="flex flex-wrap gap-2 my-4">
+       
+       <div class="flex flex-wrap gap-2 mb-6">
           @for(tag of job.tags; track tag){
             <div class="badge badge-outline">{{ tag }}</div>
           }
+          <div class="badge badge-success badge-outline font-mono">{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</div>
        </div>
-       <div class="prose max-w-none text-base-content/90">
+
+       <div class="divider"></div>
+
+       <div class="prose max-w-none text-base-content/90 text-sm">
           <p>A full job description would be displayed here. For now, this is placeholder content to demonstrate the modal functionality. The real implementation would pull this data from the job API.</p>
           <h4>Responsibilities:</h4>
           <ul>
@@ -140,11 +236,32 @@
           </ul>
        </div>
        <div class="modal-action mt-6">
-          <button (click)="closeJobDetails()" class="btn btn-ghost">Close</button>
-          <a [href]="job.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Apply Now</a>
+          <button (click)="toggleBookmark(job.id)" class="btn btn-ghost gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [attr.fill]="isBookmarked(job.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            {{ isBookmarked(job.id) ? 'Saved' : 'Save Job' }}
+          </button>
+          <a [href]="job.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary px-8">Apply Now</a>
        </div>
     </div>
   </dialog>
+}
+
+<!-- Save Filter Modal -->
+@if(isFilterNameModalOpen()) {
+    <dialog class="modal modal-open">
+        <div class="modal-box border border-base-200 shadow-2xl">
+            <button (click)="closeSaveFilterModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <h3 class="font-bold text-lg mb-4">Save Filter Configuration</h3>
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text font-medium">Filter Name</span></label>
+                <input type="text" [ngModel]="newFilterName()" (ngModelChange)="newFilterName.set($event)" class="input input-bordered w-full focus:input-primary" placeholder="e.g. Remote React Jobs" (keyup.enter)="confirmSaveFilter()">
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-ghost" (click)="closeSaveFilterModal()">Cancel</button>
+                <button class="btn btn-primary" (click)="confirmSaveFilter()" [disabled]="!newFilterName().trim()">Save Filter</button>
+            </div>
+        </div>
+    </dialog>
 }
 
 <!-- Success Toast -->
@@ -152,7 +269,7 @@
 <div class="toast toast-top toast-center z-50">
   <div class="alert alert-success shadow-lg">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    <span>Preferences saved.</span>
+    <span>{{ toastMessage() }}</span>
   </div>
 </div>
 }

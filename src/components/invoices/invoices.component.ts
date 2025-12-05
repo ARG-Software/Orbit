@@ -1,5 +1,6 @@
+
 import { Component, ChangeDetectionStrategy, computed, inject, signal, effect, Signal } from '@angular/core';
-import { DecimalPipe, DatePipe, KeyValuePipe, TitleCasePipe } from '@angular/common';
+import { DecimalPipe, DatePipe, KeyValuePipe, TitleCasePipe, CurrencyPipe } from '@angular/common';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { MockDataService, Client, Invoice, TeamMember, Project, Task } from '../../services/mock-data.service';
 import { FormsModule } from '@angular/forms';
@@ -13,19 +14,14 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   rate: number;
-}
-
-interface TaskForBilling {
-  task: Task;
-  hours: number;
-  selected: boolean;
+  type: 'hourly' | 'fixed';
 }
 
 @Component({
   selector: 'app-invoices',
   templateUrl: './invoices.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, DatePipe, RouterLink, PaginationComponent, KeyValuePipe, TitleCasePipe],
+  imports: [FormsModule, DecimalPipe, DatePipe, RouterLink, PaginationComponent, KeyValuePipe, TitleCasePipe, CurrencyPipe],
 })
 export class InvoicesComponent {
   private dataService = inject(MockDataService);
@@ -41,16 +37,33 @@ export class InvoicesComponent {
   allProjects = this.dataService.getProjects();
   allInvoices = this.dataService.getInvoices();
 
+  // --- Metrics ---
+  totalOutstanding = computed(() => {
+      return this.allInvoices()
+        .filter(i => i.type === 'Revenue' && (i.status === 'Pending' || i.status === 'Overdue'))
+        .reduce((acc, i) => acc + i.total, 0);
+  });
+
+  processedCount = computed(() => {
+      return this.allInvoices()
+        .filter(i => i.type === 'Revenue' && i.status === 'Paid')
+        .length;
+  });
+
   // --- Create Invoice Signals ---
   selectedClientId = signal<number | null>(null);
   
-  // Available projects for the selected client
-  clientProjects: Signal<Project[]> = toSignal(
-    toObservable(this.selectedClientId).pipe(
-      switchMap((id: number | null) => id !== null ? this.dataService.getProjectsByClientId(id) : of([]))
-    ),
-    { initialValue: [] }
-  );
+  // Manual Client Entry State
+  manualClientName = signal('');
+  manualClientEmail = signal('');
+  manualClientAddress = signal('');
+  manualClientTaxNumber = signal('');
+
+  // Available projects for selected Client
+  relevantProjects = computed(() => {
+      const clientId = this.selectedClientId();
+      return clientId ? this.allProjects().filter(p => p.clientId === clientId) : [];
+  });
 
   // State for Multi-Project Selection
   selectedProjectIds = signal<number[]>([]);
@@ -65,16 +78,12 @@ export class InvoicesComponent {
   dueDate = signal('');
   customItems = signal<InvoiceItem[]>([]);
 
-  // --- Bill Tasks Modal ---
-  isBillTaskModalOpen = signal(false);
-  tasksToBill = signal<Map<string, TaskForBilling>>(new Map());
-
   // --- Invoice History Signals ---
   historyFilterClientId = signal<number | null>(null);
   historyFilterProjectId = signal<number | null>(null);
   historyFilterStartDate = signal('');
   historyFilterEndDate = signal('');
-  historyFilterStatus = signal<'All' | 'Paid' | 'Pending' | 'Overdue'>('All');
+  historyFilterStatus = signal<'All' | 'Paid' | 'Pending' | 'Overdue' | 'Generated'>('All');
   historyCurrentPage = signal(1);
   historyItemsPerPage = signal(10);
 
@@ -88,7 +97,7 @@ export class InvoicesComponent {
     this.invoiceEndDate.set(lastDay.toISOString().split('T')[0]);
 
     effect(() => {
-        // Auto-generate Invoice Number and Due Date based on End Date
+        // Auto-generate Invoice Number and Default Due Date based on End Date
         const endDateStr = this.invoiceEndDate();
         if (!endDateStr) return;
 
@@ -99,17 +108,24 @@ export class InvoicesComponent {
         // Simple random component to simulate unique ID generation
         const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
         
-        this.invoiceNumber.set(`INV-${year}${String(month).padStart(2, '0')}-${randomPart}`);
-        this.invoiceDate.set(endDateStr);
+        if (!this.invoiceNumber() || this.invoiceNumber().startsWith('INV')) {
+             this.invoiceNumber.set(`INV-${year}${String(month).padStart(2, '0')}-${randomPart}`);
+        }
+        if (!this.invoiceDate()) {
+            this.invoiceDate.set(endDateStr);
+        }
         
-        const newDueDate = new Date(endDate);
-        newDueDate.setDate(newDueDate.getDate() + 30);
-        this.dueDate.set(newDueDate.toISOString().split('T')[0]);
+        // Only set default due date if not already set by user interaction
+        if (!this.dueDate()) {
+            const newDueDate = new Date(endDate);
+            newDueDate.setDate(newDueDate.getDate() + 30);
+            this.dueDate.set(newDueDate.toISOString().split('T')[0]);
+        }
     }, { allowSignalWrites: true });
 
     effect(() => {
-      // Reset or Initialize Project Selection when Client Changes
-      const projects = this.clientProjects();
+      // Reset or Initialize Project Selection when Context Changes
+      const projects = this.relevantProjects();
       // Default to selecting all active projects for convenience
       const activeIds = projects.filter(p => p.status === 'Active').map(p => p.id);
       this.selectedProjectIds.set(activeIds);
@@ -129,7 +145,7 @@ export class InvoicesComponent {
     return this.clients().find(c => c.id === id);
   });
   
-  private getRate(project: Project, memberId: number): number {
+  private getRevenueRate(project: Project, memberId: number): number {
     const member = this.members().find(m => m.id === memberId);
     if (!member) return 0;
     return project.memberRates[memberId] ?? member.defaultHourlyRate;
@@ -145,7 +161,7 @@ export class InvoicesComponent {
 
   // Automatically populate items based on Time Range + Selected Projects
   loggedHoursItems = computed<InvoiceItem[]>(() => {
-    const projects = this.clientProjects();
+    const projects = this.relevantProjects();
     const selectedIds = this.selectedProjectIds();
     const startDateStr = this.invoiceStartDate();
     const endDateStr = this.invoiceEndDate();
@@ -154,7 +170,6 @@ export class InvoicesComponent {
 
     const startDate = new Date(startDateStr);
     const endDate = new Date(endDateStr);
-    // Set end date to end of day
     endDate.setHours(23, 59, 59, 999);
 
     const relevantItems: InvoiceItem[] = [];
@@ -169,10 +184,18 @@ export class InvoicesComponent {
             
             // Check if date falls within selected range
             if(entryDate >= startDate && entryDate <= endDate) {
+              
+              let rate = this.getRevenueRate(project, entry.memberId);
+              
+              // Find member name for description
+              const m = this.members().find(x => x.id === entry.memberId);
+              const descPrefix = `[${project.name}] ${m?.name || 'Unknown'}:`;
+
               relevantItems.push({
-                description: `[${project.name}] ${entryDate.toLocaleDateString()}: ${entry.description}`,
+                description: `${descPrefix} ${entryDate.toLocaleDateString()} - ${entry.description}`,
                 quantity: entry.hours,
-                rate: this.getRate(project, entry.memberId),
+                rate: rate,
+                type: 'hourly'
               });
             }
           });
@@ -181,8 +204,13 @@ export class InvoicesComponent {
     return relevantItems;
   });
 
-  addCustomItem(): void {
-    this.customItems.update(items => [...items, { description: '', quantity: 1, rate: 0 }]);
+  addCustomItem(type: 'hourly' | 'fixed'): void {
+    this.customItems.update(items => [...items, { 
+        description: '', 
+        quantity: 1, 
+        rate: 0,
+        type: type
+    }]);
   }
 
   updateCustomItem(index: number, field: keyof InvoiceItem, value: string | number): void {
@@ -215,16 +243,22 @@ export class InvoicesComponent {
   total = computed(() => this.subtotal() + this.tax());
 
   canGenerateInvoice = computed(() => {
-    if (this.selectedClientId() === null || (this.loggedHoursItems().length === 0 && this.customItems().length === 0)) return false;
+    let hasRecipient = this.selectedClientId() !== null || (!!this.manualClientName() && !!this.manualClientEmail());
+    const hasItems = this.loggedHoursItems().length > 0 || this.customItems().length > 0;
+    
+    if (!hasRecipient || !hasItems) return false;
+
     const method = this.selectedPaymentMethod();
     const u = this.user();
+    
     if (method === 'paypal' && !u?.paypalConnected) return false;
     if (method === 'stripe' && !u?.stripeConnected) return false;
+    
     return true;
   });
 
   paymentInstructions = computed(() => {
-    const clientName = this.selectedClient()?.contact ?? 'the client\'s email';
+    const clientName = this.selectedClient()?.contact || this.manualClientEmail() || 'the client';
     const userName = this.user()?.name.replace(/\s+/g, '').toLowerCase() || 'company';
     switch (this.selectedPaymentMethod()) {
       case 'paypal': return `Please send the total amount to our PayPal account: payment@${userName}.com. Thank you!`;
@@ -234,122 +268,50 @@ export class InvoicesComponent {
     }
   });
   
-  generateInvoice() {
+  generateInvoice(sendImmediately: boolean = false) {
     if (!this.canGenerateInvoice()) {
-      alert("Please select a client and ensure there are billable hours or items for the period.");
+      alert("Please select a recipient and ensure there are items.");
       return;
     }
     const method = this.selectedPaymentMethod();
+    const status = sendImmediately ? 'Pending' : 'Generated'; 
     
     const newInvoice: Omit<Invoice, 'id'> = {
-      clientId: this.selectedClientId()!,
+      type: 'Revenue',
+      clientId: this.selectedClientId(),
+      teamMemberId: null,
+      manualClientDetails: (!this.selectedClientId()) ? {
+          name: this.manualClientName(),
+          email: this.manualClientEmail(),
+          address: this.manualClientAddress(),
+          taxNumber: this.manualClientTaxNumber(),
+      } : undefined,
       projectIds: this.selectedProjectIds(),
       invoiceNumber: this.invoiceNumber(),
       invoiceDate: this.invoiceDate(),
       dueDate: this.dueDate(),
       total: this.total(),
-      status: 'Pending',
+      status: status,
       paymentMethod: method,
     };
     this.dataService.addInvoice(newInvoice);
 
-    if (method === 'manual') {
-      alert(`Invoice ${this.invoiceNumber()} generated successfully!`);
+    const recipient = this.selectedClient()?.contact || this.manualClientEmail();
+
+    if (sendImmediately) {
+       alert(`Invoice ${this.invoiceNumber()} generated and sent to ${recipient}!`);
     } else {
-      alert(`Payment request for $${this.total().toFixed(2)} initiated via ${method === 'paypal' ? 'PayPal' : 'Stripe'}.`);
+       alert(`Invoice ${this.invoiceNumber()} generated successfully.`);
     }
     
     this.activeTab.set('history');
   }
 
+  generateAndSend() {
+      this.generateInvoice(true);
+  }
+
   printInvoice() { window.print(); }
-
-  // --- Bill Tasks Logic ---
-  billableTasks: Signal<Task[]> = toSignal(
-    toObservable(this.selectedClientId).pipe(
-      switchMap((id: number | null) => {
-        if (id === null) {
-          return of([]);
-        }
-        return this.dataService.getProjectsByClientId(id).pipe(
-          switchMap((projects: Project[]) => {
-            if (!projects || projects.length === 0) {
-              return of([]);
-            }
-            const tasksObservables = projects.map(p => this.dataService.getTasksByProjectId(p.id));
-            if (tasksObservables.length === 0) {
-              return of([]);
-            }
-            return forkJoin(tasksObservables).pipe(
-              map((tasksArrays: Task[][]) => tasksArrays.flat())
-            );
-          })
-        );
-      }),
-      map((tasks: Task[]) => tasks.filter(t => t.status === 'Completed' && !t.isBilled))
-    ),
-    { initialValue: [] }
-  );
-
-  openBillTaskModal() {
-    const billingMap = new Map<string, TaskForBilling>();
-    this.billableTasks().forEach(task => {
-        billingMap.set(task.id, { task, hours: 0, selected: false });
-    });
-    this.tasksToBill.set(billingMap);
-    this.isBillTaskModalOpen.set(true);
-  }
-
-  closeBillTaskModal() { this.isBillTaskModalOpen.set(false); }
-
-  toggleTaskForBilling(taskId: string) {
-    this.tasksToBill.update(currentMap => {
-      const newMap = new Map<string, TaskForBilling>(currentMap);
-      const item = newMap.get(taskId);
-      if (item) {
-        newMap.set(taskId, { ...item, selected: !item.selected });
-      }
-      return newMap;
-    });
-  }
-
-  updateBillingHoursForTask(taskId: string, hours: number) {
-    this.tasksToBill.update(currentMap => {
-      const newMap = new Map<string, TaskForBilling>(currentMap);
-      const item = newMap.get(taskId);
-      if (item) {
-        newMap.set(taskId, { ...item, hours });
-      }
-      return newMap;
-    });
-  }
-
-  addSelectedTasksToInvoice() {
-    const tasksToAdd: InvoiceItem[] = [];
-    const tasksToUpdate: Task[] = [];
-    
-    this.tasksToBill().forEach(item => {
-        if (item.selected && item.hours > 0) {
-            const project = this.allProjects().find(p => p.id === item.task.projectId);
-            if (project) {
-                tasksToAdd.push({
-                    description: `[${project.name}] Task: ${item.task.title}`,
-                    quantity: item.hours,
-                    rate: this.getRate(project, item.task.assignedMemberId)
-                });
-                tasksToUpdate.push({ ...item.task, isBilled: true });
-            }
-        }
-    });
-
-    if (tasksToAdd.length > 0) {
-        this.customItems.update(items => [...items, ...tasksToAdd]);
-        tasksToUpdate.forEach(task => this.dataService.updateTask(task));
-    }
-    
-    this.closeBillTaskModal();
-  }
-
 
   // --- Invoice History Computations ---
   projectsForClientFilter = computed(() => {
@@ -359,7 +321,9 @@ export class InvoicesComponent {
   });
 
   filteredHistoryInvoices = computed(() => {
-    let invoices = this.allInvoices();
+    // Force filtering to only Revenue type invoices
+    let invoices = this.allInvoices().filter(inv => inv.type === 'Revenue');
+    
     const clientId = this.historyFilterClientId();
     const projectId = this.historyFilterProjectId();
     const startDate = this.historyFilterStartDate();
@@ -402,27 +366,31 @@ export class InvoicesComponent {
       this.dataService.updateInvoice({ ...invoice, status: newStatus });
   }
 
+  sendInvoiceFromHistory(invoice: Invoice) {
+      // Logic to send email
+      alert(`Invoice ${invoice.invoiceNumber} sent!`);
+      this.updateInvoiceStatus(invoice, 'Pending'); // Move to pending payment after sending
+  }
+
+  downloadInvoice(invoice: Invoice) {
+      alert(`Downloading PDF for ${invoice.invoiceNumber}...`);
+  }
+
   // --- Helpers ---
-  getClientName(clientId: number): string {
-    return this.clients().find(c => c.id === clientId)?.name ?? 'N/A';
+  getRecipientName(invoice: Invoice): string {
+    if (invoice.clientId) {
+        return this.clients().find(c => c.id === invoice.clientId)?.name ?? 'Unknown Client';
+    }
+    return invoice.manualClientDetails?.name ?? 'Manual Client';
   }
 
   getProjectNames(projectIds: number[]): string {
-    if (!projectIds || projectIds.length === 0) return 'Misc';
+    if (!projectIds || projectIds.length === 0) return 'Manual/Misc';
     const names = projectIds
       .map(id => this.allProjects().find(p => p.id === id)?.name)
       .filter(Boolean);
-    if (names.length === 0) return 'Misc';
+    if (names.length === 0) return 'Manual/Misc';
     return names.join(', ');
-  }
-
-  getStatusClass(status: 'Paid' | 'Pending' | 'Overdue'): string {
-    switch (status) {
-      case 'Paid': return 'badge-success';
-      case 'Pending': return 'badge-warning';
-      case 'Overdue': return 'badge-error';
-      default: return 'badge-ghost';
-    }
   }
 
   private getDateFromWeekIdAndDay(weekId: string, dayName: string): Date {

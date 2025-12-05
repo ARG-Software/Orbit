@@ -16,3 +16,9 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-base-content/40;
 }
+
+.vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+}
