@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
 import { MockDataService, Task, Project, Payment } from '../../services/mock-data.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { GoogleGenAI } from "@google/genai";
 import { TaskModalComponent } from '../modals/task-modal/task-modal.component';
 import { ProjectModalComponent } from '../modals/project-modal/project-modal.component';
 import * as d3 from 'd3';
@@ -337,7 +336,6 @@ export class DashboardComponent {
     this.aiSuggestion.set(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       // Construct Context
       const now = new Date();
@@ -356,12 +354,7 @@ export class DashboardComponent {
         Be encouraging but direct. Do not use markdown formatting like **bold**, just plain text.
       `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      this.aiSuggestion.set(response.text.trim());
+      this.aiSuggestion.set(prompt);
     } catch (error) {
       console.error('AI Error', error);
       this.aiSuggestion.set("I couldn't connect to the satellite right now. Focus on your top priority task!");
