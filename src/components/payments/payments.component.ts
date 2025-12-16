@@ -2,21 +2,28 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, Payment, TeamMember } from '../../services/mock-data.service';
+import { MockDataService, Payment } from '../../services/mock-data.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
+import { ActivatedRoute } from '@angular/router';
+import { PaymentModalComponent } from '../modals/payment-modal/payment-modal.component';
 
 @Component({
   selector: 'app-payments',
   templateUrl: './payments.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe, CurrencyPipe, PaginationComponent],
+  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe, CurrencyPipe, PaginationComponent, PaymentModalComponent],
 })
 export class PaymentsComponent {
   private dataService = inject(MockDataService);
+  private route = inject(ActivatedRoute);
 
   // Data Signals
   allPayments = this.dataService.getPayments();
   members = this.dataService.getTeamMembers();
+  projects = this.dataService.getProjects();
+
+  // Tabs
+  activeTab = signal<'history' | 'debts'>('history');
 
   // List View State
   statusFilter = signal<'All' | 'Paid' | 'Pending' | 'Processing'>('All');
@@ -24,25 +31,20 @@ export class PaymentsComponent {
   currentPage = signal(1);
   itemsPerPage = signal(10);
 
-  // Wizard State
+  // Modal State
   isModalOpen = signal(false);
-  currentStep = signal<1 | 2 | 3>(1);
-  
-  // New Payment Form Data
-  newPayRecipientType = signal<'existing' | 'new'>('existing');
-  selectedMemberId = signal<number | null>(null);
-  
-  // Fields
-  recipientName = signal('');
-  recipientRole = signal('');
-  recipientEmail = signal('');
-  recipientIban = signal('');
-  recipientBank = signal('');
-  
-  payAmount = signal<number | null>(null);
-  payCurrency = signal('USD');
-  payDescription = signal('');
-  payMethod = signal<'Revolut' | 'Wise' | 'PayPal' | 'Viva' | 'Manual' | null>(null);
+  modalMemberId = signal<number | null>(null);
+  modalProjectId = signal<number | null>(null);
+  modalAmount = signal<number | null>(null);
+  modalRef = signal('');
+
+  constructor() {
+    this.route.queryParams.subscribe(params => {
+        if (params['action'] === 'pay' && params['memberId']) {
+            this.openPaymentModal(Number(params['memberId']), Number(params['amount']), params['ref']);
+        }
+    });
+  }
 
   // --- List Computations ---
   
@@ -87,115 +89,55 @@ export class PaymentsComponent {
       return this.allPayments().filter(p => p.status === 'Paid').length;
   });
 
+  // --- Debt Computation ---
+  
+  outstandingDebts = computed(() => {
+      const debts: { memberId: number, memberName: string, projectId: number, projectName: string, amount: number, avatar: string }[] = [];
+      const projects = this.projects();
+      const members = this.members();
+
+      projects.forEach(p => {
+          p.allocatedTeamMemberIds.forEach(mId => {
+              const debt = this.dataService.getMemberDebt(mId, p.id);
+              if (debt > 0) {
+                  const m = members.find(mem => mem.id === mId);
+                  if (m) {
+                      debts.push({
+                          memberId: mId,
+                          memberName: m.name,
+                          avatar: m.avatarUrl,
+                          projectId: p.id,
+                          projectName: p.name,
+                          amount: debt
+                      });
+                  }
+              }
+          });
+      });
+      
+      return debts.sort((a, b) => b.amount - a.amount);
+  });
+
   // --- Actions ---
 
   onPageChange(page: number) {
       this.currentPage.set(page);
   }
 
-  openNewPaymentModal() {
-      // Reset
-      this.currentStep.set(1);
-      this.newPayRecipientType.set('existing');
-      this.selectedMemberId.set(null);
-      this.recipientName.set('');
-      this.recipientRole.set('');
-      this.recipientEmail.set('');
-      this.recipientIban.set('');
-      this.recipientBank.set('');
-      this.payAmount.set(null);
-      this.payDescription.set('');
-      this.payMethod.set(null);
-      
+  openPaymentModal(memberId?: number, amount?: number, ref?: string, projectId?: number) {
+      this.modalMemberId.set(memberId || null);
+      this.modalAmount.set(amount || null);
+      this.modalRef.set(ref || '');
+      this.modalProjectId.set(projectId || null);
       this.isModalOpen.set(true);
   }
 
   closeModal() {
       this.isModalOpen.set(false);
-  }
-
-  onMemberSelect(memberId: number) {
-      const member = this.members().find(m => m.id === memberId);
-      if (member) {
-          this.selectedMemberId.set(member.id);
-          this.recipientName.set(member.name);
-          this.recipientRole.set(member.role);
-          this.recipientEmail.set(member.email);
-          // Mock bank details if available in member object (assuming extended model)
-          this.recipientIban.set(member.paymentDetails?.iban || '');
-          this.recipientBank.set(member.paymentDetails?.bankName || '');
-      }
-  }
-
-  nextStep() {
-      if (this.currentStep() === 1) {
-          if (!this.recipientName() || !this.recipientEmail()) {
-              alert('Please fill in recipient details.');
-              return;
-          }
-      } else if (this.currentStep() === 2) {
-          if (!this.payAmount() || this.payAmount()! <= 0 || !this.payDescription()) {
-              alert('Please enter a valid amount and description.');
-              return;
-          }
-      }
-      this.currentStep.set((this.currentStep() + 1) as any);
-  }
-
-  prevStep() {
-      this.currentStep.set((this.currentStep() - 1) as any);
-  }
-
-  selectMethod(method: 'Revolut' | 'Wise' | 'PayPal' | 'Viva' | 'Manual') {
-      this.payMethod.set(method);
-  }
-
-  processExternalRedirect() {
-      const method = this.payMethod();
-      const amount = this.payAmount();
-      const currency = this.payCurrency();
-      const email = this.recipientEmail();
-      
-      // 1. Construct External URL (Mocked Logic)
-      let url = '';
-      
-      switch (method) {
-          case 'PayPal':
-              // Generic PayPal Send link
-              url = `https://www.paypal.com/myaccount/transfer/homepage/buy/preview?amount=${amount}&currencyCode=${currency}&recipient=${email}`; 
-              break;
-          case 'Wise':
-              url = `https://wise.com/send?amount=${amount}&sourceCurrency=${currency}&targetCurrency=${currency}`;
-              break;
-          case 'Revolut':
-              // Revolut Me link (requires username usually, mocking generic)
-              url = `https://revolut.me/`; 
-              break;
-          case 'Viva':
-              url = `https://www.vivawallet.com/checkout`;
-              break;
-          case 'Manual':
-              alert(`Please log in to your bank (${this.recipientBank() || 'Provider'}) and transfer ${currency} ${amount} to ${this.recipientIban()}.`);
-              break;
-      }
-
-      // 2. Add Payment Record to Orbit (Status: Pending/Processing)
-      this.dataService.addPayment({
-          recipientName: this.recipientName(),
-          recipientRole: this.recipientRole() || 'Contractor',
-          recipientEmail: this.recipientEmail(),
-          amount: amount!,
-          currency: currency,
-          method: method!,
-          description: this.payDescription()
-      });
-
-      // 3. Redirect (if not manual)
-      if (method !== 'Manual' && url) {
-          window.open(url, '_blank');
-      }
-
-      this.closeModal();
+      this.modalMemberId.set(null);
+      this.modalAmount.set(null);
+      this.modalRef.set('');
+      this.modalProjectId.set(null);
   }
 
   getStatusClass(status: string): string {

@@ -2,355 +2,294 @@
 <div class="container mx-auto">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-bold">Invoices</h1>
-            <p class="opacity-60 mt-1">Manage client billing and revenue.</p>
+            <h1 class="text-3xl font-light tracking-tight">{{ translationService.translate('Invoices') }}</h1>
+            <p class="opacity-60 mt-1 text-sm font-medium">{{ translationService.translate('Manage client billing and revenue.') }}</p>
         </div>
     </div>
 
     <!-- Metrics Overview -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
-            <div class="stat-figure text-warning opacity-20">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-lg p-5">
+            <div class="flex justify-between items-start">
+                <span class="font-bold text-xs uppercase tracking-wider opacity-50">{{ translationService.translate('Outstanding Amount') }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <div class="stat-title text-xs font-bold uppercase opacity-60">Outstanding Amount</div>
-            <div class="stat-value text-warning">{{ totalOutstanding() | currency:'USD':'symbol':'1.0-0' }}</div>
+            <div class="mt-2 text-2xl font-light tracking-tight text-warning">{{ totalOutstanding() | currency:'USD':'symbol':'1.0-0' }}</div>
         </div>
-        <div class="stat bg-base-100 shadow-sm border border-base-200 rounded-xl">
-            <div class="stat-figure text-success opacity-20">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-lg p-5">
+            <div class="flex justify-between items-start">
+                <span class="font-bold text-xs uppercase tracking-wider opacity-50">{{ translationService.translate('Invoices Processed') }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <div class="stat-title text-xs font-bold uppercase opacity-60">Invoices Processed</div>
-            <div class="stat-value text-success">{{ processedCount() }}</div>
+            <div class="mt-2 text-2xl font-light tracking-tight">{{ processedCount() }}</div>
         </div>
     </div>
 
     <div role="tablist" class="tabs tabs-lifted">
-      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'create'" (click)="activeTab.set('create')">Create New</a>
-      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">History</a>
+      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'create'" (click)="activeTab.set('create')">{{ translationService.translate('Create New') }}</a>
+      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">{{ translationService.translate('History') }}</a>
     </div>
 
     @if (activeTab() === 'create') {
-        <div class="card bg-base-100 shadow -mt-px rounded-t-none">
+        <div class="card bg-base-100 shadow-sm border border-base-200 -mt-px rounded-tl-none rounded-b-lg">
             <div class="card-body">
                 
                 <!-- 1. Payment Method Panel -->
-                <div class="card bg-base-100/50 mb-8 border border-base-200">
-                    <div class="card-body">
-                        <h2 class="card-title border-b border-base-content/10 pb-3">1. Payment Method</h2>
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <div class="btn-group">
-                                <button (click)="selectedPaymentMethod.set('manual')" class="btn" [class.btn-active]="selectedPaymentMethod() === 'manual'">
-                                    Manual / Bank
-                                </button>
-                                <button (click)="selectedPaymentMethod.set('paypal')" class="btn" [class.btn-active]="selectedPaymentMethod() === 'paypal'" [disabled]="!user()?.paypalConnected" title="{{!user()?.paypalConnected ? 'Connect PayPal in Settings' : 'Bill via PayPal'}}">
-                                    PayPal
-                                </button>
-                                <button (click)="selectedPaymentMethod.set('stripe')" class="btn" [class.btn-active]="selectedPaymentMethod() === 'stripe'" [disabled]="!user()?.stripeConnected" title="{{!user()?.stripeConnected ? 'Connect Stripe in Settings' : 'Bill via Stripe'}}">
-                                    Stripe
-                                </button>
-                            </div>
-                            @if(!user()?.paypalConnected || !user()?.stripeConnected) {
-                                <p class="text-sm opacity-75 self-center ml-4">Connect payment methods in <a routerLink="/settings" class="link link-primary">Settings</a>.</p>
-                            }
+                <div class="bg-base-50 p-6 rounded-lg border border-base-200 mb-6">
+                    <h2 class="text-sm font-bold uppercase tracking-wider opacity-60 mb-4">1. {{ translationService.translate('Payment Method') }}</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="join">
+                            <button (click)="selectedPaymentMethod.set('manual')" class="btn btn-sm join-item" [class.btn-neutral]="selectedPaymentMethod() === 'manual'">
+                                Manual / Bank
+                            </button>
+                            <button (click)="selectedPaymentMethod.set('paypal')" class="btn btn-sm join-item" [class.btn-neutral]="selectedPaymentMethod() === 'paypal'" [disabled]="!user()?.paypalConnected" title="{{!user()?.paypalConnected ? 'Connect PayPal in Settings' : 'Bill via PayPal'}}">
+                                PayPal
+                            </button>
+                            <button (click)="selectedPaymentMethod.set('stripe')" class="btn btn-sm join-item" [class.btn-neutral]="selectedPaymentMethod() === 'stripe'" [disabled]="!user()?.stripeConnected" title="{{!user()?.stripeConnected ? 'Connect Stripe in Settings' : 'Bill via Stripe'}}">
+                                Stripe
+                            </button>
                         </div>
+                        @if(!user()?.paypalConnected || !user()?.stripeConnected) {
+                            <p class="text-xs opacity-50 self-center ml-2">Connect payment methods in <a routerLink="/settings" class="link link-hover">Settings</a>.</p>
+                        }
                     </div>
                 </div>
 
                 <!-- 2. Configuration Panel -->
-                <div class="card bg-base-100/50 mb-8 border border-base-200">
-                    <div class="card-body">
-                        <h2 class="card-title border-b border-base-content/10 pb-3">2. Details</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                            
-                            <!-- Client Selection -->
-                            <div class="form-control">
-                                <label for="client" class="label"><span class="label-text font-semibold">Select Client</span></label>
-                                <select id="client" [ngModel]="selectedClientId()" (ngModelChange)="selectedClientId.set($event)" class="select select-bordered w-full">
-                                    <option [ngValue]="null">-- Manual Entry (No Client) --</option>
-                                    @for(client of clients(); track client.id){
-                                        <option [ngValue]="client.id">{{ client.name }}</option>
-                                    }
-                                </select>
-                            </div>
-
-                            <!-- Date Range Selection -->
-                            <div class="form-control">
-                                <label class="label"><span class="label-text font-semibold">Period</span></label>
-                                <div class="flex items-center gap-2">
-                                    <input type="date" [ngModel]="invoiceStartDate()" (ngModelChange)="invoiceStartDate.set($event)" class="input input-bordered w-full" placeholder="Start Date">
-                                    <span class="opacity-50 font-bold">→</span>
-                                    <input type="date" [ngModel]="invoiceEndDate()" (ngModelChange)="invoiceEndDate.set($event)" class="input input-bordered w-full" placeholder="End Date">
-                                </div>
-                            </div>
-                        </div>
+                <div class="bg-base-50 p-6 rounded-lg border border-base-200 mb-6">
+                    <h2 class="text-sm font-bold uppercase tracking-wider opacity-60 mb-4">2. {{ translationService.translate('Details') }}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
-                        <!-- Manual Client Details (Visible if no client selected) -->
-                        @if(selectedClientId() === null) {
-                            <div class="mt-4 p-4 bg-base-200/50 rounded-lg border border-base-200">
-                                <h3 class="font-bold text-sm mb-3 opacity-70 uppercase">Manual Client Details</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="form-control">
-                                        <label class="label py-1"><span class="label-text">Name</span></label>
-                                        <input type="text" [ngModel]="manualClientName()" (ngModelChange)="manualClientName.set($event)" class="input input-bordered input-sm" placeholder="Client Name">
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label py-1"><span class="label-text">Email</span></label>
-                                        <input type="email" [ngModel]="manualClientEmail()" (ngModelChange)="manualClientEmail.set($event)" class="input input-bordered input-sm" placeholder="client@example.com">
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label py-1"><span class="label-text">Address</span></label>
-                                        <input type="text" [ngModel]="manualClientAddress()" (ngModelChange)="manualClientAddress.set($event)" class="input input-bordered input-sm" placeholder="Billing Address">
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label py-1"><span class="label-text">Tax Number</span></label>
-                                        <input type="text" [ngModel]="manualClientTaxNumber()" (ngModelChange)="manualClientTaxNumber.set($event)" class="input input-bordered input-sm" placeholder="Tax ID / VAT Number">
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        <!-- Due Date Config -->
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <div class="form-control">
-                                <label class="label"><span class="label-text font-semibold">Invoice Due Date</span></label>
-                                <input type="date" [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" class="input input-bordered w-full">
-                            </div>
+                        <!-- Client Selection -->
+                        <div class="form-control">
+                            <label for="client" class="label"><span class="label-text font-medium">{{ translationService.translate('Select Client') }}</span></label>
+                            <select id="client" [ngModel]="selectedClientId()" (ngModelChange)="selectedClientId.set($event)" class="select select-bordered w-full bg-base-100">
+                                <option [ngValue]="null">-- {{ translationService.translate('Manual Entry (No Client)') }} --</option>
+                                @for(client of clients(); track client.id){
+                                    <option [ngValue]="client.id">{{ client.name }}</option>
+                                }
+                            </select>
                         </div>
 
-                        <!-- Project Selection -->
-                        @if(relevantProjects().length > 0) {
-                            <div class="mt-6">
-                                <label class="label"><span class="label-text font-semibold">Select Projects</span></label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    @for(project of relevantProjects(); track project.id) {
-                                        @let isSelected = selectedProjectIds().includes(project.id);
-                                        <div class="form-control border border-base-200 rounded-lg px-4 py-2 hover:bg-base-200/30 transition-colors" [class.border-primary]="isSelected" [class.bg-primary/5]="isSelected">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" [checked]="isSelected" (change)="toggleProjectSelection(project.id, $any($event.target).checked)" />
-                                                <div class="flex flex-col">
-                                                    <span class="label-text font-medium">{{ project.name }}</span>
-                                                    <span class="text-xs badge badge-xs badge-outline mt-1" [class.badge-success]="project.status === 'Active'" [class.badge-ghost]="project.status !== 'Active'">{{ project.status }}</span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    }
-                                </div>
-                                <p class="text-xs opacity-60 mt-2 ml-1">Hours logged for selected projects within the dates above will be automatically added.</p>
+                        <!-- Date Range Selection -->
+                        <div class="form-control">
+                            <label class="label"><span class="label-text font-medium">{{ translationService.translate('Period') }}</span></label>
+                            <div class="flex items-center gap-2">
+                                <input type="date" [ngModel]="invoiceStartDate()" (ngModelChange)="invoiceStartDate.set($event)" class="input input-bordered w-full bg-base-100" placeholder="Start Date">
+                                <span class="opacity-30">→</span>
+                                <input type="date" [ngModel]="invoiceEndDate()" (ngModelChange)="invoiceEndDate.set($event)" class="input input-bordered w-full bg-base-100" placeholder="End Date">
                             </div>
-                        } @else if (selectedClientId()) {
-                             <div class="mt-4 alert alert-warning text-sm">No projects found for this selection.</div>
-                        }
+                        </div>
                     </div>
+                    
+                    <!-- Manual Client Details (Visible if no client selected) -->
+                    @if(selectedClientId() === null) {
+                        <div class="mt-4 p-4 bg-base-100 rounded border border-base-200">
+                            <h3 class="font-bold text-xs opacity-50 uppercase mb-3">Manual Client Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-control">
+                                    <label class="label py-1"><span class="label-text text-xs">Name</span></label>
+                                    <input type="text" [ngModel]="manualClientName()" (ngModelChange)="manualClientName.set($event)" class="input input-bordered input-sm" placeholder="Client Name">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label py-1"><span class="label-text text-xs">Email</span></label>
+                                    <input type="email" [ngModel]="manualClientEmail()" (ngModelChange)="manualClientEmail.set($event)" class="input input-bordered input-sm" placeholder="client@example.com">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label py-1"><span class="label-text text-xs">Address</span></label>
+                                    <input type="text" [ngModel]="manualClientAddress()" (ngModelChange)="manualClientAddress.set($event)" class="input input-bordered input-sm" placeholder="Billing Address">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label py-1"><span class="label-text text-xs">Tax Number</span></label>
+                                    <input type="text" [ngModel]="manualClientTaxNumber()" (ngModelChange)="manualClientTaxNumber.set($event)" class="input input-bordered input-sm" placeholder="Tax ID">
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Due Date Config -->
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div class="form-control">
+                            <label class="label"><span class="label-text font-medium">{{ translationService.translate('Invoice Due Date') }}</span></label>
+                            <input type="date" [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" class="input input-bordered w-full bg-base-100">
+                        </div>
+                    </div>
+
+                    <!-- Project Selection -->
+                    @if(relevantProjects().length > 0) {
+                        <div class="mt-6">
+                            <label class="label"><span class="label-text font-medium">{{ translationService.translate('Select Projects') }}</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                @for(project of relevantProjects(); track project.id) {
+                                    @let isSelected = selectedProjectIds().includes(project.id);
+                                    <div class="form-control border border-base-200 rounded px-3 py-2 bg-base-100 hover:border-base-300 transition-colors">
+                                        <label class="label cursor-pointer justify-start gap-3 py-0">
+                                            <input type="checkbox" class="checkbox checkbox-xs rounded-sm checkbox-primary" [checked]="isSelected" (change)="toggleProjectSelection(project.id, $any($event.target).checked)" />
+                                            <div class="flex flex-col">
+                                                <span class="label-text font-medium text-sm">{{ project.name }}</span>
+                                                <span class="text-[10px] uppercase font-bold tracking-wide opacity-50">{{ project.status }}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <p class="text-xs opacity-50 mt-2 ml-1">Hours logged for selected projects within the dates above will be automatically added.</p>
+                        </div>
+                    }
                 </div>
 
                 <!-- 3. Review & Generate Panel -->
-                <div class="card bg-base-100/50 border border-base-200">
-                    <div class="card-body">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center p-2 border-b border-base-content/10 print:hidden gap-3">
-                            <h2 class="card-title mb-3 sm:mb-0">3. Review & Generate</h2>
-                            <div class="flex flex-wrap items-center gap-3">
-                                <button (click)="generateInvoice()" class="btn btn-outline btn-primary flex-1 sm:flex-none" [disabled]="!canGenerateInvoice()">
-                                    Generate Only
-                                </button>
-                                <button (click)="generateAndSend()" class="btn btn-primary flex-1 sm:flex-none shadow-lg shadow-primary/20" [disabled]="!canGenerateInvoice()">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                                    Generate & Send
-                                </button>
+                <div class="border border-base-200 rounded-lg overflow-hidden">
+                    <div class="bg-base-50 p-4 border-b border-base-200 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <h2 class="text-sm font-bold uppercase tracking-wider opacity-60">3. {{ translationService.translate('Review & Generate') }}</h2>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button (click)="generateInvoice()" class="btn btn-sm btn-outline" [disabled]="!canGenerateInvoice()">
+                                {{ translationService.translate('Generate Only') }}
+                            </button>
+                            <button (click)="generateAndSend()" class="btn btn-sm btn-neutral" [disabled]="!canGenerateInvoice()">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                {{ translationService.translate('Generate & Send') }}
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div id="invoice-preview" class="p-6 md:p-8 bg-base-100">
+                        @if (!selectedClientId() && (!manualClientName() || !manualClientEmail())) {
+                            <div class="text-center py-16 opacity-30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                <p class="mt-2 text-sm font-medium">Select a client to preview.</p>
                             </div>
-                        </div>
-                    
-                        <div id="invoice-preview" class="p-2 sm:p-4 md:p-6">
-                            @if (!selectedClientId() && (!manualClientName() || !manualClientEmail())) {
-                                <div class="text-center py-20 opacity-75">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                    <h3 class="mt-2 text-lg font-medium">Missing Details</h3>
-                                    <p class="mt-1 text-sm">Please select a client or enter details manually.</p>
+                        } @else {
+                            @if(selectedPaymentMethod() === 'manual') {
+                                <!-- INVOICE TEMPLATE -->
+                                <div class="flex justify-between items-start mb-10">
+                                    <div>
+                                        <h1 class="text-3xl font-bold tracking-tight mb-1">INVOICE</h1>
+                                        <p class="font-mono text-sm opacity-60">#{{ invoiceNumber() }}</p>
+                                    </div>
+                                    <div class="text-right text-sm">
+                                    @if(user(); as u){
+                                            <div class="font-bold">{{ u.name }}</div>
+                                            <div class="opacity-60">{{ u.email }}</div>
+                                            <div class="opacity-60">{{ u.address }}</div>
+                                        }
+                                    </div>
                                 </div>
-                            } @else {
                                 
-                                @if(selectedPaymentMethod() === 'manual') {
-                                    <!-- FULL FORMAL INVOICE TEMPLATE -->
-                                    
-                                    <!-- Invoice Header -->
-                                    <div class="flex justify-between items-start mb-10">
-                                        <div>
-                                            <h1 class="text-4xl font-bold text-primary tracking-tight uppercase">INVOICE</h1>
-                                            <p class="opacity-75 mt-1">#{{ invoiceNumber() }}</p>
-                                        </div>
-                                        <div class="text-right">
-                                        @if(user(); as u){
-                                                <h2 class="text-xl font-semibold">{{ u.name }}</h2>
-                                                <p class="text-sm opacity-75">{{ u.email }}</p>
-                                                <p class="text-sm opacity-75">{{ u.address }}</p>
-                                            }
-                                        </div>
+                                <div class="grid grid-cols-2 gap-8 mb-10 text-sm">
+                                    <div>
+                                        <h3 class="text-xs font-bold opacity-40 uppercase tracking-widest mb-2">{{ translationService.translate('Bill To') }}</h3>
+                                        @if(selectedClient(); as client){
+                                            <div class="font-bold">{{ client.name }}</div>
+                                            <div class="opacity-60">{{ client.contact }}</div>
+                                            <div class="opacity-60">{{ client.address }}</div>
+                                            <div class="opacity-60">{{ client.taxNumber }}</div>
+                                        } @else {
+                                            <div class="font-bold">{{ manualClientName() }}</div>
+                                            <div class="opacity-60">{{ manualClientEmail() }}</div>
+                                            <div class="opacity-60">{{ manualClientAddress() }}</div>
+                                            <div class="opacity-60">{{ manualClientTaxNumber() }}</div>
+                                        }
                                     </div>
-                                    
-                                    <!-- Info & Dates -->
-                                    <div class="grid grid-cols-2 gap-8 mb-10">
-                                        <div>
-                                            <h3 class="text-sm font-semibold opacity-75 uppercase tracking-wider">Bill To</h3>
-                                            @if(selectedClient(); as client){
-                                                <p class="font-bold mt-2">{{ client.name }}</p>
-                                                <p class="text-sm opacity-75">{{ client.contact }}</p>
-                                                <p class="text-sm opacity-75">{{ client.address }}</p>
-                                                <p class="text-sm opacity-75">{{ client.taxNumber }}</p>
-                                            } @else {
-                                                <p class="font-bold mt-2">{{ manualClientName() }}</p>
-                                                <p class="text-sm opacity-75">{{ manualClientEmail() }}</p>
-                                                <p class="text-sm opacity-75">{{ manualClientAddress() }}</p>
-                                                <p class="text-sm opacity-75">{{ manualClientTaxNumber() }}</p>
-                                            }
-                                        </div>
-                                        <div class="text-right">
-                                            <h3 class="text-sm font-semibold opacity-75 uppercase tracking-wider">Details</h3>
-                                            <p class="text-sm mt-2"><span class="font-medium">Period:</span> {{ invoiceStartDate() | date:'shortDate' }} - {{ invoiceEndDate() | date:'shortDate' }}</p>
-                                            <p class="text-sm"><span class="font-medium">Date:</span> {{ invoiceDate() | date:'mediumDate' }}</p>
-                                            <p class="text-sm"><span class="font-medium">Due Date:</span> {{ dueDate() | date:'mediumDate' }}</p>
-                                        </div>
+                                    <div class="text-right">
+                                        <h3 class="text-xs font-bold opacity-40 uppercase tracking-widest mb-2">{{ translationService.translate('Details') }}</h3>
+                                        <div><span class="opacity-60">{{ translationService.translate('Period') }}:</span> <span class="font-medium">{{ invoiceStartDate() | date:'shortDate' }} - {{ invoiceEndDate() | date:'shortDate' }}</span></div>
+                                        <div><span class="opacity-60">{{ translationService.translate('Date') }}:</span> <span class="font-medium">{{ invoiceDate() | date:'mediumDate' }}</span></div>
+                                        <div><span class="opacity-60">{{ translationService.translate('Due Date') }}:</span> <span class="font-medium">{{ dueDate() | date:'mediumDate' }}</span></div>
                                     </div>
+                                </div>
 
-                                    <!-- Items Table -->
-                                    <div class="overflow-x-auto">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Description</th>
-                                                <th class="text-center w-24">Qty/Hours</th>
-                                                <th class="text-center w-28">Rate</th>
-                                                <th class="text-right w-32">Amount</th>
-                                                <th class="w-12 print:hidden"></th>
+                                <div class="overflow-x-auto border-t border-base-200">
+                                <table class="table table-sm">
+                                    <thead class="text-xs uppercase opacity-40">
+                                        <tr>
+                                            <th class="pl-0">{{ translationService.translate('Description') }}</th>
+                                            <th class="text-center w-24">{{ translationService.translate('Qty/Hours') }}</th>
+                                            <th class="text-center w-28">{{ translationService.translate('Rate') }}</th>
+                                            <th class="text-right w-32 pr-0">{{ translationService.translate('Amount') }}</th>
+                                            <th class="w-8 print:hidden"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for(item of loggedHoursItems(); track $index){
+                                            <tr class="border-b border-base-100">
+                                                <td class="pl-0 py-3">{{ item.description }}</td>
+                                                <td class="text-center">{{ item.quantity }}</td>
+                                                <td class="text-center">${{ item.rate | number:'1.2-2' }}</td>
+                                                <td class="text-right font-mono pr-0">${{ item.quantity * item.rate | number:'1.2-2' }}</td>
+                                                <td class="print:hidden"></td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @for(item of loggedHoursItems(); track $index){
-                                                <tr>
-                                                    <td>{{ item.description }}</td>
-                                                    <td class="text-center">{{ item.quantity }}</td>
-                                                    <td class="text-center">${{ item.rate | number:'1.2-2' }}</td>
-                                                    <td class="text-right font-medium">${{ item.quantity * item.rate | number:'1.2-2' }}</td>
-                                                    <td class="print:hidden"></td>
-                                                </tr>
-                                            }
-                                            
-                                            @for(item of customItems(); track $index; let i = $index){
-                                                <tr>
-                                                    <td class="p-1">
-                                                        <input type="text" [ngModel]="item.description" (ngModelChange)="updateCustomItem(i, 'description', $event)" name="desc_{{i}}" placeholder="Item description" class="input input-bordered input-sm w-full">
-                                                    </td>
-                                                    <td class="p-1">
-                                                        <input type="number" [ngModel]="item.quantity" (ngModelChange)="updateCustomItem(i, 'quantity', $event)" name="qty_{{i}}" placeholder="1" class="input input-bordered input-sm w-full text-center" [disabled]="item.type === 'fixed'">
-                                                    </td>
-                                                    <td class="p-1">
-                                                        <input type="number" [ngModel]="item.rate" (ngModelChange)="updateCustomItem(i, 'rate', $event)" name="rate_{{i}}" placeholder="0.00" class="input input-bordered input-sm w-full text-center">
-                                                    </td>
-                                                    <td class="text-right p-3 font-medium">${{ (item.quantity || 0) * (item.rate || 0) | number:'1.2-2' }}</td>
-                                                    <td class="p-1 text-center print:hidden">
-                                                        <button (click)="removeCustomItem(i)" title="Remove item" class="btn btn-ghost btn-sm btn-circle text-error">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            }
+                                        }
+                                        
+                                        @for(item of customItems(); track $index; let i = $index){
+                                            <tr class="border-b border-base-100">
+                                                <td class="pl-0 py-2">
+                                                    <input type="text" [ngModel]="item.description" (ngModelChange)="updateCustomItem(i, 'description', $event)" name="desc_{{i}}" placeholder="Item description" class="input input-ghost input-xs w-full font-normal px-0 h-auto">
+                                                </td>
+                                                <td class="py-2">
+                                                    <input type="number" [ngModel]="item.quantity" (ngModelChange)="updateCustomItem(i, 'quantity', $event)" name="qty_{{i}}" placeholder="1" class="input input-ghost input-xs w-full text-center h-auto" [disabled]="item.type === 'fixed'">
+                                                </td>
+                                                <td class="py-2">
+                                                    <input type="number" [ngModel]="item.rate" (ngModelChange)="updateCustomItem(i, 'rate', $event)" name="rate_{{i}}" placeholder="0.00" class="input input-ghost input-xs w-full text-center h-auto">
+                                                </td>
+                                                <td class="text-right pr-0 font-mono">${{ (item.quantity || 0) * (item.rate || 0) | number:'1.2-2' }}</td>
+                                                <td class="text-center px-0 print:hidden">
+                                                    <button (click)="removeCustomItem(i)" title="Remove" class="btn btn-ghost btn-xs btn-circle text-error">✕</button>
+                                                </td>
+                                            </tr>
+                                        }
 
-                                            @if(!loggedHoursItems().length && !customItems().length) {
-                                                <tr>
-                                                    <td colspan="5" class="py-16 text-center opacity-75">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                                        <h3 class="mt-2 font-medium">No Billable Items</h3>
-                                                        <p class="text-xs">Select projects with logged hours or add custom items manually.</p>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                    </div>
-                                    
-                                    <!-- Add Item Buttons -->
-                                    <div class="mt-4 print:hidden flex gap-2">
-                                        <button (click)="addCustomItem('hourly')" class="btn btn-ghost btn-sm text-primary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            Add Hourly Item
-                                        </button>
-                                        <button (click)="addCustomItem('fixed')" class="btn btn-ghost btn-sm text-secondary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-                                            Add Fixed Price Item
-                                        </button>
-                                    </div>
+                                        @if(!loggedHoursItems().length && !customItems().length) {
+                                            <tr>
+                                                <td colspan="5" class="py-8 text-center opacity-40 text-sm italic">
+                                                    No billable items. Add selected projects or custom items.
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                </div>
+                                
+                                <div class="mt-4 print:hidden flex gap-2">
+                                    <button (click)="addCustomItem('hourly')" class="btn btn-ghost btn-xs text-primary font-normal">+ Hourly Item</button>
+                                    <button (click)="addCustomItem('fixed')" class="btn btn-ghost btn-xs text-primary font-normal">+ Fixed Item</button>
+                                </div>
 
-                                    <!-- Totals -->
-                                    @if(loggedHoursItems().length > 0 || customItems().length > 0) {
-                                    <div class="flex justify-end mt-6">
-                                        <div class="w-full max-w-sm space-y-3 text-sm">
-                                            <div class="flex justify-between opacity-75">
-                                                <span>Subtotal</span>
-                                                <span class="font-medium">${{ subtotal() | number:'1.2-2' }}</span>
-                                            </div>
-                                            <div class="flex justify-between opacity-75">
-                                                <span>Tax ({{ selectedClient()?.defaultTaxRate || 0 }}%)</span>
-                                                <span class="font-medium">${{ tax() | number:'1.2-2' }}</span>
-                                            </div>
-                                            <div class="divider"></div>
-                                            <div class="flex justify-between font-bold text-lg">
-                                                <span>Total Due</span>
-                                                <span>${{ total() | number:'1.2-2' }}</span>
-                                            </div>
+                                @if(loggedHoursItems().length > 0 || customItems().length > 0) {
+                                <div class="flex justify-end mt-8">
+                                    <div class="w-full max-w-xs space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="opacity-60">{{ translationService.translate('Subtotal') }}</span>
+                                            <span class="font-mono">${{ subtotal() | number:'1.2-2' }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="opacity-60">{{ translationService.translate('Tax') }} ({{ selectedClient()?.defaultTaxRate || 0 }}%)</span>
+                                            <span class="font-mono">${{ tax() | number:'1.2-2' }}</span>
+                                        </div>
+                                        <div class="divider my-1"></div>
+                                        <div class="flex justify-between text-base font-bold">
+                                            <span>{{ translationService.translate('Total Due') }}</span>
+                                            <span>${{ total() | number:'1.2-2' }}</span>
                                         </div>
                                     </div>
-                                    
-                                    <!-- Payment Instructions -->
-                                    <div class="divider mt-8"></div>
-                                    <div class="mt-6">
-                                        <h4 class="font-semibold">Payment Instructions</h4>
-                                        <p class="text-sm opacity-75 mt-2">{{ paymentInstructions() }}</p>
-                                    </div>
-                                    }
-
-                                } @else {
-                                    <!-- EXTERNAL PAYMENT (Simple List) - Mostly for quick validation -->
-                                    <div class="bg-base-200/20 rounded-xl p-6 border border-base-200">
-                                        <div class="flex items-center gap-3 mb-6">
-                                            <div>
-                                                <h3 class="font-bold text-lg">Billable Items for {{ selectedPaymentMethod() | titlecase }}</h3>
-                                                <p class="text-sm opacity-70">Review the items before processing.</p>
-                                            </div>
-                                        </div>
-
-                                        <div class="overflow-x-auto bg-base-100 rounded-lg shadow-sm border border-base-200">
-                                            <table class="table">
-                                                <thead class="bg-base-200">
-                                                    <tr>
-                                                        <th>Description</th>
-                                                        <th class="text-right w-32">Hours/Qty</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @for(item of loggedHoursItems(); track $index){
-                                                        <tr>
-                                                            <td class="font-medium opacity-80">{{ item.description }}</td>
-                                                            <td class="text-right font-bold">{{ item.quantity }}</td>
-                                                        </tr>
-                                                    }
-                                                    @for(item of customItems(); track $index){
-                                                        <tr>
-                                                            <td class="font-medium opacity-80">{{ item.description || 'Custom Item' }}</td>
-                                                            <td class="text-right font-bold">{{ item.quantity }}</td>
-                                                        </tr>
-                                                    }
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr class="bg-base-200/50">
-                                                        <td class="font-bold text-lg text-right">Total:</td>
-                                                        <td class="font-bold text-lg text-right text-primary">${{ total() | number:'1.2-2' }}</td>
-                                                    </tr>
-                                                </tfoot>
-                                            </table>
-                                        </div>
-                                    </div>
+                                </div>
+                                
+                                <div class="mt-12 text-sm">
+                                    <h4 class="font-bold text-xs uppercase opacity-40 tracking-widest mb-2">{{ translationService.translate('Payment Instructions') }}</h4>
+                                    <p class="opacity-70 leading-relaxed">{{ paymentInstructions() }}</p>
+                                </div>
                                 }
+
+                            } @else {
+                                <!-- EXTERNAL PAYMENT PREVIEW -->
+                                <div class="bg-base-200/50 rounded-lg p-6 border border-base-200 text-center">
+                                    <h3 class="font-bold text-lg mb-2">Summary for {{ selectedPaymentMethod() | titlecase }}</h3>
+                                    <p class="opacity-60 text-sm mb-6">Review total before processing external payment.</p>
+                                    <div class="text-4xl font-light mb-2">${{ total() | number:'1.2-2' }}</div>
+                                    <div class="text-xs uppercase font-bold tracking-wider opacity-40">Total Amount</div>
+                                </div>
                             }
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -358,100 +297,102 @@
     }
 
     @if (activeTab() === 'history') {
-        <div class="card bg-base-100 shadow -mt-px rounded-t-none">
-            <div class="card-body">
+        <div class="card bg-base-100 shadow-sm border border-base-200 -mt-px rounded-tl-none rounded-b-lg">
+            <div class="card-body p-0">
                 <!-- Filter Section -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end p-4 mb-6 border border-base-200 rounded-lg bg-base-200/30">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">Client</span></label>
-                        <select [ngModel]="historyFilterClientId()" (ngModelChange)="historyFilterClientId.set($event); historyCurrentPage.set(1)" class="select select-bordered">
-                            <option [ngValue]="null">All Clients</option>
-                            @for(client of clients(); track client.id){
-                                <option [ngValue]="client.id">{{ client.name }}</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">Project</span></label>
-                        <select [ngModel]="historyFilterProjectId()" (ngModelChange)="historyFilterProjectId.set($event); historyCurrentPage.set(1)" class="select select-bordered" [disabled]="!historyFilterClientId()">
-                            <option [ngValue]="null">All Projects</option>
-                            @for(project of projectsForClientFilter(); track project.id){
-                                <option [ngValue]="project.id">{{ project.name }}</option>
-                            }
-                        </select>
-                    </div>
-                     <div class="form-control">
-                        <label class="label"><span class="label-text">Start Date</span></label>
-                        <input type="date" [ngModel]="historyFilterStartDate()" (ngModelChange)="historyFilterStartDate.set($event); historyCurrentPage.set(1)" class="input input-bordered">
-                    </div>
-                     <div class="form-control">
-                        <label class="label"><span class="label-text">End Date</span></label>
-                        <input type="date" [ngModel]="historyFilterEndDate()" (ngModelChange)="historyFilterEndDate.set($event); historyCurrentPage.set(1)" class="input input-bordered">
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">Status</span></label>
-                        <select [ngModel]="historyFilterStatus()" (ngModelChange)="historyFilterStatus.set($event); historyCurrentPage.set(1)" class="select select-bordered">
-                            <option value="All">All</option>
-                            <option value="Generated">Generated</option>
-                            <option value="Paid">Paid</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Overdue">Overdue</option>
-                        </select>
-                    </div>
-                    <div class="form-control lg:col-span-5">
-                         <button (click)="resetFilters()" class="btn btn-ghost w-full">Reset Filters</button>
+                <div class="p-4 border-b border-base-200 bg-base-50/30">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                        <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Client') }}</span></label>
+                            <select [ngModel]="historyFilterClientId()" (ngModelChange)="historyFilterClientId.set($event); historyCurrentPage.set(1)" class="select select-bordered select-sm bg-base-100">
+                                <option [ngValue]="null">All Clients</option>
+                                @for(client of clients(); track client.id){
+                                    <option [ngValue]="client.id">{{ client.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Project') }}</span></label>
+                            <select [ngModel]="historyFilterProjectId()" (ngModelChange)="historyFilterProjectId.set($event); historyCurrentPage.set(1)" class="select select-bordered select-sm bg-base-100" [disabled]="!historyFilterClientId()">
+                                <option [ngValue]="null">All Projects</option>
+                                @for(project of projectsForClientFilter(); track project.id){
+                                    <option [ngValue]="project.id">{{ project.name }}</option>
+                                }
+                            </select>
+                        </div>
+                         <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Start Date') }}</span></label>
+                            <input type="date" [ngModel]="historyFilterStartDate()" (ngModelChange)="historyFilterStartDate.set($event); historyCurrentPage.set(1)" class="input input-bordered input-sm bg-base-100">
+                        </div>
+                         <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('End Date') }}</span></label>
+                            <input type="date" [ngModel]="historyFilterEndDate()" (ngModelChange)="historyFilterEndDate.set($event); historyCurrentPage.set(1)" class="input input-bordered input-sm bg-base-100">
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Status') }}</span></label>
+                            <select [ngModel]="historyFilterStatus()" (ngModelChange)="historyFilterStatus.set($event); historyCurrentPage.set(1)" class="select select-bordered select-sm bg-base-100">
+                                <option value="All">All</option>
+                                <option value="Generated">Generated</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Overdue">Overdue</option>
+                            </select>
+                        </div>
+                        <div class="form-control lg:col-span-5 flex justify-end">
+                             <button (click)="resetFilters()" class="btn btn-ghost btn-xs">Reset Filters</button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Table Section -->
                 <div class="overflow-x-auto">
                     <table class="table">
-                        <thead>
+                        <thead class="bg-base-50/50 text-xs uppercase opacity-60">
                             <tr>
-                                <th>ID</th>
-                                <th>Client</th>
-                                <th>Project(s)</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th class="text-right">Amount</th>
-                                <th class="text-right">Actions</th>
+                                <th class="pl-6">{{ translationService.translate('ID') }}</th>
+                                <th>{{ translationService.translate('Client') }}</th>
+                                <th>{{ translationService.translate('Project(s)') }}</th>
+                                <th>{{ translationService.translate('Date') }}</th>
+                                <th>{{ translationService.translate('Status') }}</th>
+                                <th class="text-right">{{ translationService.translate('Amount') }}</th>
+                                <th class="text-right pr-6">{{ translationService.translate('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @for(invoice of paginatedHistoryInvoices(); track invoice.id){
-                                <tr>
-                                    <td class="font-medium text-xs">{{ invoice.invoiceNumber }}</td>
-                                    <td>{{ getRecipientName(invoice) }}</td>
-                                    <td class="text-sm max-w-xs truncate" [title]="getProjectNames(invoice.projectIds)">{{ getProjectNames(invoice.projectIds) }}</td>
-                                    <td>{{ invoice.invoiceDate | date:'mediumDate' }}</td>
-                                    <td class="text-center">
+                                <tr class="hover:bg-base-50">
+                                    <td class="pl-6 font-mono text-xs opacity-70">{{ invoice.invoiceNumber }}</td>
+                                    <td class="font-medium">{{ getRecipientName(invoice) }}</td>
+                                    <td class="text-xs opacity-60 max-w-xs truncate" [title]="getProjectNames(invoice.projectIds)">{{ getProjectNames(invoice.projectIds) }}</td>
+                                    <td class="text-sm opacity-80">{{ invoice.invoiceDate | date:'mediumDate' }}</td>
+                                    <td>
                                         <select [ngModel]="invoice.status" (ngModelChange)="updateInvoiceStatus(invoice, $event)" 
-                                                class="select select-bordered select-xs w-full max-w-[110px] font-bold"
+                                                class="select select-ghost select-xs w-full max-w-[110px] font-bold"
                                                 [class.text-success]="invoice.status === 'Paid'"
                                                 [class.text-warning]="invoice.status === 'Pending'"
                                                 [class.text-error]="invoice.status === 'Overdue'"
                                                 [class.text-info]="invoice.status === 'Generated'">
-                                            <option value="Generated" class="text-info">Generated</option>
-                                            <option value="Paid" class="text-success">Paid</option>
-                                            <option value="Pending" class="text-warning">Pending</option>
-                                            <option value="Overdue" class="text-error">Overdue</option>
+                                            <option value="Generated">Generated</option>
+                                            <option value="Paid">Paid</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Overdue">Overdue</option>
                                         </select>
                                     </td>
-                                    <td class="text-right font-semibold">${{ invoice.total | number:'1.2-2' }}</td>
-                                    <td class="text-right flex gap-2 justify-end">
+                                    <td class="text-right font-mono font-bold text-sm">${{ invoice.total | number:'1.2-2' }}</td>
+                                    <td class="text-right pr-6 flex gap-2 justify-end">
                                         @if(invoice.status === 'Generated') {
-                                            <button class="btn btn-sm btn-circle btn-ghost text-primary" (click)="sendInvoiceFromHistory(invoice)" title="Send Invoice">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                            <button class="btn btn-xs btn-square btn-ghost text-primary" (click)="sendInvoiceFromHistory(invoice)" title="Send Invoice">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                                             </button>
                                         }
-                                        <button class="btn btn-sm btn-circle btn-ghost" (click)="downloadInvoice(invoice)" title="Download PDF">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                        <button class="btn btn-xs btn-square btn-ghost" (click)="downloadInvoice(invoice)" title="Download PDF">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                         </button>
                                     </td>
                                 </tr>
                             } @empty {
                                 <tr>
-                                    <td colspan="8" class="text-center py-12 opacity-75">
+                                    <td colspan="8" class="text-center py-12 opacity-50 italic text-sm">
                                         No invoices found matching your criteria.
                                     </td>
                                 </tr>
@@ -462,7 +403,7 @@
 
                 <!-- Pagination -->
                 @if (filteredHistoryInvoices().length > historyItemsPerPage()) {
-                    <div class="card-actions justify-center mt-6">
+                    <div class="card-actions justify-center p-4 border-t border-base-200">
                         <app-pagination
                             [currentPage]="historyCurrentPage()"
                             [totalItems]="filteredHistoryInvoices().length"
@@ -494,6 +435,8 @@
     width: 100%;
     box-shadow: none;
     border: none;
+    padding: 0;
+    background: white;
   }
 }
 </style>

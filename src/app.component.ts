@@ -10,7 +10,7 @@ import { UiService } from './services/ui.service';
     <!-- Global Loading Overlay -->
     @if(uiService.isLoading()){
       <div class="fixed inset-0 z-[9999] bg-base-100/50 backdrop-blur-sm flex items-center justify-center">
-        <span class="loading loading-infinity loading-lg text-primary scale-150"></span>
+        <span data-theme="pastel" class="loading loading-ring loading-lg text-secondary scale-150"></span>
       </div>
     }
     <router-outlet></router-outlet>
@@ -22,15 +22,18 @@ import { UiService } from './services/ui.service';
 export class AppComponent {
   private themeService = inject(ThemeService);
   public uiService = inject(UiService);
-  private router = inject(Router);
+  private router: Router = inject(Router);
 
   constructor() {
     // Theme Effect
     effect(() => {
-      if (this.themeService.isDarkMode()) {
+      const isDark = this.themeService.isDarkMode();
+      if (isDark) {
         document.documentElement.setAttribute('data-theme', 'dim');
+        document.documentElement.classList.add('dark');
       } else {
-        document.documentElement.setAttribute('data-theme', 'pastel');
+        document.documentElement.setAttribute('data-theme', 'cupcake');
+        document.documentElement.classList.remove('dark');
       }
     });
 

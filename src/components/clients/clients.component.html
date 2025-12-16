@@ -1,79 +1,134 @@
 
-<div class="container mx-auto">
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+<div class="container mx-auto pb-8">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
     <div>
-      <h1 class="text-3xl font-bold">Clients</h1>
-      <p class="opacity-60 mt-1">Manage your client relationships and details.</p>
+      <h1 class="text-3xl font-light tracking-tight">{{ translationService.translate('Clients') }}</h1>
+      <p class="opacity-60 mt-1 text-sm font-medium">{{ translationService.translate('Manage your client relationships and details.') }}</p>
     </div>
-    <button (click)="openAddModal()" class="btn btn-primary shadow-md shadow-primary/20">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-      Add Client
+    <button (click)="openAddModal()" class="btn btn-neutral btn-sm gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+        <span class="hidden sm:inline">{{ translationService.translate('Add Client') }}</span>
     </button>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+  <!-- Compact Filter Bar -->
+  <div class="bg-base-100 rounded-lg border border-base-200 p-4 mb-6 shadow-sm">
+      <div class="flex flex-col md:flex-row justify-start items-end gap-4">
+          <!-- Search -->
+          <div class="form-control w-full md:w-auto">
+              <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Search') }}</span></label>
+              <div class="relative w-full md:w-64">
+                  <input type="text" 
+                         [placeholder]="translationService.translate('Search...')" 
+                         class="input input-sm input-bordered w-full pl-9 bg-base-100"
+                         [ngModel]="searchTerm()"
+                         (ngModelChange)="searchTerm.set($event); onFilterChange()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </div>
+          </div>
+          
+          <!-- Status -->
+          <div class="form-control w-full md:w-auto">
+              <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Status') }}</span></label>
+              <select class="select select-sm select-bordered w-full md:w-32 bg-base-100" 
+                      [ngModel]="filterStatus()" 
+                      (ngModelChange)="filterStatus.set($event); onFilterChange()">
+                  <option value="All">All</option>
+                  <option value="Active">Active</option>
+                  <option value="Paused">Paused</option>
+              </select>
+          </div>
+          
+          <!-- Min Revenue -->
+          <div class="form-control w-full md:w-auto">
+              <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Min Revenue') }}</span></label>
+              <input type="number" 
+                     placeholder="0.00" 
+                     class="input input-sm input-bordered w-full md:w-32 bg-base-100" 
+                     [ngModel]="minRevenue()"
+                     (ngModelChange)="minRevenue.set($event === '' ? null : +$event); onFilterChange()">
+          </div>
+
+          <!-- Sort By -->
+          <div class="form-control w-full md:w-auto">
+              <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Sort By') }}</span></label>
+              <select class="select select-sm select-bordered w-full md:w-40 bg-base-100" 
+                      [ngModel]="sortBy()" 
+                      (ngModelChange)="sortBy.set($event); onFilterChange()"
+                      [title]="translationService.translate('Sort by')">
+                  <option value="Name">{{ translationService.translate('Name') }}</option>
+                  <option value="Revenue">{{ translationService.translate('Highest Revenue') }}</option>
+              </select>
+          </div>
+      </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
     @for(client of paginatedClients(); track client.id){
       @let stats = getClientStats(client.id);
-      <div class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all duration-200 cursor-pointer group relative h-full min-h-[11rem] flex flex-col" (click)="navigateToClient(client.id)">
-        
-        <!-- Accent Bar -->
-        <div class="absolute top-0 left-0 bottom-0 w-1" [style.background-color]="client.color"></div>
+      
+      <div class="card bg-base-100 shadow-sm border border-base-200 hover:border-base-300 transition-all duration-200 group relative h-full flex flex-col cursor-pointer min-h-[11rem]"
+           [class.opacity-60]="client.status === 'Paused'"
+           (click)="navigateToClient(client.id)">
         
         <!-- Hover Actions (Top-Right) -->
-        <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-           <!-- Email -->
-           <button (click)="$event.stopPropagation(); openEmailModal(client)" class="btn btn-sm btn-circle bg-base-100 border border-base-200 shadow-sm flex items-center justify-center text-info hover:bg-base-200 tooltip tooltip-left" data-tip="Email">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+           <button (click)="$event.stopPropagation(); openEmailModal(client)" class="btn btn-xs btn-square btn-ghost hover:bg-base-200">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
            </button>
-           <!-- Deactivate/Activate -->
-           <button (click)="$event.stopPropagation(); toggleStatus(client)" class="btn btn-sm btn-circle bg-base-100 border border-base-200 shadow-sm flex items-center justify-center text-warning hover:bg-base-200 tooltip tooltip-left" [attr.data-tip]="client.status === 'Active' ? 'Pause' : 'Resume'">
-               @if(client.status === 'Active') {
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-               } @else {
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-               }
+           
+           <button (click)="$event.stopPropagation(); toggleStatus(client)" class="btn btn-xs btn-square btn-ghost hover:bg-base-200">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
            </button>
-           <!-- Delete -->
-           <button (click)="$event.stopPropagation(); deleteClient(client.id)" class="btn btn-sm btn-circle bg-base-100 border border-base-200 shadow-sm flex items-center justify-center text-error hover:bg-base-200 tooltip tooltip-left" data-tip="Delete">
+
+           <button (click)="$event.stopPropagation(); deleteClient(client.id)" class="btn btn-xs btn-square btn-ghost text-error hover:bg-error/10">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
            </button>
         </div>
 
-        <div class="card-body p-4 pl-5 flex flex-row items-center gap-4 flex-grow">
-            <!-- Avatar -->
-            <div class="avatar">
-                <div class="w-12 h-12 rounded-full ring ring-offset-base-100 ring-offset-1 ring-1 ring-base-200">
-                  <img [src]="client.logoUrl" alt="{{ client.name }}" class="object-cover" />
+        <div class="card-body p-5 flex flex-row items-start gap-4 flex-grow">
+            <!-- Logo -->
+            <div class="avatar pt-1">
+                <div class="w-10 h-10 rounded-lg ring-1 ring-base-200">
+                  <img [src]="client.logoUrl" [alt]="client.name" class="object-cover" />
                 </div>
             </div>
 
-            <!-- Main Info -->
+            <!-- Info -->
             <div class="flex-1 min-w-0">
-                <h2 class="card-title text-base font-bold truncate mb-0.5">{{ client.name }}</h2>
-                <p class="text-xs opacity-60 truncate mb-1">{{ client.contact }}</p>
-                <span class="badge badge-xs font-medium" [class.badge-success]="client.status === 'Active'" [class.badge-warning]="client.status === 'Paused'">{{ client.status }}</span>
+                <div class="font-bold text-sm truncate group-hover:text-primary transition-colors mb-0.5">{{ client.name }}</div>
+                <p class="text-xs opacity-50 truncate mb-2">{{ client.contact }}</p>
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-xs font-medium border-base-200" [class.bg-base-200]="client.status !== 'Active'" [class.badge-neutral]="client.status === 'Active'">{{ client.status }}</span>
+                </div>
             </div>
         </div>
 
-        <!-- Stats Footer -->
-        <div class="bg-base-200/30 px-4 py-3 border-t border-base-200 flex justify-between text-xs mt-auto">
-            <div class="flex gap-1">
-                <span class="font-bold">{{ stats.activeProjects }}</span>
-                <span class="opacity-60">Projects</span>
+        <!-- Metrics Footer -->
+        <div class="bg-base-50/50 px-5 py-3 border-t border-base-200 flex justify-between text-xs mt-auto">
+            <div class="flex gap-2 items-center">
+                <span class="font-mono font-medium">{{ stats.totalRevenue | currency:'USD':'symbol':'1.0-0' }}</span>
+                <span class="opacity-40 uppercase tracking-wide text-[10px]">Rev</span>
             </div>
-            <div class="flex gap-1">
-                <span class="font-bold text-success">{{ stats.totalRevenue | currency:'USD':'symbol':'1.0-0' }}</span>
-                <span class="opacity-60">Rev</span>
+            <div class="flex gap-1 items-center opacity-60">
+                <span class="font-bold">{{ stats.activeProjects }}</span>
+                <span>Projects</span>
             </div>
         </div>
       </div>
+    } @empty {
+        <div class="col-span-full flex flex-col items-center justify-center p-12 opacity-50 bg-base-100 rounded-lg border border-dashed border-base-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z" /></svg>
+            <p class="text-sm">No clients found matching your search.</p>
+        </div>
     }
   </div>
-   @if(clients().length > itemsPerPage()){
+  
+  @if(filteredClients().length > itemsPerPage()){
     <div class="flex justify-center mt-10">
       <app-pagination 
         [currentPage]="currentPage()"
-        [totalItems]="clients().length"
+        [totalItems]="filteredClients().length"
         [itemsPerPage]="itemsPerPage()"
         (pageChange)="onPageChange($event)">
       </app-pagination>
@@ -84,64 +139,58 @@
 <!-- Add Client Modal -->
 @if(isModalOpen()){
   <dialog class="modal modal-open">
-    <div class="modal-box w-11/12 max-w-3xl max-h-screen overflow-y-auto shadow-2xl border border-base-200">
-       <button (click)="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-      <h3 class="font-bold text-lg mb-6 pb-2 border-b border-base-200">Add New Client</h3>
+    <div class="modal-box shadow-2xl border border-base-200 rounded-xl">
+      <button (click)="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 class="font-bold text-lg mb-6 pb-2 border-b border-base-200">{{ translationService.translate('Add Client') }}</h3>
       
-      <form (ngSubmit)="saveClient()" class="mt-4 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="form-control md:col-span-2">
-            <label class="label"><span class="label-text font-medium">Client Name *</span></label>
-            <input type="text" [ngModel]="clientName()" (ngModelChange)="clientName.set($event)" name="clientName" required class="input input-bordered focus:input-primary">
-          </div>
-          <div class="form-control">
-            <label class="label"><span class="label-text font-medium">Contact Email *</span></label>
-            <input type="email" [ngModel]="clientContact()" (ngModelChange)="clientContact.set($event)" name="clientContact" required class="input input-bordered focus:input-primary">
-          </div>
-          <div class="form-control">
-            <label class="label"><span class="label-text font-medium">Phone</span></label>
-            <input type="tel" [ngModel]="clientPhone()" (ngModelChange)="clientPhone.set($event)" name="clientPhone" class="input input-bordered focus:input-primary">
-          </div>
-          <div class="md:col-span-2 form-control">
-            <label class="label"><span class="label-text font-medium">Address</span></label>
-            <input type="text" [ngModel]="clientAddress()" (ngModelChange)="clientAddress.set($event)" name="clientAddress" class="input input-bordered focus:input-primary">
-          </div>
-          <div class="form-control">
-            <label class="label"><span class="label-text font-medium">Tax Number</span></label>
-            <input type="text" [ngModel]="clientTaxNumber()" (ngModelChange)="clientTaxNumber.set($event)" name="clientTaxNumber" class="input input-bordered focus:input-primary">
-          </div>
-          <div class="form-control">
-            <label class="label"><span class="label-text font-medium">Default Tax Rate (%)</span></label>
-            <input type="number" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" name="clientTaxRate" class="input input-bordered focus:input-primary" min="0" step="0.1">
-          </div>
-           <div class="form-control">
-             <label class="label"><span class="label-text font-medium">Brand Color</span></label>
-             <div class="flex gap-2">
-               <input type="color" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" name="clientColor" class="input input-bordered w-16 p-1 h-12 cursor-pointer">
-               <input type="text" [ngModel]="clientColor()" (ngModelChange)="clientColor.set($event)" name="clientColorText" class="input input-bordered flex-1 uppercase" pattern="^#+([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$">
-             </div>
-          </div>
-          <div class="form-control">
-             <label class="label"><span class="label-text font-medium">Logo Upload</span></label>
-             <div class="flex gap-4 items-center">
-                <input type="file" (change)="onLogoSelected($event)" accept="image/*" class="file-input file-input-bordered w-full max-w-xs" />
-                @if(clientLogoUrl()){
-                  <div class="avatar">
-                    <div class="w-12 rounded ring ring-primary ring-offset-base-100 ring-offset-2">
-                      <img [src]="clientLogoUrl()" class="object-cover" />
-                    </div>
-                  </div>
-                }
-             </div>
-          </div>
-          <div class="md:col-span-2 form-control">
-             <label class="label"><span class="label-text font-medium">Notes</span></label>
-             <textarea [ngModel]="clientNotes()" (ngModelChange)="clientNotes.set($event)" name="clientNotes" class="textarea textarea-bordered h-24"></textarea>
-          </div>
+      <form (ngSubmit)="saveClient()" class="space-y-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">{{ translationService.translate('Client Name') }} *</span></label>
+          <input type="text" [ngModel]="clientName()" (ngModelChange)="clientName.set($event)" name="clientName" required class="input input-bordered focus:input-primary" placeholder="e.g. Acme Corp">
         </div>
-        <div class="modal-action mt-8">
-          <button type="button" (click)="closeModal()" class="btn btn-ghost">Cancel</button>
-          <button type="submit" class="btn btn-primary px-6">Save Client</button>
+        <div class="form-control">
+            <label class="label"><span class="label-text font-medium">{{ translationService.translate('Contact Email') }} *</span></label>
+            <input type="email" [ngModel]="clientContact()" (ngModelChange)="clientContact.set($event)" name="clientContact" required class="input input-bordered focus:input-primary" placeholder="contact@acme.com">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="form-control">
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Phone') }}</span></label>
+                <input type="tel" [ngModel]="clientPhone()" (ngModelChange)="clientPhone.set($event)" name="clientPhone" class="input input-bordered focus:input-primary">
+            </div>
+            <div class="form-control">
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Tax Number') }}</span></label>
+                <input type="text" [ngModel]="clientTaxNumber()" (ngModelChange)="clientTaxNumber.set($event)" name="clientTaxNumber" class="input input-bordered focus:input-primary">
+            </div>
+        </div>
+        <div class="form-control">
+            <label class="label"><span class="label-text font-medium">{{ translationService.translate('Address') }}</span></label>
+            <input type="text" [ngModel]="clientAddress()" (ngModelChange)="clientAddress.set($event)" name="clientAddress" class="input input-bordered focus:input-primary">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+             <div class="form-control">
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Default Tax Rate (%)') }}</span></label>
+                <input type="number" [ngModel]="clientTaxRate()" (ngModelChange)="clientTaxRate.set(+$event)" name="clientTaxRate" class="input input-bordered focus:input-primary" min="0" step="0.1">
+             </div>
+             <div class="form-control">
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Logo Upload') }}</span></label>
+                <div class="flex gap-2 items-center">
+                   <input type="file" (change)="onLogoSelected($event)" accept="image/*" class="file-input file-input-bordered w-full file-input-sm" />
+                   @if(clientLogoUrl()){
+                     <div class="avatar"><div class="w-8 rounded"><img [src]="clientLogoUrl()"></div></div>
+                   }
+                </div>
+             </div>
+        </div>
+
+        <div class="form-control">
+            <label class="label"><span class="label-text font-medium">{{ translationService.translate('Notes') }}</span></label>
+            <textarea [ngModel]="clientNotes()" (ngModelChange)="clientNotes.set($event)" name="clientNotes" class="textarea textarea-bordered h-20 resize-none focus:textarea-primary"></textarea>
+        </div>
+
+        <div class="modal-action mt-6">
+           <button type="button" (click)="closeModal()" class="btn btn-ghost">{{ translationService.translate('Cancel') }}</button>
+           <button type="submit" class="btn btn-neutral px-6">{{ translationService.translate('Save Client') }}</button>
         </div>
       </form>
     </div>
@@ -151,25 +200,25 @@
 <!-- Email Modal -->
 @if(isEmailModalOpen()){
   <dialog class="modal modal-open">
-    <div class="modal-box shadow-2xl border border-base-200">
+    <div class="modal-box shadow-2xl border border-base-200 rounded-xl">
       <button (click)="closeEmailModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-      <h3 class="font-bold text-lg mb-1">Send Email</h3>
-      <p class="text-sm opacity-70 mb-6">To: <span class="font-semibold">{{ selectedClientForEmail()?.name }}</span> ({{ selectedClientForEmail()?.contact }})</p>
+      <h3 class="font-bold text-lg mb-1">{{ translationService.translate('Send Email') }}</h3>
+      <p class="text-sm opacity-70 mb-6">{{ translationService.translate('To') }}: <span class="font-semibold">{{ selectedClientForEmail()?.name }}</span> ({{ selectedClientForEmail()?.contact }})</p>
       
       <form (ngSubmit)="sendEmail()" class="space-y-4">
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Subject</span></label>
+          <label class="label"><span class="label-text font-medium">{{ translationService.translate('Subject') }}</span></label>
           <input type="text" [ngModel]="emailSubject()" (ngModelChange)="emailSubject.set($event)" name="subject" required class="input input-bordered w-full focus:input-primary" placeholder="e.g. Project Update">
         </div>
         <div class="form-control">
-          <label class="label"><span class="label-text font-medium">Message</span></label>
+          <label class="label"><span class="label-text font-medium">{{ translationService.translate('Message') }}</span></label>
           <textarea [ngModel]="emailBody()" (ngModelChange)="emailBody.set($event)" name="body" required class="textarea textarea-bordered h-32 focus:textarea-primary" placeholder="Write your message here..."></textarea>
         </div>
         <div class="modal-action mt-6">
-          <button type="button" (click)="closeEmailModal()" class="btn btn-ghost">Cancel</button>
-          <button type="submit" class="btn btn-primary px-6">
+          <button type="button" (click)="closeEmailModal()" class="btn btn-ghost">{{ translationService.translate('Cancel') }}</button>
+          <button type="submit" class="btn btn-neutral px-6">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-            Send Message
+            {{ translationService.translate('Send Message') }}
           </button>
         </div>
       </form>

@@ -5,6 +5,7 @@ import { MockDataService, TeamMember, Project, Task } from '../../services/mock-
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { TranslationService } from '../../services/translation.service';
 
 @Component({
   selector: 'app-team',
@@ -14,17 +15,98 @@ import { DecimalPipe } from '@angular/common';
 })
 export class TeamComponent {
   private dataService = inject(MockDataService);
+  public translationService = inject(TranslationService);
 
   members = this.dataService.getTeamMembers();
   projects = this.dataService.getProjects();
   tasks = this.dataService.getAllTasks();
   
+  // Filters
+  searchTerm = signal('');
+  filterStatus = signal<'All' | 'Active' | 'Inactive'>('All');
+  sortBy = signal<'Name' | 'Earnings' | 'Hours'>('Name');
+  minEarnings = signal<number | null>(null);
+
   // Pagination (Increased density allows for more items)
   currentPage = signal(1);
   itemsPerPage = signal(12); 
 
+  filteredMembers = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    const status = this.filterStatus();
+    const sort = this.sortBy();
+    const minEarn = this.minEarnings();
+    const projects = this.projects();
+
+    // Helper to calculate total earnings
+    const getTotalEarnings = (memberId: number): number => {
+        let earnings = 0;
+        projects.forEach(p => {
+            Object.entries(p.hours).forEach(([weekId, days]) => {
+                Object.values(days).forEach((entry: any) => {
+                    if (entry.memberId === memberId) {
+                        const rate = p.memberRates[memberId] ?? p.defaultRate ?? 0;
+                        earnings += entry.hours * rate;
+                    }
+                });
+            });
+        });
+        return earnings;
+    };
+
+    // 1. Filter
+    let result = this.members().filter(m => {
+        const matchesSearch = 
+            m.name.toLowerCase().includes(term) ||
+            m.email.toLowerCase().includes(term) ||
+            m.role.toLowerCase().includes(term);
+        
+        const matchesStatus = status === 'All' || m.status === status || (status === 'Inactive' && m.status === 'Invited');
+        
+        let matchesEarnings = true;
+        if (minEarn !== null) {
+            matchesEarnings = getTotalEarnings(m.id) >= minEarn;
+        }
+
+        return matchesSearch && matchesStatus && matchesEarnings;
+    });
+
+    // 2. Sort
+    if (sort === 'Name') {
+        result.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+        // Calculation Helper for sorting
+        const getMetrics = (memberId: number) => {
+            let totalHours = 0;
+            let totalEarnings = 0;
+            projects.forEach(p => {
+                Object.entries(p.hours).forEach(([weekId, days]) => {
+                    Object.values(days).forEach((entry: any) => {
+                        if (entry.memberId === memberId) {
+                            totalHours += entry.hours;
+                            const rate = p.memberRates[memberId] ?? p.defaultRate ?? 0;
+                            totalEarnings += entry.hours * rate;
+                        }
+                    });
+                });
+            });
+            return { totalHours, totalEarnings };
+        };
+
+        result.sort((a, b) => {
+            const statsA = getMetrics(a.id);
+            const statsB = getMetrics(b.id);
+            if (sort === 'Earnings') return statsB.totalEarnings - statsA.totalEarnings;
+            if (sort === 'Hours') return statsB.totalHours - statsA.totalHours;
+            return 0;
+        });
+    }
+
+    return result;
+  });
+
   paginatedMembers = computed(() => {
-    const members = this.members();
+    const members = this.filteredMembers();
     const startIndex = (this.currentPage() - 1) * this.itemsPerPage();
     const endIndex = startIndex + this.itemsPerPage();
     return members.slice(startIndex, startIndex + this.itemsPerPage());
@@ -32,6 +114,10 @@ export class TeamComponent {
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
+  }
+
+  onFilterChange(): void {
+    this.currentPage.set(1);
   }
 
   // --- Metrics Calculation ---

@@ -1,0 +1,12 @@
+
+/* Global Selection Color */
+::selection {
+  background-color: #DCC4D5 !important;
+  color: #1f2937 !important;
+}
+
+/* Dragging visual cue */
+.drag-target-active {
+    box-shadow: 0 0 0 2px theme('colors.primary');
+    transform: scale(1.02);
+}

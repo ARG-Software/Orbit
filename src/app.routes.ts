@@ -44,11 +44,19 @@ export const APP_ROUTES: Routes = [
       },
       {
         path: 'timesheet',
-        loadComponent: () => import('./components/timesheet/timesheet.component').then(c => c.TimesheetComponent)
-      },
-      {
-        path: 'tasks',
-        loadComponent: () => import('./components/tasks/tasks.component').then(c => c.TasksComponent)
+        children: [
+            { path: '', redirectTo: 'log', pathMatch: 'full' },
+            {
+                path: 'log',
+                loadComponent: () => import('./components/timesheet/timesheet.component').then(c => c.TimesheetComponent),
+                data: { tab: 'log' }
+            },
+            {
+                path: 'history',
+                loadComponent: () => import('./components/timesheet/timesheet.component').then(c => c.TimesheetComponent),
+                data: { tab: 'history' }
+            }
+        ]
       },
       // Admin Only Routes
       { 

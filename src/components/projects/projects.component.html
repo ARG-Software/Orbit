@@ -1,151 +1,194 @@
 
-<div class="container mx-auto">
+<div class="container mx-auto pb-12">
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
     <div>
-      <h1 class="text-3xl font-bold">Projects</h1>
-      <p class="opacity-60 mt-1">Manage all your projects, track status, and team allocation.</p>
+      <h1 class="text-3xl font-light tracking-tight">{{ translationService.translate('Projects') }}</h1>
+      <p class="opacity-60 mt-1 text-sm font-medium">
+          {{ translationService.translate('Manage ongoing work, track status, and team allocation.') }}
+      </p>
     </div>
-    <button class="btn btn-primary shadow-lg shadow-primary/20" (click)="isProjectModalOpen.set(true)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New Project
+    <button class="btn btn-neutral btn-sm gap-2" (click)="openNewProjectModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        {{ translationService.translate('New Project') }}
     </button>
   </div>
 
-  <!-- Filters -->
-  <div class="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-base-100 rounded-xl border border-base-200 shadow-sm">
-    <div class="form-control flex-1">
-        <input type="text" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); currentPage.set(1)" placeholder="Search projects..." class="input input-bordered w-full">
-    </div>
-    <div class="form-control w-full md:w-48">
-        <select [ngModel]="filterClient()" (ngModelChange)="filterClient.set($any($event)); currentPage.set(1)" class="select select-bordered w-full">
-            <option [ngValue]="null">All Clients</option>
-            @for(client of clients(); track client.id){
-                <option [ngValue]="client.id">{{ client.name }}</option>
-            }
-        </select>
-    </div>
-    <div class="form-control w-full md:w-48">
-        <select [ngModel]="filterMember()" (ngModelChange)="filterMember.set($any($event)); currentPage.set(1)" class="select select-bordered w-full">
-            <option [ngValue]="null">All Freelancers</option>
-            @for(member of members(); track member.id){
-                <option [ngValue]="member.id">{{ member.name }}</option>
-            }
-        </select>
-    </div>
+  <div role="tablist" class="tabs tabs-lifted">
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'active'" (click)="activeTab.set('active')">{{ translationService.translate('Active Projects') }}</a>
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'closed'" (click)="activeTab.set('closed')">{{ translationService.translate('Closed Projects') }}</a>
   </div>
 
-  <!-- Projects Table -->
-  <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="table w-full">
-            <thead class="bg-base-200/50 text-base-content/70">
-                <tr>
-                    <th class="w-1/3 pl-6">Project Name</th>
-                    <th>Client</th>
-                    <th>Status</th>
-                    <th>Type & Value</th>
-                    <th>Team</th>
-                    <th class="text-right pr-6">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(project of paginatedProjects(); track project.id) {
-                    @let client = getClient(project.clientId);
-                    <tr class="hover:bg-base-100 transition-colors group cursor-pointer" [routerLink]="['/app/projects', project.id]">
-                        <td class="pl-6">
-                            <div class="font-bold text-base">{{ project.name }}</div>
-                            @if(project.description) {
-                                <div class="text-sm opacity-50 truncate max-w-xs">{{ project.description }}</div>
-                            }
-                        </td>
-                        <td>
-                            @if(client) {
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2.5 h-2.5 rounded-full" [style.background-color]="client.color"></div>
-                                    <span class="font-medium">{{ client.name }}</span>
-                                </div>
-                            } @else {
-                                <span class="opacity-40 italic">Unknown</span>
-                            }
-                        </td>
-                        <td>
-                            <div class="badge badge-sm" 
-                                [class.badge-success]="project.status === 'Active'"
-                                [class.badge-warning]="project.status === 'Paused'"
-                                [class.badge-neutral]="project.status === 'Completed'">
-                                {{ project.status }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="flex flex-col">
-                                <span class="badge badge-sm badge-ghost mb-1 w-fit">{{ project.billingType === 'fixed' ? 'Fixed' : 'Hourly' }}</span>
-                                <span class="text-xs font-mono opacity-70">
-                                    {{ project.billingType === 'fixed' ? (project.fixedPrice | currency) : (project.defaultRate ? (project.defaultRate | currency) + '/hr' : 'Var. Rates') }}
-                                </span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="avatar-group -space-x-3 rtl:space-x-reverse">
-                                @for(mId of project.allocatedTeamMemberIds.slice(0, 4); track mId) {
-                                    @let member = getMember(mId);
-                                    @if(member) {
-                                        <div class="avatar border-base-100" [title]="member.name">
-                                            <div class="w-8">
-                                                <img [src]="member.avatarUrl" [alt]="member.name" />
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                                @if(project.allocatedTeamMemberIds.length > 4) {
-                                    <div class="avatar placeholder border-base-100">
-                                        <div class="w-8 bg-neutral text-neutral-content">
-                                            <span class="text-xs">+{{ project.allocatedTeamMemberIds.length - 4 }}</span>
-                                        </div>
-                                    </div>
-                                }
-                                @if(project.allocatedTeamMemberIds.length === 0) {
-                                    <span class="text-xs opacity-40 italic py-1">No team assigned</span>
-                                }
-                            </div>
-                        </td>
-                        <td class="text-right pr-6">
-                            <button class="btn btn-ghost btn-sm text-primary">View</button>
-                        </td>
-                    </tr>
-                } @empty {
+  <div class="card bg-base-100 shadow-sm border border-base-200 mb-12 -mt-px rounded-tl-none">
+      <div class="card-body p-0">
+          <!-- Filters Toolbar -->
+          <div class="p-4 border-b border-base-200 bg-base-50/30">
+              <div class="flex flex-col lg:flex-row justify-start items-end gap-4">
+                  
+                  <!-- Search -->
+                  <div class="form-control w-full sm:w-auto">
+                      <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Search') }}</span></label>
+                      <div class="relative w-full sm:w-64">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                          <input type="text" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); onFilterChange()" [placeholder]="translationService.translate('Search...')" class="input input-bordered input-sm w-full pl-9 bg-base-100">
+                      </div>
+                  </div>
+
+                  <!-- Client Filter -->
+                  <div class="form-control w-full sm:w-auto">
+                      <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Client') }}</span></label>
+                      <select [ngModel]="filterClient()" (ngModelChange)="filterClient.set($any($event)); onFilterChange()" class="select select-bordered select-sm w-full sm:w-48 bg-base-100">
+                          <option [ngValue]="null">{{ translationService.translate('All Clients') }}</option>
+                          @for(client of clients(); track client.id){
+                              <option [ngValue]="client.id">{{ client.name }}</option>
+                          }
+                      </select>
+                  </div>
+
+                  <!-- Member Filter -->
+                  <div class="form-control w-full sm:w-auto">
+                      <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Member') }}</span></label>
+                      <select [ngModel]="filterMember()" (ngModelChange)="filterMember.set($any($event)); onFilterChange()" class="select select-bordered select-sm w-full sm:w-48 bg-base-100">
+                          <option [ngValue]="null">{{ translationService.translate('All Members') }}</option>
+                          @for(member of members(); track member.id){
+                              <option [ngValue]="member.id">{{ member.name }}</option>
+                          }
+                      </select>
+                  </div>
+
+              </div>
+          </div>
+
+          <!-- Project Table -->
+          <div>
+            <table class="table w-full">
+                <thead class="bg-base-50/50 text-base-content/70">
                     <tr>
-                        <td colspan="6" class="text-center py-16 opacity-50">
-                            No projects found matching your filters.
-                        </td>
+                        <th class="w-1/4 pl-6">{{ translationService.translate('Project Name') }}</th>
+                        <th>{{ translationService.translate('Client') }}</th>
+                        <th>{{ translationService.translate('Status') }}</th>
+                        <th>{{ translationService.translate('Created') }}</th>
+                        <th>{{ translationService.translate('Type & Value') }}</th>
+                        @if(activeTab() === 'active') { <th>{{ translationService.translate('Team') }}</th> }
+                        <th class="text-right pr-6">{{ translationService.translate('Actions') }}</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-  </div>
+                </thead>
+                <tbody>
+                    @for(project of paginatedProjects(); track project.id) {
+                        @let client = getClient(project.clientId);
+                        <tr class="hover:bg-base-50 transition-colors group cursor-pointer" [routerLink]="['/app/projects', project.id]">
+                            <td class="pl-6">
+                                <div>
+                                    <div class="font-bold text-sm lg:text-base">{{ project.name }}</div>
+                                    @if(project.description) {
+                                        <div class="text-xs opacity-50 truncate max-w-[200px]">{{ project.description }}</div>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                @if(client) {
+                                    <div class="font-medium text-sm">{{ client.name }}</div>
+                                } @else {
+                                    <span class="opacity-40 italic text-xs">Unknown</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="badge badge-sm font-normal border-base-300" 
+                                    [class.badge-neutral]="project.status === 'Active'"
+                                    [class.badge-ghost]="project.status !== 'Active'">
+                                    {{ project.status }}
+                                </div>
+                            </td>
+                            <td class="text-xs opacity-60 font-mono">
+                                {{ project.createdAt | date:'shortDate' }}
+                            </td>
+                            <td>
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold opacity-50 uppercase mb-0.5">{{ project.billingType === 'fixed' ? 'Fixed' : 'Hourly' }}</span>
+                                    <span class="text-sm font-mono">
+                                        {{ project.billingType === 'fixed' ? (project.fixedPrice | currency) : (project.defaultRate ? (project.defaultRate | currency) + '/hr' : 'Var.') }}
+                                    </span>
+                                </div>
+                            </td>
+                            
+                            @if(activeTab() === 'active') {
+                                <td>
+                                    <div class="avatar-group -space-x-3 rtl:space-x-reverse">
+                                        @for(mId of project.allocatedTeamMemberIds.slice(0, 3); track mId) {
+                                            @let member = getMember(mId);
+                                            @if(member) {
+                                                <div class="avatar border-base-100" [title]="member.name">
+                                                    <div class="w-7">
+                                                        <img [src]="member.avatarUrl" [alt]="member.name" />
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        @if(project.allocatedTeamMemberIds.length > 3) {
+                                            <div class="avatar placeholder border-base-100">
+                                                <div class="w-7 bg-base-200 text-base-content text-[10px]">
+                                                    <span>+{{ project.allocatedTeamMemberIds.length - 3 }}</span>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if(project.allocatedTeamMemberIds.length === 0) {
+                                            <span class="text-[10px] opacity-40 italic py-1">--</span>
+                                        }
+                                    </div>
+                                </td>
+                            }
 
-  @if(filteredProjects().length > itemsPerPage()){
-    <div class="flex justify-center mt-8">
-        <app-pagination 
-        [currentPage]="currentPage()"
-        [totalItems]="filteredProjects().length"
-        [itemsPerPage]="itemsPerPage()"
-        (pageChange)="onPageChange($event)">
-        </app-pagination>
-    </div>
-  }
+                            <td class="text-right pr-6">
+                                <div class="dropdown dropdown-end">
+                                    <button tabindex="0" (click)="$event.stopPropagation()" class="btn btn-ghost btn-circle btn-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 11-2 0 1 1 0 012 0zm0 7a1 1 0 11-2 0 1 1 0 012 0zm0 7a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
+                                    </button>
+                                    <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-lg w-40 z-50 border border-base-200">
+                                        @if(activeTab() === 'active') {
+                                            <li><a (click)="editProject(project); $event.stopPropagation()">{{ translationService.translate('Edit Project') }}</a></li>
+                                            <li><a (click)="archiveProject(project); $event.stopPropagation()">{{ translationService.translate('Archive') }}</a></li>
+                                        } @else {
+                                            <li><a (click)="restoreProject(project); $event.stopPropagation()">{{ translationService.translate('Restore') }}</a></li>
+                                        }
+                                        <li><a (click)="deleteProject(project.id); $event.stopPropagation()" class="text-error">{{ translationService.translate('Delete') }}</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td [attr.colspan]="activeTab() === 'active' ? 7 : 6" class="text-center py-12 opacity-50 text-sm">
+                                {{ translationService.translate('No projects found matching criteria.') }}
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+          </div>
+          
+          @if(filteredProjects().length > itemsPerPage()){
+            <div class="p-4 flex justify-center border-t border-base-200">
+                <app-pagination 
+                [currentPage]="currentPage()"
+                [totalItems]="filteredProjects().length"
+                [itemsPerPage]="itemsPerPage()"
+                (pageChange)="onPageChange($event)">
+                </app-pagination>
+            </div>
+          }
+      </div>
+  </div>
 </div>
 
 @if(isProjectModalOpen()) {
-    <app-project-modal (close)="isProjectModalOpen.set(false)" (saved)="onProjectSaved()"></app-project-modal>
+    <app-project-modal [projectToEdit]="projectToEdit()" (close)="isProjectModalOpen.set(false)" (saved)="onProjectSaved()"></app-project-modal>
 }
 
 <!-- Success Toast -->
 @if(showSuccessToast()){
 <div class="toast toast-top toast-center z-50">
-  <div class="alert alert-success shadow-lg">
+  <div class="alert alert-success shadow-sm border border-success/20">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    <span>Project created successfully.</span>
+    <span>{{ toastMessage() }}</span>
   </div>
 </div>
 }

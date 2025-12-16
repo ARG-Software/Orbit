@@ -1,365 +1,250 @@
 
-<div class="container mx-auto pb-12 max-w-6xl">
+<div class="w-full pb-12">
   
-  <!-- Greeting Section -->
-  <div class="mb-8 mt-4">
-      <h1 class="text-4xl font-extrabold tracking-tight text-base-content">{{ greeting() }}.</h1>
-      <p class="text-lg opacity-60 mt-1 font-medium">Ready to conquer the day?</p>
+  <!-- Quick Actions Toolbar -->
+  <div class="flex flex-wrap items-center gap-3 mb-6 animate-fade-in-down">
+      <button class="btn btn-neutral btn-sm gap-2" (click)="isTaskModalOpen.set(true)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          New Task
+      </button>
+      <button class="btn btn-ghost border border-base-300 btn-sm gap-2 bg-base-100" (click)="isProjectModalOpen.set(true)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 00-2-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+          New Project
+      </button>
+      <button class="btn btn-ghost border border-base-300 btn-sm gap-2 bg-base-100" (click)="openExpenseModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+          Record Expense
+      </button>
+      <div class="ml-auto text-xs opacity-40 hidden sm:block font-medium uppercase tracking-widest">
+          Executive View
+      </div>
   </div>
 
-  <!-- Quick Actions Bar -->
-  <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-10">
-      <!-- Create Task -->
-      <button (click)="isTaskModalOpen.set(true)" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-primary/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
-          <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-content transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-          </div>
-          <span class="text-xs font-bold">New Task</span>
-      </button>
+  <!-- BENTO GRID LAYOUT (Draggable) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 grid-flow-dense auto-rows-[minmax(140px,auto)]">
 
-      <!-- Create Project -->
-      <button (click)="isProjectModalOpen.set(true)" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-secondary/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
-          <div class="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-secondary-content transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-          </div>
-          <span class="text-xs font-bold">New Project</span>
-      </button>
+      @for (widget of widgets(); track widget; let i = $index) {
+          <div [class]="getWidgetClass(widget)"
+               draggable="true" 
+               (dragstart)="onDragStart($event, i)" 
+               (dragover)="onDragOver($event)" 
+               (drop)="onDrop($event, i)"
+               class="cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.005]">
+               
+               @switch (widget) {
+                   @case ('welcome') {
+                        <!-- TILE 1: WELCOME CLOCK (Minimalist) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-6 relative overflow-hidden h-full">
+                            <div class="relative z-10 flex flex-col justify-between h-full">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="text-xs font-bold opacity-40 uppercase tracking-widest">{{ currentTime() | date:'EEEE, dd MMMM' }}</h3>
+                                        <h1 class="text-4xl font-light tracking-tight mt-2">
+                                            {{ currentTime() | date:'HH:mm' }}
+                                        </h1>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xl font-medium">{{ user()?.name?.split(' ')?.[0] }}</div>
+                                        <div class="text-xs font-medium opacity-40">{{ greeting() }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-2 mt-4">
+                                    <div class="badge badge-sm badge-ghost gap-2 pl-1 pr-3 bg-base-200/50 border-base-300">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                        <span class="text-[10px] uppercase font-bold tracking-wide text-base-content/60">{{ translationService.translate('Online') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   }
 
-      <!-- Pay Expense (New) -->
-      <button (click)="openExpenseModal()" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-error/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
-          <div class="w-10 h-10 rounded-full bg-error/10 text-error flex items-center justify-center group-hover:bg-error group-hover:text-error-content transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-          </div>
-          <span class="text-xs font-bold">Pay Expense</span>
-      </button>
+                   @case ('activity') {
+                        <!-- TILE 2: HOURS LOGGED (Grayscale) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-5 relative overflow-hidden flex flex-col justify-between h-full group">
+                            <div class="flex justify-between items-start w-full z-10">
+                                <span class="font-bold text-xs uppercase tracking-wider opacity-50">{{ translationService.translate('Activity') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-30" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                            </div>
+                            
+                            <div class="flex items-end justify-between mt-2">
+                                <div>
+                                    <div class="text-3xl font-light tracking-tight">{{ weeklyHoursLogged() | number:'1.0-0' }}<span class="text-lg opacity-40 font-normal ml-0.5">h</span></div>
+                                    <div class="text-[10px] font-medium opacity-40 mt-1">{{ translationService.translate('This Week') }}</div>
+                                </div>
+                                
+                                <!-- Mini Graph -->
+                                <div class="flex items-end gap-1 h-8 opacity-30">
+                                    <div class="w-1.5 bg-current h-[30%] rounded-t-sm"></div>
+                                    <div class="w-1.5 bg-current h-[60%] rounded-t-sm"></div>
+                                    <div class="w-1.5 bg-current h-[40%] rounded-t-sm"></div>
+                                    <div class="w-1.5 bg-current h-[80%] rounded-t-sm"></div>
+                                    <div class="w-1.5 bg-current h-[50%] rounded-t-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+                   }
 
-      <!-- Log Time -->
-      <a routerLink="/app/timesheet" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-accent/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
-          <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-accent-content transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          </div>
-          <span class="text-xs font-bold">Log Time</span>
-      </a>
+                   @case ('revenue') {
+                        <!-- TILE 3: REVENUE (Monochrome) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-5 relative overflow-hidden flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-start">
+                                <span class="font-bold text-xs uppercase tracking-wider opacity-50">{{ translationService.translate('Revenue') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <div class="text-3xl font-light tracking-tight">{{ weeklyFinancials().revenue | currency:'USD':'symbol':'1.0-0' }}</div>
+                                <div class="w-full bg-base-200 h-1 mt-3 rounded-full overflow-hidden">
+                                    <div class="bg-base-content h-full w-[65%] opacity-80"></div>
+                                </div>
+                            </div>
+                        </div>
+                   }
 
-      <!-- Invoice -->
-      <a routerLink="/app/invoices" class="btn h-auto py-3 bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:border-success/50 hover:bg-base-100 flex flex-col items-center gap-2 group">
-          <div class="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center group-hover:bg-success group-hover:text-success-content transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          </div>
-          <span class="text-xs font-bold">New Invoice</span>
-      </a>
+                   @case ('status') {
+                        <!-- TILE 4: STATUS GAUGE (Sober) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-6 flex flex-col items-center relative overflow-hidden h-full">
+                            <div class="w-full flex justify-between items-center mb-4">
+                                <span class="font-bold text-xs uppercase tracking-wider opacity-50">{{ translationService.translate('Status') }}</span>
+                                <div class="badge badge-sm badge-ghost border-base-300 font-medium text-[10px]">{{ weeklyProjectsCount() }} {{ translationService.translate('Active') }}</div>
+                            </div>
 
-      <!-- AI Plan Day -->
-      <button (click)="planMyDay()" class="btn h-auto py-3 btn-neutral shadow-lg flex flex-col items-center gap-2 group hover:scale-[1.02] transition-transform">
-          @if(isAiLoading()) {
-             <span class="loading loading-spinner loading-md"></span>
-          } @else {
-             <div class="w-10 h-10 rounded-full bg-base-100/10 flex items-center justify-center group-hover:bg-base-100/20 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-             </div>
-          }
-          <span class="text-xs font-bold">Plan My Day</span>
-      </button>
+                            <!-- Large Gauge (Neutral) -->
+                            <div class="relative w-40 h-40 my-auto">
+                                <svg viewBox="0 0 200 200" class="w-full h-full transform -rotate-90">
+                                    <circle cx="100" cy="100" r="85" fill="none" class="stroke-base-200" stroke-width="12" stroke-linecap="round" />
+                                    <circle cx="100" cy="100" r="85" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" 
+                                            stroke-dasharray="534" 
+                                            [attr.stroke-dashoffset]="534 - (534 * 0.7)" 
+                                            class="text-base-content opacity-80" />
+                                </svg>
+                                
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-light">{{ allProjects().length }}</span>
+                                    <span class="text-[10px] uppercase font-bold opacity-40">{{ translationService.translate('Total') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                   }
+
+                   @case ('activeProjects') {
+                        <!-- TILE 5: WORKSPACE (Card Style) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-5 cursor-pointer hover:border-base-300 transition-all group h-full" routerLink="/app/projects">
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="font-bold text-xs uppercase tracking-wider opacity-50">{{ translationService.translate('Workspace') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-30 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4-4 2 2 0 014 4z" /></svg>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="text-2xl font-light mb-1">{{ weeklyProjectsCount() }}</div>
+                                <div class="text-[10px] opacity-50 font-medium">Active Projects</div>
+                                <div class="w-full bg-base-200 h-1 mt-3 rounded-full overflow-hidden">
+                                    <div class="bg-base-content h-full w-[40%] opacity-40"></div>
+                                </div>
+                            </div>
+                        </div>
+                   }
+
+                   @case ('nextMeeting') {
+                        <!-- TILE 6: NEXT MEETING (Clean List) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-5 flex flex-row items-center gap-5 relative overflow-hidden h-full">
+                            @let meetings = upcomingMeetings();
+                            @if(meetings.length > 0) {
+                                @let next = meetings[0];
+                                <div class="w-12 h-12 rounded border border-base-200 bg-base-50 flex flex-col items-center justify-center shrink-0">
+                                    <span class="text-[9px] font-bold uppercase opacity-50">{{ next.startTime | date:'MMM' }}</span>
+                                    <span class="text-lg font-bold leading-none">{{ next.startTime | date:'dd' }}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-40">{{ translationService.translate('Next Up') }}</span>
+                                        <span class="w-1 h-1 rounded-full bg-base-content opacity-20"></span>
+                                        <span class="text-[10px] font-medium opacity-60">{{ next.platform }}</span>
+                                    </div>
+                                    <h3 class="font-medium text-sm truncate">{{ next.title }}</h3>
+                                    <p class="text-xs opacity-50 truncate mt-0.5">{{ next.startTime | date:'shortTime' }} • {{ next.clientName }}</p>
+                                </div>
+                                <div class="pr-1">
+                                    <a [href]="next.link" target="_blank" class="btn btn-square btn-sm btn-ghost border border-base-200 hover:bg-base-200 hover:border-base-300">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" /></svg>
+                                    </a>
+                                </div>
+                            } @else {
+                                <div class="flex-1 flex items-center justify-center gap-3 opacity-40">
+                                    <span class="font-medium text-sm">{{ translationService.translate('No meetings today') }}</span>
+                                </div>
+                            }
+                        </div>
+                   }
+
+                   @case ('ai') {
+                        <!-- TILE 7: AI ASSISTANT (Professional) -->
+                        <div class="card bg-base-100 text-base-content shadow-sm border border-base-200 rounded-lg p-5 cursor-pointer hover:border-base-300 transition-all group h-full" (click)="planMyDay()">
+                            <div class="relative z-10 flex flex-col h-full justify-center items-center text-center gap-3">
+                                <div class="w-10 h-10 rounded-full border border-base-200 bg-base-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    @if(isAiLoading()) {
+                                        <span class="loading loading-spinner loading-xs opacity-50"></span>
+                                    } @else {
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                    }
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm">{{ translationService.translate('AI Assistant') }}</div>
+                                    <div class="text-[10px] opacity-50 uppercase tracking-wide mt-1">{{ translationService.translate('Generate Plan') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                   }
+               }
+          </div>
+      }
+
   </div>
 
-  <!-- AI Suggestion Result -->
+  <!-- AI Result Modal (Floating) -->
   @if(aiSuggestion()) {
-      <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-900/20 dark:to-fuchsia-900/20 border border-violet-100 dark:border-violet-800 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div class="flex items-start gap-4">
-              <div class="p-2 bg-white dark:bg-base-200 rounded-lg shadow-sm text-violet-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-              </div>
-              <div class="flex-1">
-                  <h3 class="font-bold text-lg mb-2 text-violet-900 dark:text-violet-100">Your AI Briefing</h3>
-                  <div class="prose text-sm leading-relaxed text-base-content/80 whitespace-pre-line font-medium">
-                      {{ aiSuggestion() }}
+      <div class="fixed bottom-6 right-6 z-50 max-w-sm w-full animate-bounce-in">
+          <div class="bg-base-100 shadow-2xl border border-base-300 p-6 rounded-xl relative overflow-hidden">
+              <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 opacity-50 hover:opacity-100" (click)="aiSuggestion.set(null)">✕</button>
+              <div class="flex items-start gap-4">
+                  <div class="w-8 h-8 rounded-full border border-base-200 bg-base-50 flex items-center justify-center shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <div>
+                      <h3 class="font-bold text-sm uppercase tracking-wide opacity-50 mb-2">AI Insight</h3>
+                      <div class="text-sm leading-relaxed whitespace-pre-line">{{ aiSuggestion() }}</div>
                   </div>
               </div>
-              <button class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100" (click)="aiSuggestion.set(null)">✕</button>
           </div>
       </div>
   }
-
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      
-      <!-- Main Column (Financials, Invoices, Tasks) -->
-      <div class="lg:col-span-2 flex flex-col gap-8">
-          
-          <!-- Financial Card (Graph View) -->
-          <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
-              <div class="card-body">
-                  <div class="flex justify-between items-start mb-6">
-                      <div>
-                          <h2 class="text-xl font-bold">This Month's Financials</h2>
-                          <div class="flex items-center gap-2 mt-1">
-                              <span class="text-xs opacity-60">Cumulative Trend</span>
-                              <div class="badge badge-sm badge-ghost font-mono">{{ currentMonthFinancials().profit >= 0 ? '+' : '' }}{{ currentMonthFinancials().profit | currency:'USD':'symbol':'1.0-0' }} Net</div>
-                          </div>
-                      </div>
-                      
-                      <!-- Legend -->
-                      <div class="flex gap-4 text-xs font-medium">
-                          <div class="flex items-center gap-2">
-                              <span class="w-3 h-3 rounded-full bg-success"></span>
-                              <span class="opacity-70">Revenue</span>
-                              <span class="font-bold ml-1 text-success">{{ currentMonthFinancials().revenue | currency:'USD':'symbol':'1.0-0' }}</span>
-                          </div>
-                          <div class="flex items-center gap-2">
-                              <span class="w-3 h-3 rounded-full bg-warning"></span>
-                              <span class="opacity-70">Expenses</span>
-                              <span class="font-bold ml-1 text-warning">{{ currentMonthFinancials().expenses | currency:'USD':'symbol':'1.0-0' }}</span>
-                          </div>
-                      </div>
-                  </div>
-
-                  <!-- Graphic (D3 Area Chart) -->
-                  <div class="w-full h-64 relative group cursor-crosshair">
-                      <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" 
-                           class="w-full h-full overflow-visible"
-                           (mousemove)="onChartMouseMove($event)" 
-                           (mouseleave)="onChartMouseLeave()">
-                          
-                          <!-- Gradients -->
-                          <defs>
-                              <linearGradient id="gradRevenue" x1="0" x2="0" y1="0" y2="1">
-                                  <stop offset="0%" stop-color="oklch(var(--su))" stop-opacity="0.3"/>
-                                  <stop offset="100%" stop-color="oklch(var(--su))" stop-opacity="0"/>
-                              </linearGradient>
-                              <linearGradient id="gradExpense" x1="0" x2="0" y1="0" y2="1">
-                                  <stop offset="0%" stop-color="oklch(var(--wa))" stop-opacity="0.3"/>
-                                  <stop offset="100%" stop-color="oklch(var(--wa))" stop-opacity="0"/>
-                              </linearGradient>
-                          </defs>
-
-                          <!-- Grid Lines -->
-                          <line x1="0" [attr.y1]="chartHeight" [attr.x2]="chartWidth" [attr.y2]="chartHeight" stroke="currentColor" stroke-opacity="0.1" />
-                          <line x1="0" [attr.y1]="0" [attr.x2]="chartWidth" [attr.y2]="0" stroke="currentColor" stroke-opacity="0.05" stroke-dasharray="4" />
-
-                          <!-- Areas -->
-                          <path [attr.d]="financialChartPaths().revenueArea" fill="url(#gradRevenue)" class="transition-all duration-300" />
-                          <path [attr.d]="financialChartPaths().expenseArea" fill="url(#gradExpense)" class="transition-all duration-300" />
-
-                          <!-- Lines -->
-                          <path [attr.d]="financialChartPaths().revenueLine" fill="none" stroke="oklch(var(--su))" stroke-width="3" stroke-linecap="round" class="drop-shadow-sm" />
-                          <path [attr.d]="financialChartPaths().expenseLine" fill="none" stroke="oklch(var(--wa))" stroke-width="3" stroke-linecap="round" stroke-dasharray="4,4" class="drop-shadow-sm" />
-
-                          <!-- Hover Indicator -->
-                          @if(hoverData(); as h) {
-                              <!-- Vertical Line -->
-                              <line [attr.x1]="h.x" y1="0" [attr.x2]="h.x" [attr.y2]="chartHeight" stroke="currentColor" stroke-opacity="0.2" stroke-dasharray="2" />
-                              
-                              <!-- Dots -->
-                              <circle [attr.cx]="h.x" [attr.cy]="h.yRev" r="5" fill="oklch(var(--su))" stroke="white" stroke-width="2" />
-                              <circle [attr.cx]="h.x" [attr.cy]="h.yExp" r="5" fill="oklch(var(--wa))" stroke="white" stroke-width="2" />
-                          }
-                      </svg>
-
-                      <!-- Hover Tooltip (HTML Overlay) -->
-                      @if(hoverData(); as h) {
-                          <div class="absolute pointer-events-none bg-base-100 shadow-xl border border-base-200 p-3 rounded-lg text-xs z-10 w-40"
-                               [style.left.px]="h.x + 20" 
-                               [style.top.px]="50">
-                              <div class="font-bold mb-2 border-b border-base-200 pb-1">{{ h.date | date:'mediumDate' }}</div>
-                              <div class="flex justify-between items-center mb-1">
-                                  <span class="text-success font-medium">Revenue</span>
-                                  <span class="font-bold">{{ h.cumRevenue | currency:'USD':'symbol':'1.0-0' }}</span>
-                              </div>
-                              <div class="flex justify-between items-center">
-                                  <span class="text-warning font-medium">Expenses</span>
-                                  <span class="font-bold">{{ h.cumExpense | currency:'USD':'symbol':'1.0-0' }}</span>
-                              </div>
-                          </div>
-                      }
-                  </div>
-              </div>
-          </div>
-
-          <!-- Outstanding Invoices -->
-          <div class="card bg-base-100 shadow-sm border border-base-200">
-              <div class="card-body p-0">
-                  <div class="p-6 border-b border-base-200 flex justify-between items-center bg-base-200/20">
-                      <h2 class="text-lg font-bold">Outstanding Invoices</h2>
-                      <a routerLink="/app/invoices" class="btn btn-xs btn-ghost">View All</a>
-                  </div>
-                  <div class="divide-y divide-base-200">
-                      @for(inv of outstandingInvoices(); track inv.id) {
-                          <div class="p-4 hover:bg-base-100 transition-colors flex items-center justify-between gap-4">
-                              <div class="flex items-center gap-3">
-                                  <div class="w-10 h-10 rounded-lg bg-base-200 flex items-center justify-center font-bold text-xs opacity-70">
-                                      {{ inv.invoiceNumber | slice:4:8 }}
-                                  </div>
-                                  <div>
-                                      <div class="font-medium">{{ getClientName(inv.clientId) }}</div>
-                                      <div class="text-xs opacity-50">Due {{ inv.dueDate | date:'mediumDate' }}</div>
-                                  </div>
-                              </div>
-                              <div class="flex flex-col items-end gap-1">
-                                  <span class="font-bold">{{ inv.total | currency:'USD':'symbol':'1.0-0' }}</span>
-                                  <span class="badge badge-xs" [class.badge-error]="inv.status === 'Overdue'" [class.badge-warning]="inv.status === 'Pending'">{{ inv.status }}</span>
-                              </div>
-                          </div>
-                      } @empty {
-                          <div class="p-8 text-center opacity-50">
-                              <p>No outstanding invoices.</p>
-                          </div>
-                      }
-                  </div>
-              </div>
-          </div>
-
-          <!-- Priority Tasks -->
-          <div class="card bg-base-100 shadow-sm border border-base-200">
-              <div class="card-body p-0">
-                  <div class="p-6 border-b border-base-200 flex justify-between items-center bg-base-200/20">
-                      <h2 class="text-lg font-bold">High Priority Tasks</h2>
-                      <a routerLink="/app/tasks" class="btn btn-xs btn-ghost">View All</a>
-                  </div>
-                  
-                  <div class="divide-y divide-base-200">
-                      @for(task of priorityTasks(); track task.id) {
-                          <div class="p-4 hover:bg-base-100 transition-colors flex items-start gap-4 group">
-                              <div class="mt-1">
-                                  <div class="w-2 h-2 rounded-full bg-error"></div>
-                              </div>
-                              <div class="flex-1">
-                                  <div class="font-medium text-base-content/90 group-hover:text-primary transition-colors cursor-pointer">{{ task.title }}</div>
-                                  <div class="text-xs opacity-50 mt-1">{{ getProjectName(task.projectId) }}</div>
-                              </div>
-                              <div class="badge badge-sm badge-ghost">{{ task.status }}</div>
-                          </div>
-                      } @empty {
-                          <div class="p-8 text-center opacity-50">
-                              <p>No high priority tasks pending.</p>
-                          </div>
-                      }
-                  </div>
-              </div>
-          </div>
-
-          <!-- Recent Activity -->
-          <div class="card bg-base-100 shadow-sm border border-base-200">
-              <div class="card-body p-0">
-                  <div class="p-6 border-b border-base-200 flex justify-between items-center bg-base-200/20">
-                      <h2 class="text-lg font-bold">Recent Activity</h2>
-                  </div>
-                  <div class="divide-y divide-base-200">
-                      @for(task of recentActivity(); track task.id) {
-                          <div class="p-4 hover:bg-base-100 transition-colors flex items-center gap-4">
-                              <div class="text-xs font-mono opacity-50 w-24 text-right">{{ task.updatedAt | date:'MMM d, HH:mm' }}</div>
-                              <div class="flex-1">
-                                  <div class="text-sm">
-                                      <span class="font-medium">{{ task.title }}</span> updated to <span class="badge badge-xs badge-ghost">{{ task.status }}</span>
-                                  </div>
-                                  <div class="text-xs opacity-50 mt-0.5">{{ getProjectName(task.projectId) }}</div>
-                              </div>
-                          </div>
-                      } @empty {
-                          <div class="p-8 text-center opacity-50">
-                              <p>No recent activity.</p>
-                          </div>
-                      }
-                  </div>
-              </div>
-          </div>
-
-      </div>
-
-      <!-- Side Column (Meetings, Team Activity) -->
-      <div class="lg:col-span-1 flex flex-col gap-8">
-          
-          <!-- Upcoming Meetings -->
-          <div class="card bg-base-100 shadow-sm border border-base-200">
-              <div class="card-body p-0">
-                  <div class="p-5 border-b border-base-200 bg-base-200/20 flex justify-between items-center">
-                      <h2 class="text-lg font-bold">Upcoming Meetings</h2>
-                      <a routerLink="/app/meetings" class="btn btn-xs btn-ghost btn-circle">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                      </a>
-                  </div>
-                  <div class="divide-y divide-base-200">
-                      @for(meet of upcomingMeetings(); track meet.id) {
-                          <div class="p-4 flex gap-3 hover:bg-base-100 transition-colors">
-                              <div class="bg-primary/10 text-primary rounded-lg p-2 text-center min-w-[50px] flex flex-col justify-center">
-                                  <span class="text-[10px] font-bold uppercase">{{ meet.startTime | date:'MMM' }}</span>
-                                  <span class="text-lg font-bold leading-none">{{ meet.startTime | date:'dd' }}</span>
-                              </div>
-                              <div class="flex-1 min-w-0">
-                                  <div class="font-bold text-sm truncate">{{ meet.title }}</div>
-                                  <div class="text-xs opacity-60 truncate">{{ meet.clientName }}</div>
-                                  <div class="text-xs opacity-50 mt-1 flex items-center gap-1">
-                                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                      {{ meet.startTime | date:'shortTime' }}
-                                  </div>
-                              </div>
-                          </div>
-                      } @empty {
-                          <div class="p-8 text-center opacity-50 text-sm">
-                              No meetings scheduled.
-                          </div>
-                      }
-                  </div>
-              </div>
-          </div>
-
-          <!-- Team Activity -->
-          <div class="card bg-base-100 shadow-sm border border-base-200">
-              <div class="card-body p-0">
-                  <div class="p-5 border-b border-base-200 bg-base-200/20">
-                      <h2 class="text-lg font-bold">Hours Logged</h2>
-                  </div>
-                  <div class="p-2">
-                      @for(item of teamActivity(); track item.member.id) {
-                          <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-base-200/50 transition-colors">
-                              <div class="avatar">
-                                  <div class="w-10 h-10 rounded-full ring ring-offset-2 ring-offset-base-100 ring-1 ring-base-300">
-                                      <img [src]="item.member.avatarUrl" />
-                                  </div>
-                              </div>
-                              <div class="flex-1 min-w-0">
-                                  <div class="font-medium text-sm truncate">{{ item.member.name }}</div>
-                                  <div class="text-xs opacity-50">{{ item.member.role }}</div>
-                              </div>
-                              <div class="font-mono font-bold text-sm">{{ item.hours | number:'1.0-0' }}h</div>
-                          </div>
-                      }
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
 </div>
 
-<!-- Shared Modals -->
-@if(isTaskModalOpen()) {
-    <app-task-modal (close)="isTaskModalOpen.set(false)"></app-task-modal>
-}
-
-@if(isProjectModalOpen()) {
-    <app-project-modal (close)="isProjectModalOpen.set(false)"></app-project-modal>
-}
-
-<!-- Expense Modal (Local specific to dashboard context still, or could be shared later) -->
+<!-- Modals -->
+@if(isTaskModalOpen()) { <app-task-modal (close)="isTaskModalOpen.set(false)"></app-task-modal> }
+@if(isProjectModalOpen()) { <app-project-modal (close)="isProjectModalOpen.set(false)"></app-project-modal> }
 @if(isExpenseModalOpen()) {
     <dialog class="modal modal-open">
-        <div class="modal-box shadow-2xl border border-base-200">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="isExpenseModalOpen.set(false)">✕</button>
-            <h3 class="font-bold text-lg mb-4">Quick Expense</h3>
+        <div class="modal-box shadow-2xl border border-base-200 rounded-xl p-8">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4" (click)="isExpenseModalOpen.set(false)">✕</button>
+            <h3 class="font-bold text-xl mb-6">Quick Expense</h3>
             <div class="flex flex-col gap-4">
                 <div class="form-control">
                     <label class="label"><span class="label-text font-medium">Amount ($)</span></label>
-                    <input type="number" [ngModel]="newExpenseAmount()" (ngModelChange)="newExpenseAmount.set(+$event)" class="input input-bordered w-full focus:input-primary" placeholder="0.00" min="0">
+                    <input type="number" [ngModel]="newExpenseAmount()" (ngModelChange)="newExpenseAmount.set(+$event)" class="input input-lg input-bordered w-full font-mono font-bold text-xl bg-base-100" placeholder="0.00" min="0">
                 </div>
                 <div class="form-control">
                     <label class="label"><span class="label-text font-medium">Recipient</span></label>
-                    <input type="text" [ngModel]="newExpenseRecipient()" (ngModelChange)="newExpenseRecipient.set($event)" class="input input-bordered w-full" placeholder="e.g. Office Supplies Co.">
+                    <input type="text" [ngModel]="newExpenseRecipient()" (ngModelChange)="newExpenseRecipient.set($event)" class="input input-bordered w-full bg-base-100" placeholder="e.g. Vendor Name">
                 </div>
                 <div class="form-control">
                     <label class="label"><span class="label-text font-medium">Description</span></label>
-                    <textarea [ngModel]="newExpenseDescription()" (ngModelChange)="newExpenseDescription.set($event)" class="textarea textarea-bordered h-24" placeholder="What is this for?"></textarea>
+                    <textarea [ngModel]="newExpenseDescription()" (ngModelChange)="newExpenseDescription.set($event)" class="textarea textarea-bordered h-24 resize-none bg-base-100" placeholder="What is this for?"></textarea>
                 </div>
             </div>
             <div class="modal-action">
-                <button class="btn btn-primary px-6" (click)="saveExpense()" [disabled]="!newExpenseAmount() || !newExpenseRecipient()">Record Expense</button>
+                <button class="btn btn-neutral btn-block rounded-lg h-12" (click)="saveExpense()" [disabled]="!newExpenseAmount() || !newExpenseRecipient()">Record Expense</button>
             </div>
         </div>
     </dialog>

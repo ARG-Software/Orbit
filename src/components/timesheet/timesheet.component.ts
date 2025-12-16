@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { MockDataService, Client, TimeEntry, TeamMember, Project } from '../../services/mock-data.service';
 import { AuthService } from '../../services/auth.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
+import { TranslationService } from '../../services/translation.service';
+import { ActivatedRoute } from '@angular/router';
 
 interface CalendarDay {
   date: Date;
@@ -21,6 +23,8 @@ interface DailySummaryEntry {
   memberAvatarUrl: string;
   hours: number;
   description: string;
+  amount: number;
+  rate: number; // Added
 }
 
 interface DailySummary {
@@ -51,6 +55,8 @@ interface HistoryEntry {
   memberAvatarUrl: string;
   hours: number;
   description: string;
+  amount: number;
+  rate: number; // Added
 }
 
 @Component({
@@ -62,6 +68,8 @@ interface HistoryEntry {
 export class TimesheetComponent {
   private dataService = inject(MockDataService);
   private authService = inject(AuthService);
+  public translationService = inject(TranslationService);
+  private route = inject(ActivatedRoute);
 
   user = this.authService.currentUser;
   isAdmin = this.authService.isAdmin;
@@ -70,12 +78,12 @@ export class TimesheetComponent {
   members = this.dataService.getTeamMembers();
   projects = this.dataService.getProjects();
 
-  // Top Level Tabs
-  activeTab = signal<'calendar' | 'history'>('calendar');
+  // Route View Mode
+  viewMode = signal<'log' | 'history'>('log');
 
   // Calendar State
   currentDate = signal(new Date());
-  viewMode = signal<'week' | 'month'>('week');
+  calendarViewMode = signal<'week' | 'month'>('week'); // renamed to avoid conflict
   mosaicMemberFilter = signal<number | null>(null); 
 
   // History State
@@ -90,6 +98,7 @@ export class TimesheetComponent {
   // Modal State
   isEntryModalOpen = signal(false);
   entryModalDate: WritableSignal<Date | null> = signal(null);
+  entryModalMode = signal<'list' | 'add' | 'edit'>('list');
   
   // Form Fields in Modal
   modalMemberId = signal<number | null>(null);
@@ -97,6 +106,9 @@ export class TimesheetComponent {
   modalProjectId = signal<number | null>(null);
   entryHours = signal(0);
   entryDescription = signal('');
+  
+  // Track original project during edit to handle project switching
+  editingEntryOriginalProjectId = signal<number | null>(null);
 
   // Computed for Modal Dropdowns
   modalAvailableProjects = computed(() => {
@@ -123,6 +135,14 @@ export class TimesheetComponent {
   });
 
   constructor() {
+    // Subscribe to route data to switch modes
+    this.route.data.subscribe(data => {
+        this.viewMode.set(data['tab'] || 'log');
+        if (this.viewMode() === 'history') {
+            this.resetHistoryFilters(); // Ensure clean state
+        }
+    });
+
     // Set default history range (Last 90 Days to cover mock data)
     const today = new Date();
     const ninetyDaysAgo = new Date();
@@ -133,7 +153,7 @@ export class TimesheetComponent {
 
     // Auto-select user logic
     effect(() => {
-      if (this.isEntryModalOpen()) {
+      if (this.isEntryModalOpen() && this.entryModalMode() === 'add') {
           if (!this.isAdmin()) {
              // Lock to current member
              const myId = this.user()?.teamMemberId;
@@ -198,13 +218,13 @@ export class TimesheetComponent {
   });
 
   daysInView = computed(() => {
-      return this.viewMode() === 'week' ? this.currentWeekDays() : this.currentMonthDays();
+      return this.calendarViewMode() === 'week' ? this.currentWeekDays() : this.currentMonthDays();
   });
   
   changePeriod(amount: number) {
     this.currentDate.update(d => {
       const newDate = new Date(d);
-      if (this.viewMode() === 'week') {
+      if (this.calendarViewMode() === 'week') {
         newDate.setDate(d.getDate() + (7 * amount));
       } else {
         newDate.setMonth(d.getMonth() + amount);
@@ -263,6 +283,10 @@ export class TimesheetComponent {
         totalHours += entry.hours;
         const member = this.members().find(m => m.id === entry.memberId);
         const client = this.clients().find(c => c.id === p.clientId);
+        
+        const rate = p.memberRates[entry.memberId] ?? p.defaultRate ?? member?.defaultHourlyRate ?? 0;
+        const amount = entry.hours * rate;
+
         entries.push({
           projectId: p.id,
           projectName: p.name,
@@ -271,7 +295,9 @@ export class TimesheetComponent {
           memberName: member?.name || 'Unknown',
           memberAvatarUrl: member?.avatarUrl || '',
           hours: entry.hours,
-          description: entry.description
+          description: entry.description,
+          amount: amount,
+          rate: rate
         });
       }
     });
@@ -279,39 +305,13 @@ export class TimesheetComponent {
     return { totalHours, entries };
   }
 
-  // --- Grouping for Modal ---
-  groupedModalEntries = computed(() => {
+  // --- Modal Logic & Data ---
+  
+  // Fetch entries specifically for the modal view
+  modalEntries = computed(() => {
       const date = this.entryModalDate();
       if (!date) return [];
-      
-      const summary = this.getDailySummary(date);
-      
-      // Group entries by member
-      const map = new Map<number, { 
-          memberId: number, 
-          memberName: string, 
-          avatarUrl: string, 
-          totalHours: number, 
-          entries: DailySummaryEntry[] 
-      }>();
-
-      summary.entries.forEach(entry => {
-          const existing = map.get(entry.memberId);
-          if (existing) {
-              existing.totalHours += entry.hours;
-              existing.entries.push(entry);
-          } else {
-              map.set(entry.memberId, {
-                  memberId: entry.memberId,
-                  memberName: entry.memberName,
-                  avatarUrl: entry.memberAvatarUrl,
-                  totalHours: entry.hours,
-                  entries: [entry]
-              });
-          }
-      });
-
-      return Array.from(map.values());
+      return this.getDailySummary(date).entries;
   });
 
   // --- Insights Logic ---
@@ -367,14 +367,9 @@ export class TimesheetComponent {
                        totalEarnings: 0
                    };
                    
-                   // Calculate earnings based on project rate
-                   const project = this.projects().find(p => p.id === entry.projectId);
-                   const rate = project?.memberRates[member.id] || project?.defaultRate || member.defaultHourlyRate || 0;
-                   const earnings = entry.hours * rate;
-                   
                    stats.totalHours += entry.hours;
-                   stats.totalEarnings += earnings;
-                   totalPeriodEarnings += earnings;
+                   stats.totalEarnings += entry.amount; // Use pre-calc amount
+                   totalPeriodEarnings += entry.amount;
 
                    userStatsMap.set(member.id, stats);
                }
@@ -434,6 +429,9 @@ export class TimesheetComponent {
                   const member = members.find(m => m.id === entry.memberId);
                   const date = this.getDateFromWeekIdAndDay(weekId, dayName);
                   
+                  const rate = p.memberRates[entry.memberId] ?? p.defaultRate ?? member?.defaultHourlyRate ?? 0;
+                  const amount = entry.hours * rate;
+
                   entries.push({
                       id: `${p.id}-${weekId}-${dayName}-${entry.memberId}`,
                       date: date,
@@ -447,7 +445,9 @@ export class TimesheetComponent {
                       memberName: member?.name || 'Unknown',
                       memberAvatarUrl: member?.avatarUrl || '',
                       hours: entry.hours,
-                      description: entry.description
+                      description: entry.description,
+                      amount: amount,
+                      rate: rate
                   });
               });
           });
@@ -473,9 +473,9 @@ export class TimesheetComponent {
           entries = entries.filter(e => e.date >= s);
       }
       if (end) {
-          const e = new Date(end);
-          e.setHours(23, 59, 59, 999);
-          entries = entries.filter(e => e.date <= e);
+          const endDateObj = new Date(end);
+          endDateObj.setHours(23, 59, 59, 999);
+          entries = entries.filter(entry => entry.date <= endDateObj);
       }
 
       return entries;
@@ -507,16 +507,41 @@ export class TimesheetComponent {
 
   // --- Modal Logic ---
 
-  openEntryModal(date: Date) {
+  openEntryModal(date: Date, mode: 'list' | 'add' = 'list') {
     this.entryModalDate.set(date);
-    
-    // Reset form
+    this.entryModalMode.set(mode);
+    this.resetForm();
+    this.isEntryModalOpen.set(true);
+  }
+
+  resetForm() {
     this.modalClientId.set(null);
     this.modalProjectId.set(null);
     this.entryHours.set(0);
     this.entryDescription.set('');
-    
-    this.isEntryModalOpen.set(true);
+    this.editingEntryOriginalProjectId.set(null);
+  }
+
+  switchToEntryForm() {
+      this.entryModalMode.set('add');
+      this.resetForm();
+      // Member selection auto-logic handled by effect in constructor
+  }
+
+  editEntry(entry: DailySummaryEntry) {
+      this.entryModalMode.set('edit');
+      this.modalMemberId.set(entry.memberId);
+      this.modalProjectId.set(entry.projectId);
+      this.editingEntryOriginalProjectId.set(entry.projectId);
+      
+      // Look up Client ID from Project
+      const project = this.projects().find(p => p.id === entry.projectId);
+      if (project) {
+          this.modalClientId.set(project.clientId);
+      }
+      
+      this.entryHours.set(entry.hours);
+      this.entryDescription.set(entry.description);
   }
 
   closeEntryModal() {
@@ -540,8 +565,18 @@ export class TimesheetComponent {
     const weekId = this.getWeekId(date);
     const dayName = date.toLocaleString('en-US', { weekday: 'short' });
 
+    // If Editing and Project Changed, we must delete the old one first
+    if (this.entryModalMode() === 'edit' && this.editingEntryOriginalProjectId()) {
+        const oldPid = this.editingEntryOriginalProjectId()!;
+        if (oldPid !== projectId) {
+            this.dataService.deleteTimeEntry(oldPid, weekId, dayName);
+        }
+    }
+
     this.dataService.submitHours(projectId, weekId, { [dayName]: newEntry });
-    this.closeEntryModal();
+    
+    // Return to list view
+    this.entryModalMode.set('list');
   }
 
   deleteEntry(projectId: number, weekId?: string, dayName?: string) {

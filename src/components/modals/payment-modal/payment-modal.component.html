@@ -1,0 +1,151 @@
+
+<dialog class="modal modal-open">
+    <div class="modal-box w-11/12 max-w-4xl shadow-2xl border border-base-200 p-0 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-base-100 p-6 border-b border-base-200 flex justify-between items-center">
+            <h3 class="font-bold text-lg">Send Payment</h3>
+            <button class="btn btn-sm btn-circle btn-ghost" (click)="close.emit()">✕</button>
+        </div>
+
+        <div class="flex flex-col md:flex-row h-[550px]">
+            <!-- Sidebar -->
+            <div class="w-full md:w-64 bg-base-200/50 border-r border-base-200 p-6 flex flex-col">
+                <ul class="steps steps-vertical w-full">
+                    <li class="step" [class.step-primary]="currentStep() >= 1">Recipient</li>
+                    <li class="step" [class.step-primary]="currentStep() >= 2">Amount & Type</li>
+                    <li class="step" [class.step-primary]="currentStep() >= 3">Method</li>
+                </ul>
+                
+                @if(currentStep() >= 2 && selectedMemberId() && selectedProjectId()) {
+                    <div class="mt-auto bg-base-100 p-4 rounded-lg border border-base-200 text-sm shadow-sm">
+                        <div class="font-bold mb-2 border-b border-base-200 pb-1 text-xs uppercase opacity-60">Current Debt</div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs">Outstanding</span>
+                            <span class="font-bold text-error">{{ currentDebt() | currency }}</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-8 overflow-y-auto">
+                <!-- Step 1: Recipient -->
+                @if(currentStep() === 1) {
+                    <h2 class="text-xl font-bold mb-6">Select Recipient</h2>
+                    <div class="form-control mb-4">
+                        <label class="label font-medium">Team Member</label>
+                        <select [ngModel]="selectedMemberId()" (ngModelChange)="onMemberSelect(+$event)" class="select select-bordered w-full">
+                            <option [ngValue]="null" disabled>Choose member...</option>
+                            @for(member of members(); track member.id) {
+                                <option [value]="member.id">{{ member.name }}</option>
+                            }
+                        </select>
+                    </div>
+                    @if(selectedMemberId()) {
+                        <div class="p-4 bg-base-200 rounded-lg text-sm space-y-2">
+                            <div class="flex justify-between"><span>Email:</span> <span class="font-medium">{{recipientEmail()}}</span></div>
+                            <div class="flex justify-between"><span>Role:</span> <span class="font-medium">{{recipientRole()}}</span></div>
+                            <div class="flex justify-between"><span>IBAN:</span> <span class="font-mono">{{recipientIban()}}</span></div>
+                        </div>
+                    }
+                }
+
+                <!-- Step 2: Amount -->
+                @if(currentStep() === 2) {
+                    <h2 class="text-xl font-bold mb-4">Payment Details</h2>
+                    
+                    <div class="form-control mb-4">
+                        <label class="label font-medium">Project Context (Optional)</label>
+                        <select [ngModel]="selectedProjectId()" (ngModelChange)="selectedProjectId.set(+$event)" class="select select-bordered w-full">
+                            <option [ngValue]="null">No specific project</option>
+                            @for(project of projects(); track project.id) {
+                                <option [value]="project.id">{{ project.name }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="join w-full mb-6">
+                        <input class="join-item btn flex-1" type="radio" name="payType" aria-label="Flat Amount" [checked]="paymentType() === 'flat'" (change)="paymentType.set('flat')" />
+                        <input class="join-item btn flex-1" type="radio" name="payType" aria-label="Log Entries" [checked]="paymentType() === 'hours'" (change)="paymentType.set('hours')" [disabled]="!selectedProjectId()" />
+                    </div>
+
+                    @if(paymentType() === 'flat') {
+                        <div class="form-control">
+                            <label class="label font-medium">Amount ($)</label>
+                            <input type="number" [ngModel]="payAmount()" (ngModelChange)="payAmount.set(+$event)" class="input input-bordered text-lg" min="0">
+                        </div>
+                    }
+
+                    @if(paymentType() === 'hours') {
+                        <div class="border border-base-200 rounded-lg overflow-hidden flex flex-col h-64">
+                            <div class="bg-base-200/50 p-2 flex justify-between items-center text-xs font-bold uppercase opacity-60">
+                                <span>Unpaid Logs</span>
+                                <button class="btn btn-xs btn-ghost" (click)="selectAllEntries()">Select All</button>
+                            </div>
+                            <div class="overflow-y-auto flex-1 p-2 space-y-1">
+                                @for(entry of availableTimeEntries(); track entry.id) {
+                                    <label class="flex items-center gap-3 p-2 hover:bg-base-100 rounded cursor-pointer border border-transparent hover:border-base-200">
+                                        <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" 
+                                               [checked]="selectedEntryIds().has(entry.id)"
+                                               (change)="toggleEntrySelection(entry.id, $any($event.target).checked)">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex justify-between">
+                                                <span class="font-medium text-sm">{{entry.date | date:'shortDate'}}</span>
+                                                <span class="font-bold text-sm">{{entry.cost | currency}}</span>
+                                            </div>
+                                            <div class="text-xs opacity-60 truncate">{{entry.desc}} ({{entry.hours}}h)</div>
+                                        </div>
+                                    </label>
+                                } @empty {
+                                    <div class="text-center py-10 opacity-50 text-sm">No unpaid logs found for this project.</div>
+                                }
+                            </div>
+                            <div class="bg-base-100 p-3 border-t border-base-200 flex justify-between items-center">
+                                <span class="text-sm">Total Selected:</span>
+                                <span class="font-bold text-lg text-primary">{{ totalSelectedCost() | currency }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-control mt-4">
+                            <label class="label font-medium">Payment Amount (Editable)</label>
+                            <div class="text-xs opacity-60 mb-2">You can pay less than the total selected cost to leave a remaining balance.</div>
+                            <input type="number" [ngModel]="payAmount()" (ngModelChange)="payAmount.set(+$event)" class="input input-bordered w-full" [min]="0">
+                        </div>
+                    }
+
+                    <div class="form-control mt-4">
+                        <label class="label font-medium">Description</label>
+                        <input type="text" [ngModel]="payDescription()" (ngModelChange)="payDescription.set($event)" class="input input-bordered" placeholder="e.g. October Invoice">
+                    </div>
+                }
+
+                <!-- Step 3: Method -->
+                @if(currentStep() === 3) {
+                    <h2 class="text-xl font-bold mb-6">Select Method</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        @for(m of ['Wise', 'Revolut', 'PayPal', 'Viva', 'Manual']; track m) {
+                            <button class="btn h-auto py-4 flex-col gap-2" 
+                                    [class.btn-active]="payMethod() === m"
+                                    [class.btn-outline]="payMethod() !== m"
+                                    (click)="selectMethod(m)">
+                                <span class="font-bold">{{m}}</span>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="modal-action p-6 bg-base-100 border-t border-base-200 m-0">
+            @if(currentStep() > 1) {
+                <button class="btn btn-ghost" (click)="prevStep()">Back</button>
+            }
+            @if(currentStep() < 3) {
+                <button class="btn btn-primary" (click)="nextStep()" [disabled]="(currentStep() === 1 && !selectedMemberId()) || (currentStep() === 2 && !payAmount())">Next</button>
+            }
+            @if(currentStep() === 3) {
+                <button class="btn btn-primary px-8" [disabled]="!payMethod()" (click)="confirmPayment()">Confirm Payment</button>
+            }
+        </div>
+    </div>
+</dialog>

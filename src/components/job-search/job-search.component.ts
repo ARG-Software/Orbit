@@ -7,6 +7,8 @@ import { MockDataService, Job } from '../../services/mock-data.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 import { switchMap, map } from 'rxjs';
 import { of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { TranslationService } from '../../services/translation.service';
 
 export interface SavedFilter {
     name: string;
@@ -25,6 +27,8 @@ export interface SavedFilter {
 })
 export class JobSearchComponent {
     private dataService = inject(MockDataService);
+    private route: ActivatedRoute = inject(ActivatedRoute);
+    public translationService = inject(TranslationService);
 
     // --- State ---
     activeTab = signal<'search' | 'saved'>('search');
@@ -60,6 +64,18 @@ export class JobSearchComponent {
 
     selectedJob = signal<Job | null>(null);
 
+    constructor() {
+        // Deep link support for tabs
+        this.route.queryParams.subscribe(params => {
+            if (params['tab']) {
+                const tab = params['tab'];
+                if (['search', 'saved'].includes(tab)) {
+                    this.activeTab.set(tab as 'search' | 'saved');
+                }
+            }
+        });
+    }
+
     // --- Computed Lists ---
     
     filteredJobs = computed(() => {
@@ -91,10 +107,10 @@ export class JobSearchComponent {
 
     // --- Pagination ---
     searchPage = signal(1);
-    searchPerPage = signal(6);
+    searchPerPage = signal(10);
     
     savedPage = signal(1);
-    savedPerPage = signal(6);
+    savedPerPage = signal(10);
 
     paginatedSearchJobs = computed(() => {
         const jobs = this.filteredJobs();

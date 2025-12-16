@@ -24,14 +24,14 @@ interface LoggedHourEntry {
   imports: [RouterLink, FormsModule, DecimalPipe, DatePipe, NgClass, PaginationComponent],
 })
 export class TeamMemberDetailComponent {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private route: ActivatedRoute = inject(ActivatedRoute);
+  private router: Router = inject(Router);
   private dataService = inject(MockDataService);
 
   member: Signal<TeamMember | undefined> = toSignal(
     this.route.paramMap.pipe(
       map((params: ParamMap) => Number(params.get('id'))),
-      switchMap(id => this.dataService.getTeamMemberById(id))
+      switchMap((id: number) => this.dataService.getTeamMemberById(id))
     )
   );
   

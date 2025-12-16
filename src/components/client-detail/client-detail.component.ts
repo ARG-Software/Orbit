@@ -1,7 +1,7 @@
 
 import { Component, ChangeDetectionStrategy, inject, Signal, computed, signal, effect } from '@angular/core';
 import { AsyncPipe, DecimalPipe, DatePipe, NgIf, CurrencyPipe, NgClass } from '@angular/common';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router, ParamMap } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { MockDataService, Client, TeamMember, Project } from '../../services/mock-data.service';
@@ -19,18 +19,17 @@ export class ClientDetailComponent {
   private router: Router = inject(Router);
   private dataService = inject(MockDataService);
 
-  // Data Signals
   client: Signal<Client | undefined> = toSignal(
     this.route.paramMap.pipe(
-      map(params => Number(params.get('id'))),
-      switchMap(id => this.dataService.getClientById(id))
+      map((params: ParamMap) => Number(params.get('id'))),
+      switchMap((id: number) => this.dataService.getClientById(id))
     )
   );
 
   projects: Signal<Project[]> = toSignal(
     this.route.paramMap.pipe(
-      map(params => Number(params.get('id'))),
-      switchMap(id => this.dataService.getProjectsByClientId(id))
+      map((params: ParamMap) => Number(params.get('id'))),
+      switchMap((id: number) => this.dataService.getProjectsByClientId(id))
     ), { initialValue: [] }
   );
 
@@ -38,10 +37,8 @@ export class ClientDetailComponent {
   meetings = this.dataService.getMeetings();
   allMembers = this.dataService.getTeamMembers();
   
-  // UI State
   activeTab = signal<'projects' | 'invoices' | 'meetings'>('projects');
 
-  // Client Stats Computation
   clientStats = computed(() => {
       const c = this.client();
       if (!c) return null;
@@ -58,7 +55,6 @@ export class ClientDetailComponent {
       return { totalRevenue, outstandingAmount, activeProjects, upcomingMeetings };
   });
 
-  // Filtered Lists for Tabs
   clientInvoicesList = computed(() => {
       const id = this.client()?.id;
       if (!id) return [];
@@ -71,18 +67,15 @@ export class ClientDetailComponent {
       return this.meetings().filter(m => m.clientId === id).sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
   });
 
-  // Form state signals for Client Details
   clientName = signal('');
   clientContact = signal('');
   clientPhone = signal('');
   clientAddress = signal('');
   clientTaxNumber = signal('');
-  clientColor = signal('#6366f1');
   clientStatus = signal<'Active' | 'Paused'>('Active');
   clientTaxRate = signal(0);
   clientNotes = signal('');
   
-  // Pagination
   currentPage = signal(1);
   itemsPerPage = signal(6);
 
@@ -95,7 +88,6 @@ export class ClientDetailComponent {
   showSuccessToast = signal(false);
   toastMessage = signal('');
 
-  // --- Email Modal State ---
   isEmailModalOpen = signal(false);
   emailSubject = signal('');
   emailBody = signal('');
@@ -109,7 +101,6 @@ export class ClientDetailComponent {
         this.clientPhone.set(c.phone);
         this.clientAddress.set(c.address);
         this.clientTaxNumber.set(c.taxNumber);
-        this.clientColor.set(c.color || '#6366f1');
         this.clientStatus.set(c.status);
         this.clientTaxRate.set(c.defaultTaxRate || 0);
         this.clientNotes.set(c.notes || '');
@@ -128,7 +119,6 @@ export class ClientDetailComponent {
       phone: this.clientPhone(),
       address: this.clientAddress(),
       taxNumber: this.clientTaxNumber(),
-      color: this.clientColor(),
       status: this.clientStatus(),
       defaultTaxRate: this.clientTaxRate(),
       notes: this.clientNotes(),
@@ -159,7 +149,6 @@ export class ClientDetailComponent {
       }
   }
 
-  // --- Email Logic ---
   openEmailModal(): void {
     this.emailSubject.set('');
     this.emailBody.set('');

@@ -1,30 +1,39 @@
 {
-  "name": "orbit",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "orbit-freelance-os",
+  "version": "1.0.0",
+  "description": "Orbit is the central operating system for freelancers and agencies.",
   "scripts": {
-    "dev": "ng serve",
+    "start": "ng serve",
     "build": "ng build",
-    "preview": "ng serve --configuration=production"
+    "watch": "ng build --watch --configuration development"
   },
   "dependencies": {
-    "rxjs": "^7.8.2",
-    "@angular/common": "^20.3.0",
-    "@angular/core": "^20.3.0",
-    "@angular/platform-browser": "^20.3.0",
-    "@angular/compiler": "^20.3.0",
-    "@angular/router": "^20.3.12",
-    "@angular/forms": "^20.3.12",
+    "@angular/animations": "^18.0.0",
+    "@angular/common": "^18.0.0",
+    "@angular/compiler": "^18.0.0",
+    "@angular/core": "^18.0.0",
+    "@angular/forms": "^18.0.0",
+    "@angular/platform-browser": "^18.0.0",
+    "@angular/router": "^18.0.0",
+    "@google/genai": "^0.1.0",
     "d3": "^7.9.0",
-    "@angular/build": "^20.3.0",
-    "@angular/cli": "^20.3.0",
-    "@angular/compiler-cli": "^20.3.0",
+    "daisyui": "^4.12.10",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.3",
+    "@angular/build": "^18.0.0",
+    "@angular/cli": "^18.0.0",
+    "@angular/compiler-cli": "^18.0.0",
     "tailwindcss": "latest"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@angular-devkit/build-angular": "^18.0.0",
+    "@angular/cli": "^18.0.0",
+    "@angular/compiler-cli": "^18.0.0",
+    "@types/d3": "^7.4.3",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "~5.4.2"
   }
 }

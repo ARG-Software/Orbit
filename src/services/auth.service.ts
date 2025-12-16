@@ -31,7 +31,7 @@ export interface User {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private router = inject(Router);
+  private router: Router = inject(Router);
 
   private users = signal<User[]>([]);
   currentUser = signal<User | null>(null);

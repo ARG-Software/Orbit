@@ -6,7 +6,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MockDataService, Meeting } from '../../services/mock-data.service';
 import { AuthService } from '../../services/auth.service';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import { TranslationService } from '../../services/translation.service';
 
 @Component({
   selector: 'app-meetings',
@@ -18,6 +19,8 @@ import { RouterLink } from '@angular/router';
 export class MeetingsComponent {
   private dataService = inject(MockDataService);
   private authService = inject(AuthService);
+  private route: ActivatedRoute = inject(ActivatedRoute);
+  public translationService = inject(TranslationService);
 
   // Data
   meetings = this.dataService.getMeetings();
@@ -48,6 +51,18 @@ export class MeetingsComponent {
   meetPlatform = signal<'Google Meet' | 'Zoom' | 'Phone' | 'In-Person'>('Google Meet');
   meetDescription = signal('');
 
+  constructor() {
+    // Deep link support for tabs
+    this.route.queryParams.subscribe(params => {
+      if (params['tab']) {
+        const tab = params['tab'];
+        if (['upcoming', 'history'].includes(tab)) {
+          this.activeTab.set(tab as 'upcoming' | 'history');
+        }
+      }
+    });
+  }
+
   // Computations
   
   // Upcoming: Only future meetings, simple platform filter removed in favor of clean view
@@ -61,7 +76,7 @@ export class MeetingsComponent {
   
   // Pagination for Upcoming
   upcomingPage = signal(1);
-  upcomingPerPage = signal(6);
+  upcomingPerPage = signal(10);
   paginatedUpcoming = computed(() => {
       const upcoming = this.upcomingMeetings();
       const start = (this.upcomingPage() - 1) * this.upcomingPerPage();

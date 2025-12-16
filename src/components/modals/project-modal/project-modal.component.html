@@ -5,7 +5,7 @@
             <button (click)="close.emit()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
         
-        <h2 class="card-title border-b border-base-200 pb-2 mb-4">Create New Project</h2>
+        <h2 class="card-title border-b border-base-200 pb-2 mb-4">{{ isEditMode() ? 'Edit Project' : 'Create New Project' }}</h2>
         
         <form (ngSubmit)="saveProject()">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -32,6 +32,9 @@
                         <option value="Active">Active</option>
                         <option value="Paused">Paused</option>
                         <option value="Completed">Completed</option>
+                        @if(isEditMode() && newProjectStatus() === 'Archived') {
+                            <option value="Archived">Archived</option>
+                        }
                     </select>
                 </div>
                 
@@ -116,7 +119,7 @@
 
             <div class="modal-action mt-8 pt-4 border-t border-base-200">
                 <button type="button" class="btn btn-ghost" (click)="close.emit()">Cancel</button>
-                <button type="submit" class="btn btn-primary px-8" [disabled]="!newProjectName() || !newProjectClientId()">Create Project</button>
+                <button type="submit" class="btn btn-primary px-8" [disabled]="!newProjectName() || !newProjectClientId()">{{ isEditMode() ? 'Save Changes' : 'Create Project' }}</button>
             </div>
         </form>
     </div>

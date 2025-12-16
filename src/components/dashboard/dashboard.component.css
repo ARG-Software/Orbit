@@ -1,5 +1,24 @@
 
-.radial-progress {
-  --size: 8rem;
-  --thickness: 1rem;
+/* Animations for lists and charts */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Donut Chart Text Centering */
+.donut-text {
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

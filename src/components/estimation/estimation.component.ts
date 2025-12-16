@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -64,7 +65,7 @@ export class EstimationComponent {
 
   // --- History Tab State ---
   historyPage = signal(1);
-  historyPerPage = signal(8);
+  historyPerPage = signal(10);
   
   // --- Computations ---
 

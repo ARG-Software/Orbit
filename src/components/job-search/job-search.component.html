@@ -2,49 +2,49 @@
 <div class="container mx-auto">
   <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
     <div>
-        <h1 class="text-3xl font-bold">Job Board</h1>
-        <p class="opacity-75 mt-1">Find and manage your next opportunity.</p>
+        <h1 class="text-3xl font-light tracking-tight">{{ translationService.translate('Job Board') }}</h1>
+        <p class="opacity-60 mt-1 text-sm font-medium">{{ translationService.translate('Find and manage your next opportunity.') }}</p>
     </div>
   </div>
 
-  <!-- Main Tabs (Invoices Style) -->
+  <!-- Main Tabs -->
   <div role="tablist" class="tabs tabs-lifted">
-    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'search'" (click)="activeTab.set('search')">Search Jobs</a>
+    <a role="tab" class="tab" [class.tab-active]="activeTab() === 'search'" (click)="activeTab.set('search')">{{ translationService.translate('Search Jobs') }}</a>
     <a role="tab" class="tab" [class.tab-active]="activeTab() === 'saved'" (click)="activeTab.set('saved')">
-        Saved Jobs 
+        {{ translationService.translate('Saved Jobs') }} 
         @if(bookmarkedJobIds().size > 0) {
-            <span class="badge badge-sm badge-primary ml-2">{{ bookmarkedJobIds().size }}</span>
+            <span class="badge badge-sm badge-neutral ml-2">{{ bookmarkedJobIds().size }}</span>
         }
     </a>
   </div>
 
   <!-- Content Card -->
-  <div class="card bg-base-100 shadow -mt-px rounded-t-none border border-base-200">
+  <div class="card bg-base-100 shadow-sm -mt-px rounded-tl-none rounded-b-lg border border-base-200">
     <div class="card-body p-4 sm:p-6">
         
         @if(activeTab() === 'search') {
             <!-- Top Filter Bar -->
-            <div class="bg-base-200/40 rounded-xl p-4 mb-6 border border-base-200">
+            <div class="bg-base-50/50 rounded-lg p-4 mb-6 border border-base-200">
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
                     
                     <!-- Filter Inputs -->
                     <div class="form-control w-full">
-                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Keywords</span></label>
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Keywords') }}</span></label>
                         <input type="text" [ngModel]="filterKeywords()" (ngModelChange)="filterKeywords.set($event); searchPage.set(1)" placeholder="Title, company, tags..." class="input input-bordered input-sm w-full bg-base-100">
                     </div>
 
                     <div class="form-control w-full">
-                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Location</span></label>
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Location') }}</span></label>
                         <input type="text" [ngModel]="filterLocation()" (ngModelChange)="filterLocation.set($event); searchPage.set(1)" placeholder="e.g. New York" class="input input-bordered input-sm w-full bg-base-100">
                     </div>
 
                     <div class="form-control w-full">
-                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Interest</span></label>
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Interest') }}</span></label>
                         <input type="text" [ngModel]="filterInterest()" (ngModelChange)="filterInterest.set($event); searchPage.set(1)" placeholder="e.g. React, Design" class="input input-bordered input-sm w-full bg-base-100">
                     </div>
 
                     <div class="form-control w-full">
-                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Work Model</span></label>
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Work Model') }}</span></label>
                         <select [ngModel]="filterWorkModel()" (ngModelChange)="filterWorkModel.set($event); searchPage.set(1)" class="select select-bordered select-sm w-full bg-base-100">
                             <option value="any">Any</option>
                             <option value="Remote">Remote</option>
@@ -55,13 +55,13 @@
 
                     <!-- Salary Range -->
                     <div class="form-control w-full">
-                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Min. Salary: ${{ filterSalaryMin() | number:'1.0-0' }}</span></label>
-                        <input type="range" min="30000" max="200000" step="5000" [ngModel]="filterSalaryMin()" (ngModelChange)="filterSalaryMin.set(+$event); searchPage.set(1)" class="range range-xs range-primary">
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Min. Salary') }}: ${{ filterSalaryMin() | number:'1.0-0' }}</span></label>
+                        <input type="range" min="30000" max="200000" step="5000" [ngModel]="filterSalaryMin()" (ngModelChange)="filterSalaryMin.set(+$event); searchPage.set(1)" class="range range-xs range-neutral">
                     </div>
 
                     <!-- Saved Filters Dropdown & Action -->
                     <div class="form-control w-full">
-                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">Load Saved Filter</span></label>
+                        <label class="label py-1"><span class="label-text text-xs font-bold uppercase opacity-60">{{ translationService.translate('Load Saved Filter') }}</span></label>
                         <div class="flex gap-2">
                             <select class="select select-bordered select-sm w-full bg-base-100" [ngModel]="selectedFilterName()" (ngModelChange)="applySavedFilter($any($event))">
                                 <option [ngValue]="null" disabled>Select filter...</option>
@@ -77,55 +77,53 @@
                         </div>
                     </div>
 
-                    <!-- Buttons (Aligned Bottom) -->
+                    <!-- Buttons -->
                     <div class="flex gap-2 md:col-span-2 lg:col-span-2 justify-end items-center pb-0.5 self-end">
-                        <button class="btn btn-sm btn-ghost font-normal text-xs" (click)="resetFilters()">Reset</button>
-                        <button class="btn btn-sm btn-primary btn-outline" (click)="openSaveFilterModal()">Save Filter</button>
+                        <button class="btn btn-sm btn-ghost font-normal text-xs" (click)="resetFilters()">{{ translationService.translate('Reset') }}</button>
+                        <button class="btn btn-sm btn-neutral" (click)="openSaveFilterModal()">{{ translationService.translate('Save Filter') }}</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Results List (Simplified & Clean) -->
-            <div class="flex flex-col border border-base-200 rounded-xl bg-base-100 overflow-hidden">
+            <!-- Results List -->
+            <div class="flex flex-col border border-base-200 rounded-lg bg-base-100 overflow-hidden">
                 @for(job of paginatedSearchJobs(); track job.id){
                     <div class="p-6 border-b border-base-200 last:border-0 hover:bg-base-50 transition-colors group relative cursor-pointer" (click)="viewJobDetails(job)">
                         <div class="flex justify-between items-start gap-4">
                             <!-- Job Info -->
                             <div class="flex-1 min-w-0 space-y-1">
                                 <!-- Title -->
-                                <h3 class="text-lg font-bold text-primary">{{ job.title }}</h3>
+                                <h3 class="text-base font-bold">{{ job.title }}</h3>
                                 
                                 <!-- Metadata Line -->
-                                <div class="text-xs text-base-content/70 font-medium flex flex-wrap gap-2 items-center">
-                                    <span class="font-bold text-base-content">{{ job.company }}</span>
+                                <div class="text-xs opacity-70 font-medium flex flex-wrap gap-2 items-center">
+                                    <span class="font-bold opacity-100">{{ job.company }}</span>
                                     <span class="opacity-40">•</span>
                                     <span>{{ job.location }}</span>
                                     <span class="opacity-40">•</span>
                                     <span>{{ job.workModel }}</span>
                                     <span class="opacity-40">•</span>
-                                    <span>{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</span>
+                                    <span class="font-mono">{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</span>
                                 </div>
 
                                 <!-- Description -->
-                                <p class="text-sm opacity-80 line-clamp-2 max-w-4xl mt-2 leading-relaxed">
+                                <p class="text-sm opacity-60 line-clamp-2 max-w-4xl mt-2 leading-relaxed">
                                     {{ job.description }}
                                 </p>
                             </div>
 
                             <!-- Actions (Heart Only) -->
                             <div class="flex flex-col shrink-0 ml-2">
-                                <button class="btn btn-circle btn-sm btn-ghost border border-base-200 hover:border-primary hover:text-primary hover:bg-base-100" (click)="$event.stopPropagation(); toggleBookmark(job.id)" [class.text-primary]="isBookmarked(job.id)" [class.border-primary]="isBookmarked(job.id)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [attr.fill]="isBookmarked(job.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                <button class="btn btn-circle btn-sm btn-ghost border border-base-200 hover:border-base-300" (click)="$event.stopPropagation(); toggleBookmark(job.id)" [class.text-error]="isBookmarked(job.id)" [class.border-error]="isBookmarked(job.id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [attr.fill]="isBookmarked(job.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                 } @empty {
-                    <div class="col-span-full card bg-base-100/50 border border-dashed border-base-300 py-12">
-                        <div class="card-body text-center opacity-60">
-                            <p>No jobs found matching your criteria.</p>
-                            <button class="btn btn-link btn-sm" (click)="resetFilters()">Clear Filters</button>
-                        </div>
+                    <div class="col-span-full py-16 text-center opacity-50">
+                        <p class="text-sm">{{ translationService.translate('No jobs found matching your criteria.') }}</p>
+                        <button class="btn btn-link btn-sm text-neutral no-underline hover:underline" (click)="resetFilters()">Clear Filters</button>
                     </div>
                 }
             </div>
@@ -143,14 +141,14 @@
         }
 
         @if(activeTab() === 'saved') {
-            <div class="flex flex-col border border-base-200 rounded-xl bg-base-100 overflow-hidden">
+            <div class="flex flex-col border border-base-200 rounded-lg bg-base-100 overflow-hidden">
                 @for(job of paginatedSavedJobs(); track job.id) {
                     <div class="p-6 border-b border-base-200 last:border-0 hover:bg-base-50 transition-colors group relative cursor-pointer" (click)="viewJobDetails(job)">
                         <div class="flex justify-between items-start gap-4">
                             <div class="flex-1 space-y-1">
-                                <h3 class="text-lg font-bold text-primary">{{ job.title }}</h3>
-                                <div class="text-xs text-base-content/70 font-medium flex flex-wrap gap-2 items-center">
-                                    <span class="font-bold text-base-content">{{ job.company }}</span>
+                                <h3 class="text-base font-bold">{{ job.title }}</h3>
+                                <div class="text-xs opacity-70 font-medium flex flex-wrap gap-2 items-center">
+                                    <span class="font-bold opacity-100">{{ job.company }}</span>
                                     <span class="opacity-40">•</span>
                                     <span>{{ job.location }}</span>
                                     <span class="opacity-40">•</span>
@@ -158,22 +156,22 @@
                                     <span class="opacity-40">•</span>
                                     <span>{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</span>
                                 </div>
-                                <p class="text-sm opacity-80 line-clamp-2 max-w-4xl mt-2 leading-relaxed">
+                                <p class="text-sm opacity-60 line-clamp-2 max-w-4xl mt-2 leading-relaxed">
                                     {{ job.description }}
                                 </p>
                             </div>
                             <div class="flex flex-col shrink-0 ml-2">
-                                <button class="btn btn-circle btn-sm btn-ghost border border-base-200 hover:border-error hover:text-error hover:bg-base-100" (click)="$event.stopPropagation(); toggleBookmark(job.id)" title="Remove Bookmark">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current text-primary" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                <button class="btn btn-circle btn-sm btn-ghost border border-base-200 text-error hover:bg-error/10" (click)="$event.stopPropagation(); toggleBookmark(job.id)" title="Remove Bookmark">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                 } @empty {
-                    <div class="col-span-full text-center py-16 opacity-50 bg-base-200/30 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                        <p>No saved jobs yet.</p>
-                        <button class="btn btn-link btn-sm" (click)="activeTab.set('search')">Browse Jobs</button>
+                    <div class="col-span-full text-center py-16 opacity-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                        <p class="text-sm">No saved jobs yet.</p>
+                        <button class="btn btn-link btn-sm text-neutral no-underline hover:underline" (click)="activeTab.set('search')">{{ translationService.translate('Search Jobs') }}</button>
                     </div>
                 }
             </div>
@@ -196,14 +194,14 @@
 <!-- Job Details Modal -->
 @if (selectedJob(); as job) {
   <dialog class="modal modal-open">
-    <div class="modal-box w-11/12 max-w-3xl shadow-2xl border border-base-200">
+    <div class="modal-box w-11/12 max-w-3xl shadow-2xl border border-base-200 rounded-xl">
        <button (click)="closeJobDetails()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
        <div class="flex items-center gap-4 mb-6">
-          <div class="avatar"><div class="w-16 rounded-xl shadow-sm border border-base-200 p-1"><img [src]="job.companyLogo" [alt]="job.company + ' logo'" class="rounded-lg"></div></div>
+          <div class="avatar"><div class="w-16 rounded-lg ring-1 ring-base-200 p-1"><img [src]="job.companyLogo" [alt]="job.company + ' logo'" class="rounded"></div></div>
           <div>
             <h3 class="font-bold text-xl">{{ job.title }}</h3>
-            <p class="font-semibold text-primary">{{ job.company }}</p>
-            <div class="flex gap-2 text-sm opacity-75 mt-1">
+            <p class="font-medium opacity-70">{{ job.company }}</p>
+            <div class="flex gap-2 text-xs opacity-50 mt-1 uppercase font-bold tracking-wide">
                 <span>{{ job.location }}</span>
                 <span>•</span>
                 <span>{{ job.workModel }}</span>
@@ -213,34 +211,33 @@
        
        <div class="flex flex-wrap gap-2 mb-6">
           @for(tag of job.tags; track tag){
-            <div class="badge badge-outline">{{ tag }}</div>
+            <div class="badge badge-outline border-base-300 text-xs text-opacity-70">{{ tag }}</div>
           }
-          <div class="badge badge-success badge-outline font-mono">{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</div>
+          <div class="badge badge-neutral font-mono text-xs">{{ job.salary.min | currency:'USD':'symbol':'1.0-0' }} - {{ job.salary.max | currency:'USD':'symbol':'1.0-0' }}</div>
        </div>
 
        <div class="divider"></div>
 
-       <div class="prose max-w-none text-base-content/90 text-sm">
-          <p>A full job description would be displayed here. For now, this is placeholder content to demonstrate the modal functionality. The real implementation would pull this data from the job API.</p>
+       <div class="prose max-w-none text-base-content/80 text-sm">
+          <p>A full job description would be displayed here. For now, this is placeholder content to demonstrate the modal functionality.</p>
           <h4>Responsibilities:</h4>
           <ul>
              <li>Develop and maintain web applications using modern technologies.</li>
-             <li>Collaborate with cross-functional teams to define, design, and ship new features.</li>
-             <li>Ensure the performance, quality, and responsiveness of applications.</li>
+             <li>Collaborate with cross-functional teams.</li>
+             <li>Ensure performance and quality.</li>
           </ul>
           <h4>Qualifications:</h4>
           <ul>
              <li>5+ years of experience in software development.</li>
-             <li>Strong proficiency in JavaScript, TypeScript, and a modern framework like Angular or React.</li>
-             <li>Experience with cloud services (AWS, Azure, GCP).</li>
+             <li>Strong proficiency in JavaScript/TypeScript.</li>
           </ul>
        </div>
        <div class="modal-action mt-6">
           <button (click)="toggleBookmark(job.id)" class="btn btn-ghost gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [attr.fill]="isBookmarked(job.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-            {{ isBookmarked(job.id) ? 'Saved' : 'Save Job' }}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [attr.fill]="isBookmarked(job.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            {{ isBookmarked(job.id) ? translationService.translate('Saved') : translationService.translate('Save Job') }}
           </button>
-          <a [href]="job.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary px-8">Apply Now</a>
+          <a [href]="job.url" target="_blank" rel="noopener noreferrer" class="btn btn-neutral px-8">{{ translationService.translate('Apply Now') }}</a>
        </div>
     </div>
   </dialog>
@@ -249,16 +246,16 @@
 <!-- Save Filter Modal -->
 @if(isFilterNameModalOpen()) {
     <dialog class="modal modal-open">
-        <div class="modal-box border border-base-200 shadow-2xl">
+        <div class="modal-box border border-base-200 shadow-2xl rounded-xl">
             <button (click)="closeSaveFilterModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            <h3 class="font-bold text-lg mb-4">Save Filter Configuration</h3>
+            <h3 class="font-bold text-lg mb-4">{{ translationService.translate('Save Filter') }}</h3>
             <div class="form-control w-full">
-                <label class="label"><span class="label-text font-medium">Filter Name</span></label>
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Filter Name') }}</span></label>
                 <input type="text" [ngModel]="newFilterName()" (ngModelChange)="newFilterName.set($event)" class="input input-bordered w-full focus:input-primary" placeholder="e.g. Remote React Jobs" (keyup.enter)="confirmSaveFilter()">
             </div>
             <div class="modal-action">
-                <button class="btn btn-ghost" (click)="closeSaveFilterModal()">Cancel</button>
-                <button class="btn btn-primary" (click)="confirmSaveFilter()" [disabled]="!newFilterName().trim()">Save Filter</button>
+                <button class="btn btn-ghost" (click)="closeSaveFilterModal()">{{ translationService.translate('Cancel') }}</button>
+                <button class="btn btn-neutral" (click)="confirmSaveFilter()" [disabled]="!newFilterName().trim()">{{ translationService.translate('Save Filter') }}</button>
             </div>
         </div>
     </dialog>
@@ -267,7 +264,7 @@
 <!-- Success Toast -->
 @if(showSuccessToast()){
 <div class="toast toast-top toast-center z-50">
-  <div class="alert alert-success shadow-lg">
+  <div class="alert alert-success shadow-sm border border-success/20">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
     <span>{{ toastMessage() }}</span>
   </div>

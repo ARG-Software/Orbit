@@ -5,10 +5,11 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { MockDataService, Client, Invoice, TeamMember, Project, Task } from '../../services/mock-data.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { switchMap, map } from 'rxjs';
 import { of, forkJoin } from 'rxjs';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
+import { TranslationService } from '../../services/translation.service';
 
 interface InvoiceItem {
   description: string;
@@ -26,6 +27,8 @@ interface InvoiceItem {
 export class InvoicesComponent {
   private dataService = inject(MockDataService);
   private authService = inject(AuthService);
+  private route: ActivatedRoute = inject(ActivatedRoute);
+  public translationService = inject(TranslationService);
 
   // --- Tab Management ---
   activeTab = signal<'create' | 'history'>('create');
@@ -95,6 +98,16 @@ export class InvoicesComponent {
     
     this.invoiceStartDate.set(firstDay.toISOString().split('T')[0]);
     this.invoiceEndDate.set(lastDay.toISOString().split('T')[0]);
+
+    // Handle deep linking for tabs
+    this.route.queryParams.subscribe(params => {
+      if (params['tab']) {
+        const tab = params['tab'];
+        if (['create', 'history'].includes(tab)) {
+          this.activeTab.set(tab as 'create' | 'history');
+        }
+      }
+    });
 
     effect(() => {
         // Auto-generate Invoice Number and Default Due Date based on End Date

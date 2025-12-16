@@ -5,7 +5,7 @@ import { AuthService } from '../services/auth.service';
 
 export const publicGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
-  const router = inject(Router);
+  const router: Router = inject(Router);
 
   // Allow landing page even if logged in (optional choice), 
   // but usually for public guard on login/register we redirect.

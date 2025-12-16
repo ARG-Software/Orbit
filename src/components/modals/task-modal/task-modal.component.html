@@ -14,6 +14,11 @@
                 <label class="label py-1"><span class="label-text font-semibold">Title</span></label>
                 <input type="text" [ngModel]="taskTitle()" (ngModelChange)="taskTitle.set($event)" name="taskTitle" class="input input-bordered w-full focus:input-primary" placeholder="Enter task title">
             </div>
+
+            <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Description</span></label>
+                <textarea [ngModel]="taskDescription()" (ngModelChange)="taskDescription.set($event)" name="taskDescription" class="textarea textarea-bordered w-full focus:textarea-primary min-h-[100px]" placeholder="Detailed description of the task..."></textarea>
+            </div>
             
              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="form-control">
@@ -38,14 +43,20 @@
                 </div>
              </div>
 
-             <div class="form-control">
-                <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Assignee</span></label>
-                <select [ngModel]="taskAssignedMemberId()" (ngModelChange)="taskAssignedMemberId.set(+$event)" class="select select-bordered select-sm w-full">
-                    <option [ngValue]="null">Unassigned</option>
-                    @for(member of allMembers(); track member.id){
-                        <option [ngValue]="member.id">{{ member.name }}</option>
-                    }
-                </select>
+             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Assignee</span></label>
+                    <select [ngModel]="taskAssignedMemberId()" (ngModelChange)="taskAssignedMemberId.set(+$event)" class="select select-bordered select-sm w-full">
+                        <option [ngValue]="null">Unassigned</option>
+                        @for(member of allMembers(); track member.id){
+                            <option [ngValue]="member.id">{{ member.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-medium opacity-70">Day Estimate</span></label>
+                    <input type="number" [ngModel]="taskEstimatedDays()" (ngModelChange)="taskEstimatedDays.set(+$event)" class="input input-bordered input-sm w-full" min="0" step="0.5" placeholder="e.g. 3">
+                </div>
              </div>
             
              <!-- Hierarchy -->

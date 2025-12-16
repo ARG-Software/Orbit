@@ -8,14 +8,17 @@ export interface TimeEntry {
   hours: number;
   description: string;
   memberId: number;
+  date?: Date; // Added for precise tracking
 }
 
 export interface ProjectFile {
   id: string;
   name: string;
   url: string;
+  type: 'doc' | 'sheet' | 'image' | 'pdf' | 'other';
+  size: string;
   uploadedAt: Date;
-  uploadedBy: number; // memberId
+  uploadedBy: number;
 }
 
 export interface ProjectComment {
@@ -25,34 +28,45 @@ export interface ProjectComment {
   authorId: number;
 }
 
+export interface WikiSection {
+  id: string;
+  title: string;
+  content: string;
+  lastUpdated: Date;
+}
+
 export interface Project {
   id: number;
   clientId: number;
   name: string;
   description?: string;
-  status: 'Active' | 'Completed' | 'Paused';
+  status: 'Active' | 'Completed' | 'Paused' | 'Archived';
   billingType: 'hourly' | 'fixed';
   fixedPrice?: number;
   defaultRate?: number;
   hours: { [week: string]: { [day: string]: TimeEntry } };
   allocatedTeamMemberIds: number[];
-  memberRates: { [memberId: number]: number };
+  memberRates: { [memberId: number]: number }; // Cost to owner
+  memberPaymentTypes?: { [memberId: number]: 'hourly' | 'fixed' }; // How member is paid
   files?: ProjectFile[];
   comments?: ProjectComment[];
+  createdAt: Date;
+  color?: string;
+  wiki: WikiSection[]; // Replaces specifics string
+  isPinned?: boolean; // New property for sidebar favorites
 }
 
 export interface Client {
   id: number;
   name: string;
-  contact: string; // email
+  contact: string;
   phone: string;
   address: string;
   taxNumber: string;
   logoUrl: string;
-  color: string; // New field for UI theming
   status: 'Active' | 'Paused';
   defaultTaxRate?: number;
-  notes?: string; // New field for client notes
+  notes?: string;
 }
 
 export interface TeamMember {
@@ -63,7 +77,6 @@ export interface TeamMember {
   avatarUrl: string;
   defaultHourlyRate: number;
   status: 'Active' | 'Invited' | 'Inactive';
-  // Optional payment details for auto-fill
   paymentDetails?: {
       iban?: string;
       bankName?: string;
@@ -125,6 +138,7 @@ export interface Board {
   id: string;
   projectId: number;
   name: string;
+  color?: string;
 }
 
 export interface TaskComment {
@@ -139,6 +153,8 @@ export interface Task {
   projectId: number;
   boardId: string | null; 
   title: string;
+  description?: string;
+  estimatedDays?: number;
   assignedMemberId: number;
   status: 'To Do' | 'In Progress' | 'On Hold' | 'Completed' | 'Archived';
   priority: 'Low' | 'Medium' | 'High';
@@ -146,6 +162,7 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
   comments: TaskComment[];
+  order: number;
 }
 
 export interface Meeting {
@@ -165,7 +182,7 @@ export interface Meeting {
 export interface Payment {
     id: string;
     recipientName: string;
-    recipientRole: string; // e.g. Designer, Developer, Contractor
+    recipientRole: string;
     recipientEmail?: string;
     amount: number;
     currency: string;
@@ -174,6 +191,8 @@ export interface Payment {
     method: 'Revolut' | 'Wise' | 'Viva' | 'PayPal' | 'Manual';
     description: string;
     externalReference?: string;
+    projectId?: number; // Linked project for debt calculation
+    memberId?: number; // Linked member
 }
 
 // --- Data Generators ---
@@ -194,11 +213,13 @@ const NAMES = [
 ];
 
 const ROLES = [
-  'Frontend Developer', 'Backend Developer', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 
+  'Founder', 'Frontend Developer', 'Backend Developer', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 
   'QA Tester', 'Data Scientist', 'Mobile Developer', 'Product Owner', 'System Architect'
 ];
 
-// 1. Generate Clients (More data: 30 clients)
+const PALETTE = ['#6366f1', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
+
+// 1. Generate Clients (30 clients)
 const MOCK_CLIENTS: Client[] = COMPANIES.map((name, i) => ({
     id: i + 1,
     name,
@@ -207,18 +228,17 @@ const MOCK_CLIENTS: Client[] = COMPANIES.map((name, i) => ({
     address: `${100 + i} Enterprise Blvd, Tech City`,
     taxNumber: `US-${10000 + i}`,
     logoUrl: `https://picsum.photos/seed/${i + 50}/100/100`,
-    color: ['#6366f1', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][i % 6],
     status: i % 8 === 0 ? 'Paused' : 'Active',
     defaultTaxRate: 10 + (i % 10),
     notes: 'Key client account. Prefer weekly updates on Fridays.'
 }));
 
-// 2. Generate Members (More data: 25 members)
+// 2. Generate Members (25 members)
 const MOCK_MEMBERS: TeamMember[] = NAMES.map((name, i) => ({
     id: i + 1,
     name,
     email: `${name.toLowerCase().replace(' ', '.')}@example.com`,
-    role: ROLES[i % ROLES.length],
+    role: i === 0 ? 'Founder' : ROLES[i % ROLES.length], // Ensure first user is founder
     avatarUrl: `https://picsum.photos/seed/${name.replace(' ', '')}/100/100`,
     defaultHourlyRate: 50 + Math.floor(Math.random() * 100),
     status: i > 20 ? 'Invited' : (i > 22 ? 'Inactive' : 'Active'),
@@ -230,7 +250,6 @@ const MOCK_MEMBERS: TeamMember[] = NAMES.map((name, i) => ({
     }
 }));
 
-// ... (Existing generators for Projects, Tasks, Invoices, Meetings, Jobs remain same) ...
 // Helper for week ID
 const getWeekId = (d: Date): string => {
     const date = new Date(d.getTime());
@@ -253,10 +272,15 @@ const generateMockHours = (allocatedMembers: number[]) => {
        days.forEach(day => {
            if(Math.random() > 0.6 && allocatedMembers.length > 0) {
                const memberId = allocatedMembers[Math.floor(Math.random()*allocatedMembers.length)];
+               const entryDate = new Date(d);
+               // simple date offset for mock
+               entryDate.setDate(d.getDate() + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].indexOf(day)); 
+               
                hours[weekId][day] = {
                    hours: Math.floor(Math.random() * 6) + 2, 
                    description: 'Work log',
-                   memberId
+                   memberId,
+                   date: entryDate
                };
            }
        });
@@ -266,42 +290,83 @@ const generateMockHours = (allocatedMembers: number[]) => {
 
 const MOCK_PROJECTS: Project[] = [];
 let projectIdCounter = 1;
-MOCK_CLIENTS.forEach(client => {
+MOCK_CLIENTS.forEach((client, idx) => {
     const numProjects = Math.floor(Math.random() * 4) + 1; 
     for (let i = 0; i < numProjects; i++) {
         const status: any = Math.random() > 0.7 ? 'Completed' : 'Active';
         const billingType: 'hourly' | 'fixed' = Math.random() > 0.8 ? 'fixed' : 'hourly';
         const numMembers = Math.floor(Math.random() * 5) + 1;
         const members = [...MOCK_MEMBERS].sort(() => 0.5 - Math.random()).slice(0, numMembers);
+        
         const memberRates: any = {};
-        members.forEach(m => memberRates[m.id] = m.defaultHourlyRate);
+        const memberPaymentTypes: any = {};
+        
+        members.forEach(m => {
+            memberRates[m.id] = m.defaultHourlyRate;
+            memberPaymentTypes[m.id] = 'hourly';
+        });
+
         const memberIds = members.map(m => m.id);
         const fixedPrice = billingType === 'fixed' ? (Math.floor(Math.random() * 50) + 10) * 100 : undefined;
         const defaultRate = billingType === 'hourly' ? (Math.floor(Math.random() * 10) + 5) * 10 : undefined;
+        
+        const createdAt = new Date();
+        createdAt.setDate(createdAt.getDate() - Math.floor(Math.random() * 365));
+
+        // Generate Mock Files
+        const numFiles = Math.floor(Math.random() * 8) + 2;
+        const files: ProjectFile[] = [];
+        for(let f=0; f<numFiles; f++) {
+            const types: ProjectFile['type'][] = ['doc', 'sheet', 'pdf', 'image'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            files.push({
+                id: crypto.randomUUID(),
+                name: `${client.name} ${type === 'sheet' ? 'Budget' : 'Specs'} v${f+1}.${type === 'sheet' ? 'xlsx' : (type === 'doc' ? 'docx' : type === 'pdf' ? 'pdf' : 'png')}`,
+                type,
+                size: `${Math.floor(Math.random() * 10) + 1} MB`,
+                url: '#',
+                uploadedAt: new Date(createdAt.getTime() + Math.floor(Math.random() * 100000000)),
+                uploadedBy: memberIds[0]
+            });
+        }
 
         MOCK_PROJECTS.push({
             id: projectIdCounter++,
             clientId: client.id,
             name: `${client.name} Project ${String.fromCharCode(65 + i)}`,
             description: `Strategic project for ${client.name}.`,
+            wiki: [
+                { id: '1', title: 'Overview', content: 'This project aims to deliver a high-quality solution.', lastUpdated: new Date() },
+                { id: '2', title: 'Tech Stack', content: '- Angular v18\n- Node.js\n- PostgreSQL', lastUpdated: new Date() },
+                { id: '3', title: 'Credentials', content: '**Staging:**\nUser: admin\nPass: admin123', lastUpdated: new Date() }
+            ],
             status,
             billingType,
             fixedPrice,
             defaultRate,
             allocatedTeamMemberIds: memberIds,
             memberRates,
+            memberPaymentTypes,
             hours: billingType === 'hourly' ? generateMockHours(memberIds) : {},
-            files: [],
-            comments: []
+            files: files,
+            comments: [],
+            createdAt,
+            color: PALETTE[(idx + i) % PALETTE.length],
+            isPinned: Math.random() > 0.9 // Randomly pin some projects
         });
     }
 });
 
 const MOCK_TASKS: Task[] = [];
 const MOCK_BOARDS: Board[] = [];
-MOCK_PROJECTS.forEach(project => {
+MOCK_PROJECTS.forEach((project, idx) => {
     const boardId = `board-${project.id}`;
-    MOCK_BOARDS.push({ id: boardId, projectId: project.id, name: 'Main Board' });
+    MOCK_BOARDS.push({ 
+      id: boardId, 
+      projectId: project.id, 
+      name: 'Main Board',
+      color: PALETTE[(idx + 2) % PALETTE.length] 
+    });
     const numTasks = Math.floor(Math.random() * 12) + 3; 
     for(let i=0; i<numTasks; i++) {
         MOCK_TASKS.push({
@@ -309,58 +374,151 @@ MOCK_PROJECTS.forEach(project => {
             projectId: project.id,
             boardId: boardId,
             title: `Task ${i + 1}: Implementation`,
+            description: 'Implement core features and ensure responsiveness.',
+            estimatedDays: Math.floor(Math.random() * 5) + 1,
             assignedMemberId: project.allocatedTeamMemberIds[0] || 1,
             status: 'To Do',
             priority: 'Medium',
             isBilled: false,
             createdAt: new Date(),
             updatedAt: new Date(),
-            comments: []
+            comments: [],
+            order: i * 1000 // Spaced order for easier insertion
         });
     }
 });
 
-const MOCK_INVOICES: Invoice[] = []; // Simplified for brevity, logic exists in original file
-for (let i=0; i < 20; i++) {
+const MOCK_INVOICES: Invoice[] = []; 
+for (let i=0; i < 150; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - Math.floor(Math.random() * 120));
+    
+    const client = MOCK_CLIENTS[Math.floor(Math.random() * MOCK_CLIENTS.length)];
+    const statusRand = Math.random();
+    let status: Invoice['status'] = 'Paid';
+    if(statusRand > 0.8) status = 'Pending';
+    else if(statusRand > 0.95) status = 'Overdue';
+
     MOCK_INVOICES.push({
         id: crypto.randomUUID(),
         type: 'Revenue',
-        clientId: MOCK_CLIENTS[i].id,
+        clientId: client.id,
         projectIds: [], 
-        invoiceNumber: `INV-${i}`,
-        invoiceDate: new Date().toISOString(),
-        dueDate: new Date().toISOString(),
-        total: 1000,
-        status: 'Paid',
+        invoiceNumber: `INV-${1000 + i}`,
+        invoiceDate: date.toISOString(),
+        dueDate: new Date(date.setDate(date.getDate() + 30)).toISOString(),
+        total: Math.floor(Math.random() * 5000) + 500,
+        status: status,
         paymentMethod: 'manual'
     });
 }
 
 const MOCK_MEETINGS: Meeting[] = [];
-const MOCK_JOBS: Job[] = [];
+const meetingTypes = ['Sync', 'Kickoff', 'Review', 'Discovery', 'Feedback', 'Planning'];
+const platforms: Meeting['platform'][] = ['Google Meet', 'Zoom', 'Phone', 'In-Person'];
 
-// 8. Generate Payments (New)
-const MOCK_PAYMENTS: Payment[] = [];
-const paymentMethods: Payment['method'][] = ['Revolut', 'Wise', 'PayPal', 'Manual', 'Viva'];
-for(let i = 0; i < 25; i++) {
-    const member = MOCK_MEMBERS[Math.floor(Math.random() * MOCK_MEMBERS.length)];
-    const status = Math.random() > 0.2 ? 'Paid' : (Math.random() > 0.5 ? 'Pending' : 'Processing');
+for (let i = 0; i < 60; i++) {
+    const isClient = Math.random() > 0.3;
+    let clientId = null;
+    let clientName = '';
+    let guestEmail = '';
+
+    if (isClient) {
+        const client = MOCK_CLIENTS[Math.floor(Math.random() * MOCK_CLIENTS.length)];
+        clientId = client.id;
+        clientName = client.name;
+        guestEmail = client.contact;
+    } else {
+        const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+        clientName = name;
+        guestEmail = `${name.toLowerCase().replace(' ', '.')}@external.com`;
+    }
+
+    const type = meetingTypes[Math.floor(Math.random() * meetingTypes.length)];
     const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 60));
+    const dayOffset = Math.floor(Math.random() * 40) - 10;
+    date.setDate(date.getDate() + dayOffset);
+    date.setHours(9 + Math.floor(Math.random() * 9), 0, 0, 0);
+
+    const endDate = new Date(date);
+    endDate.setHours(date.getHours() + 1);
+
+    const platform = platforms[Math.floor(Math.random() * platforms.length)];
     
-    MOCK_PAYMENTS.push({
+    MOCK_MEETINGS.push({
         id: crypto.randomUUID(),
-        recipientName: member.name,
-        recipientRole: member.role,
-        recipientEmail: member.email,
-        amount: Math.floor(Math.random() * 2000) + 500,
-        currency: 'USD',
-        date: date,
-        status: status as any,
-        method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
-        description: 'Monthly Retainer - ' + date.toLocaleString('default', { month: 'long' })
+        title: `${type} with ${clientName}`,
+        clientId,
+        clientName,
+        guestEmail,
+        startTime: date,
+        endTime: endDate,
+        platform,
+        link: platform === 'In-Person' || platform === 'Phone' ? undefined : `https://meet.mock.com/${crypto.randomUUID()}`,
+        description: `Agenda: Discuss project progress and next steps for ${type.toLowerCase()}.`,
+        status: date < new Date() ? 'Completed' : 'Scheduled'
     });
 }
+
+const JOB_TITLES = [
+    'Senior Frontend Engineer', 'Product Designer', 'UX Researcher', 'Full Stack Developer', 
+    'Marketing Manager', 'Content Strategist', 'DevOps Specialist', 'Mobile Developer (iOS)',
+    'Growth Hacker', 'Technical Writer', 'Art Director', 'React Native Developer'
+];
+
+const MOCK_JOBS: Job[] = JOB_TITLES.map((title, i) => {
+    const company = COMPANIES[i % COMPANIES.length];
+    const postedDate = new Date();
+    postedDate.setDate(postedDate.getDate() - Math.floor(Math.random() * 10));
+
+    return {
+        id: crypto.randomUUID(),
+        title,
+        company,
+        companyLogo: `https://picsum.photos/seed/${company}/100/100`,
+        location: Math.random() > 0.6 ? 'Remote' : (Math.random() > 0.5 ? 'New York, USA' : 'London, UK'),
+        workModel: Math.random() > 0.4 ? 'Remote' : (Math.random() > 0.5 ? 'Hybrid' : 'On-site'),
+        salary: {
+            min: 80000 + (Math.floor(Math.random() * 40) * 1000),
+            max: 140000 + (Math.floor(Math.random() * 60) * 1000),
+            currency: 'USD',
+            period: 'year'
+        },
+        description: `We are looking for a talented ${title} to join our team at ${company}. You will be working on cutting-edge technologies and shaping the future of our product.`,
+        tags: ['React', 'TypeScript', 'Design', 'Agile', 'Remote'].sort(() => 0.5 - Math.random()).slice(0, 3),
+        postedDate,
+        url: 'https://example.com/apply'
+    };
+});
+
+const MOCK_PAYMENTS: Payment[] = [];
+const paymentMethods: Payment['method'][] = ['Revolut', 'Wise', 'PayPal', 'Manual', 'Viva'];
+// Generate payments linked to members and projects to allow debt calculation
+MOCK_PROJECTS.forEach(project => {
+    project.allocatedTeamMemberIds.forEach(memberId => {
+        // Randomly pay some members some amount
+        if (Math.random() > 0.5) {
+            const member = MOCK_MEMBERS.find(m => m.id === memberId);
+            if (member && member.role !== 'Founder') {
+                const amount = Math.floor(Math.random() * 1000) + 200;
+                MOCK_PAYMENTS.push({
+                    id: crypto.randomUUID(),
+                    recipientName: member.name,
+                    recipientRole: member.role,
+                    recipientEmail: member.email,
+                    memberId: member.id,
+                    projectId: project.id,
+                    amount: amount,
+                    currency: 'USD',
+                    date: new Date(),
+                    status: 'Paid',
+                    method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+                    description: `Partial payment for ${project.name}`
+                });
+            }
+        }
+    });
+});
 
 
 @Injectable({ providedIn: 'root' })
@@ -376,7 +534,7 @@ export class MockDataService {
   private meetings = signal<Meeting[]>(MOCK_MEETINGS);
   private boards = signal<Board[]>(MOCK_BOARDS);
   private tasks = signal<Task[]>(MOCK_TASKS);
-  private payments = signal<Payment[]>(MOCK_PAYMENTS); // New Signal
+  private payments = signal<Payment[]>(MOCK_PAYMENTS);
 
   // Observables
   private clients$!: Observable<Client[]>;
@@ -415,12 +573,15 @@ export class MockDataService {
   getProjects() { return this.projects.asReadonly(); }
   getProjectById(id: number) { return this.projects$.pipe(map(projects => projects.find(p => p.id === id))); }
   getProjectsByClientId(clientId: number) { return this.projects$.pipe(map(projects => projects.filter(p => p.clientId === clientId))); }
-  addProject(project: Omit<Project, 'id' | 'hours'>) {
+  addProject(project: Omit<Project, 'id' | 'hours' | 'createdAt' | 'wiki' | 'isPinned'>) {
       const newId = Math.max(...this.projects().map(p => p.id), 0) + 1;
-      this.projects.update(current => [...current, { ...project, id: newId, hours: {} }]);
+      this.projects.update(current => [...current, { ...project, id: newId, hours: {}, createdAt: new Date(), wiki: [], isPinned: false }]);
   }
   updateProject(project: Project) { this.projects.update(current => current.map(p => p.id === project.id ? project : p)); }
   deleteProject(id: number) { this.projects.update(current => current.filter(p => p.id !== id)); }
+  toggleProjectPin(id: number) {
+      this.projects.update(current => current.map(p => p.id === id ? { ...p, isPinned: !p.isPinned } : p));
+  }
 
   // --- Hours ---
   submitHours(projectId: number, weekId: string, entries: { [day: string]: TimeEntry }) {
@@ -451,142 +612,6 @@ export class MockDataService {
   }
   updateInvoice(invoice: Invoice) { this.invoices.update(curr => curr.map(i => i.id === invoice.id ? invoice : i)); }
   
-  // --- Dashboard ---
-  getDashboardData(dateRange: { startDate: Date, endDate: Date }): Observable<any> {
-    const { startDate, endDate } = dateRange;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // Data snapshots
-    const invoices = this.invoices();
-    const projects = this.projects();
-    const clients = this.clients();
-    const members = this.members();
-    const tasks = this.tasks();
-
-    // --- Revenue Calculations ---
-    const relevantInvoices = invoices.filter(i => {
-        const d = new Date(i.invoiceDate);
-        return d >= start && d <= end;
-    });
-
-    const totalEarnings = relevantInvoices.filter(i => i.status === 'Paid').reduce((acc, i) => acc + i.total, 0);
-    
-    // Earnings by Client
-    const earningsByClientMap = new Map<string, number>();
-    relevantInvoices.filter(i => i.status === 'Paid').forEach(i => {
-        const client = clients.find(c => c.id === i.clientId);
-        const name = client ? client.name : (i.manualClientDetails?.name || 'Unknown');
-        earningsByClientMap.set(name, (earningsByClientMap.get(name) || 0) + i.total);
-    });
-    const earningsByClient = Array.from(earningsByClientMap.entries()).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
-
-    // Most Valuable Projects (Mock logic based on project fixed price or estimated hours * rate)
-    const activeProjects = projects.filter(p => p.status === 'Active' || p.status === 'Completed');
-    const mostValuableProjects = activeProjects.map(p => {
-        const client = clients.find(c => c.id === p.clientId);
-        let value = 0;
-        if(p.billingType === 'fixed') value = p.fixedPrice || 0;
-        else {
-            // Estimate: sum of all logged hours * default rate (simplified for mock speed)
-            // In a real app, we'd sum actual timesheet entries * specific member rates
-            // Use a simple randomized value for the mock visualization if no logged hours exist
-            value = 1000 + Math.random() * 5000; 
-        }
-        return { name: p.name, clientName: client?.name, value };
-    }).sort((a,b) => b.value - a.value).slice(0, 5);
-
-    // Hours
-    let totalHours = 0;
-    const memberHoursMap = new Map<number, number>();
-    
-    projects.forEach(p => {
-        Object.keys(p.hours).forEach(weekId => {
-            const weekData = p.hours[weekId];
-            Object.keys(weekData).forEach(day => {
-                // Note: For strictly accurate dates we'd parse weekId/day.
-                // For the dashboard view mock, we simply aggregate existing mock data.
-                const entry = weekData[day];
-                totalHours += entry.hours;
-                memberHoursMap.set(entry.memberId, (memberHoursMap.get(entry.memberId) || 0) + entry.hours);
-            });
-        });
-    });
-
-    const avgHourlyRate = totalHours > 0 ? (totalEarnings / totalHours) : 0;
-
-    // --- Clients Section ---
-    const activeClientsCount = new Set(relevantInvoices.map(i => i.clientId).filter(id => id !== null)).size;
-    
-    const invoiceStatusSummary = {
-        paid: relevantInvoices.filter(i => i.status === 'Paid').length,
-        pending: relevantInvoices.filter(i => i.status === 'Pending').length,
-        overdue: relevantInvoices.filter(i => i.status === 'Overdue').length
-    };
-
-    // Mocking some client specific stats for the UI
-    const clientsWithMostBilledTime = earningsByClient.map(e => ({ name: e.name, hours: Math.floor(e.value / 100) })).slice(0, 5);
-    const projectValuePerClient = clients.map(c => ({ name: c.name, avgValue: Math.floor(Math.random() * 5000) + 1000 })).slice(0, 5);
-
-    // --- Members Section ---
-    const rankingByHours = Array.from(memberHoursMap.entries()).map(([id, hours]) => {
-        const member = members.find(m => m.id === id);
-        if(!member) return null;
-        return { member, hours, earnings: hours * member.defaultHourlyRate };
-    }).filter(x => x !== null) as any[];
-    
-    rankingByHours.sort((a,b) => b.hours - a.hours);
-
-    const activeMembersCount = rankingByHours.length;
-    const mostProfitableMember = rankingByHours.sort((a,b) => b.earnings - a.earnings)[0];
-    const mostHoursLogged = rankingByHours.sort((a,b) => b.hours - a.hours)[0];
-
-    // --- Tasks Section ---
-    const recentlyAddedTasks = tasks
-        .filter(t => new Date(t.createdAt) >= start)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
-
-    const recentlyChangedTasks = tasks
-        .filter(t => new Date(t.updatedAt) >= start)
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 10);
-        
-    const boardActivity = this.boards().map(b => ({
-        name: b.name,
-        projectId: b.projectId,
-        count: Math.floor(Math.random() * 20) // Mock activity count
-    })).slice(0, 5);
-
-    return of({
-        revenue: {
-            totalEarnings,
-            earningsByClient,
-            mostValuableProjects,
-            avgHourlyRate: avgHourlyRate || 65, // Fallback
-            totalHours
-        },
-        clients: {
-            mostValuableClients: earningsByClient,
-            activeClientsCount: activeClientsCount || 5,
-            clientsWithMostBilledTime,
-            projectValuePerClient,
-            invoiceStatusSummary
-        },
-        members: {
-            activeMembersCount: activeMembersCount || members.length,
-            rankingByHours,
-            mostProfitableMember,
-            mostHoursLogged
-        },
-        tasks: {
-            recentlyAddedTasks,
-            recentlyChangedTasks,
-            boardActivity
-        }
-    });
-  }
-
   // --- Job Board ---
   getJobs(pref: any): Observable<Job[]> { return of(MOCK_JOBS); }
 
@@ -597,13 +622,26 @@ export class MockDataService {
   deleteBoard(id: string) { this.boards.update(b => b.filter(x => x.id !== id)); }
   getAllTasks() { return this.tasks.asReadonly(); }
   getTasksByProjectId(projectId: number) { return this.tasks$.pipe(map(tasks => tasks.filter(t => t.projectId === projectId))); }
-  addTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments'>) {
-      this.tasks.update(t => [...t, { ...task, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date(), comments: [] }]);
+  addTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'comments' | 'order'>) {
+      const maxOrder = Math.max(...this.tasks().map(t => t.order || 0), 0);
+      this.tasks.update(t => [...t, { 
+          ...task, 
+          id: crypto.randomUUID(), 
+          createdAt: new Date(), 
+          updatedAt: new Date(), 
+          comments: [],
+          order: maxOrder + 1000 
+      }]);
   }
   updateTask(task: Task) { this.tasks.update(t => t.map(x => x.id === task.id ? { ...task, updatedAt: new Date() } : x)); }
   deleteTask(id: string) { this.tasks.update(t => t.filter(x => x.id !== id)); }
   addTaskComment(taskId: string, comment: any) {
       this.tasks.update(tasks => tasks.map(t => t.id === taskId ? { ...t, comments: [...t.comments, { ...comment, id: crypto.randomUUID(), createdAt: new Date() }] } : t));
+  }
+  
+  reorderTasks(reorderedTasks: Task[]) {
+      const updates = new Map(reorderedTasks.map(t => [t.id, t]));
+      this.tasks.update(currentTasks => currentTasks.map(t => updates.get(t.id) || t));
   }
 
   // --- Proposals ---
@@ -630,6 +668,32 @@ export class MockDataService {
           },
           ...p
       ]);
+  }
+
+  // Calculate Debt: Cost of work - Payments made
+  getMemberDebt(memberId: number, projectId: number): number {
+      const project = this.projects().find(p => p.id === projectId);
+      if (!project) return 0;
+
+      const member = this.members().find(m => m.id === memberId);
+      // Founders have no debt (cost is 0)
+      if (!member || member.role === 'Founder' || member.role === 'Admin') return 0;
+
+      let totalCost = 0;
+      Object.values(project.hours).forEach(week => {
+          Object.values(week).forEach((entry: any) => {
+              if (entry.memberId === memberId) {
+                  const rate = project.memberRates[memberId] ?? member.defaultHourlyRate;
+                  totalCost += entry.hours * rate;
+              }
+          });
+      });
+
+      const totalPaid = this.payments()
+          .filter(p => p.memberId === memberId && p.projectId === projectId && p.status === 'Paid')
+          .reduce((sum, p) => sum + p.amount, 0);
+
+      return Math.max(0, totalCost - totalPaid);
   }
 
   // --- Project Details ---

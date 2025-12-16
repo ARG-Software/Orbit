@@ -2,78 +2,67 @@
 <div class="container mx-auto pb-12">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-bold">Meetings</h1>
-            <p class="opacity-60 mt-1">Schedule and manage your calls with clients.</p>
+            <h1 class="text-3xl font-light tracking-tight">{{ translationService.translate('Meetings') }}</h1>
+            <p class="opacity-60 mt-1 text-sm font-medium">{{ translationService.translate('Schedule and manage your calls with clients.') }}</p>
         </div>
-        <button (click)="openScheduleModal()" class="btn btn-primary shadow-lg shadow-primary/20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            Schedule Meeting
+        <button (click)="openScheduleModal()" class="btn btn-neutral btn-sm gap-2 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            {{ translationService.translate('Schedule Meeting') }}
         </button>
     </div>
 
-    <!-- Tabs matching Invoices style -->
+    <!-- Tabs -->
     <div role="tablist" class="tabs tabs-lifted">
-      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'upcoming'" (click)="activeTab.set('upcoming')">Upcoming</a>
-      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">History</a>
+      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'upcoming'" (click)="activeTab.set('upcoming')">{{ translationService.translate('Upcoming') }}</a>
+      <a role="tab" class="tab" [class.tab-active]="activeTab() === 'history'" (click)="activeTab.set('history')">{{ translationService.translate('History') }}</a>
     </div>
 
     @if (activeTab() === 'upcoming') {
         <!-- UPCOMING MEETINGS LIST -->
-        <div class="card bg-base-100 shadow -mt-px rounded-t-none border border-base-200">
+        <div class="card bg-base-100 shadow-sm -mt-px rounded-tl-none rounded-b-lg border border-base-200">
             <div class="card-body p-4 sm:p-6">
                 @if(paginatedUpcoming().length > 0) {
-                    <div class="grid grid-cols-1 gap-2">
+                    <div class="grid grid-cols-1 gap-3">
                         @for(meeting of paginatedUpcoming(); track meeting.id) {
-                            <!-- Meeting Row Item (Compact) -->
-                            <div class="border border-base-200 rounded-lg p-2 hover:bg-base-200/40 transition-all duration-200 group bg-base-100 flex flex-col sm:flex-row gap-3 items-center">
+                            <!-- Meeting Row Item (Clean) -->
+                            <div class="border border-base-200 rounded-lg p-3 hover:border-base-300 transition-all duration-200 group bg-base-100 flex flex-col sm:flex-row gap-4 items-center">
                                 
-                                <!-- Date Box (Ultra Compact) -->
-                                <div class="flex flex-row sm:flex-col items-center justify-center bg-base-200/50 rounded-lg px-2 py-1 sm:w-14 sm:h-14 text-center border border-base-200 self-stretch sm:self-center gap-2 sm:gap-0 shrink-0">
-                                    <span class="text-[9px] font-bold text-primary uppercase tracking-wider">{{ meeting.startTime | date:'MMM' }}</span>
-                                    <span class="text-lg font-black leading-none sm:my-0.5">{{ meeting.startTime | date:'dd' }}</span>
-                                    <span class="text-[9px] font-medium opacity-60 hidden sm:block">{{ meeting.startTime | date:'EEE' }}</span>
+                                <!-- Date Box -->
+                                <div class="flex flex-row sm:flex-col items-center justify-center bg-base-50 rounded-lg w-16 h-16 text-center border border-base-200 shrink-0 gap-1 sm:gap-0">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider opacity-50">{{ meeting.startTime | date:'MMM' }}</span>
+                                    <span class="text-xl font-light leading-none my-0.5">{{ meeting.startTime | date:'dd' }}</span>
+                                    <span class="text-[10px] font-bold opacity-40 hidden sm:block">{{ meeting.startTime | date:'EEE' }}</span>
                                 </div>
                                 
                                 <!-- Info -->
-                                <div class="flex-1 min-w-0 flex flex-col gap-0.5 w-full text-center sm:text-left">
+                                <div class="flex-1 min-w-0 flex flex-col gap-1 w-full text-center sm:text-left">
                                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                                         <h3 class="font-bold text-sm leading-tight truncate">{{ meeting.title }}</h3>
-                                        <div class="flex items-center justify-center sm:justify-start gap-1 text-xs opacity-60">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <div class="flex items-center justify-center sm:justify-start gap-1 text-xs opacity-50 font-mono">
                                             <span>{{ meeting.startTime | date:'shortTime' }} - {{ meeting.endTime | date:'shortTime' }}</span>
                                         </div>
                                     </div>
 
-                                    <!-- Badges & Metadata -->
-                                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-0.5">
-                                        <!-- Platform Badge -->
-                                        <div class="badge badge-xs badge-outline gap-1 h-4 text-[10px]">
-                                            @if(meeting.platform === 'Google Meet') {
-                                                <span class="text-success">●</span> Meet
-                                            } @else if(meeting.platform === 'Zoom') {
-                                                <span class="text-info">●</span> Zoom
-                                            } @else if(meeting.platform === 'Phone') {
-                                                <span class="text-warning">●</span> Phone
-                                            } @else {
-                                                <span class="text-secondary">●</span> In-Person
-                                            }
+                                    <!-- Badges -->
+                                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
+                                        <div class="badge badge-xs badge-outline border-base-300 text-[10px] font-normal opacity-70">
+                                            {{ meeting.platform }}
                                         </div>
 
-                                        <div class="badge badge-xs badge-ghost gap-1 h-4 text-[10px]">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                        <div class="badge badge-xs badge-ghost text-[10px] font-normal">
                                             {{ meeting.clientName }}
                                         </div>
                                         
                                         @if(meeting.description) {
-                                            <button class="btn btn-xs btn-ghost h-4 min-h-0 px-1 text-base-content/60 hover:text-primary font-normal text-[10px]" (click)="toggleNote(meeting.id)">
-                                                {{ isNoteExpanded(meeting.id) ? 'Hide Notes' : 'Notes' }}
+                                            <button class="btn btn-xs btn-ghost h-4 min-h-0 px-1 text-xs opacity-50 hover:opacity-100 font-normal" (click)="toggleNote(meeting.id)">
+                                                {{ isNoteExpanded(meeting.id) ? 'Hide' : 'View' }} Notes
                                             </button>
                                         }
                                     </div>
                                     
                                     <!-- Expanded Note -->
                                     @if(isNoteExpanded(meeting.id) && meeting.description) {
-                                        <div class="mt-2 pt-2 border-t border-base-200 text-xs opacity-80 text-left">
+                                        <div class="mt-2 pt-2 border-t border-base-100 text-xs opacity-70 text-left">
                                             {{ meeting.description }}
                                         </div>
                                     }
@@ -82,11 +71,11 @@
                                 <!-- Actions -->
                                 <div class="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end border-t sm:border-t-0 border-base-100 pt-2 sm:pt-0">
                                     @if(meeting.link) {
-                                        <a [href]="meeting.link" target="_blank" class="btn btn-primary btn-xs h-7 min-h-0 shadow-sm font-normal">
-                                            Join
+                                        <a [href]="meeting.link" target="_blank" class="btn btn-neutral btn-xs font-normal">
+                                            {{ translationService.translate('Join') }}
                                         </a>
                                     }
-                                    <button (click)="deleteMeeting(meeting.id)" class="btn btn-ghost btn-xs h-7 min-h-0 text-error hover:bg-error/10 btn-square">
+                                    <button (click)="deleteMeeting(meeting.id)" class="btn btn-ghost btn-xs text-error hover:bg-error/10 btn-square">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
                                 </div>
@@ -94,19 +83,16 @@
                         }
                     </div>
                 } @else {
-                    <div class="flex flex-col items-center justify-center text-center opacity-50 min-h-[200px]">
-                        <div class="bg-base-200 p-4 rounded-full mb-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        </div>
-                        <p class="font-medium">No upcoming meetings</p>
-                        <p class="text-sm">You're all caught up for now.</p>
+                    <div class="flex flex-col items-center justify-center text-center opacity-40 min-h-[200px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <p class="text-sm font-medium">{{ translationService.translate('No upcoming meetings') }}</p>
                     </div>
                 }
             </div>
 
             <!-- Pagination Footer -->
             @if(upcomingMeetings().length > upcomingPerPage()){
-                <div class="card-body border-t border-base-200 p-4 flex items-center justify-center pt-2">
+                <div class="border-t border-base-200 p-4 flex items-center justify-center">
                     <app-pagination 
                         [currentPage]="upcomingPage()" 
                         [totalItems]="upcomingMeetings().length" 
@@ -120,13 +106,13 @@
     
     @if (activeTab() === 'history') {
         <!-- HISTORY MEETINGS -->
-        <div class="card bg-base-100 shadow -mt-px rounded-t-none border border-base-200">
+        <div class="card bg-base-100 shadow-sm -mt-px rounded-tl-none rounded-b-lg border border-base-200">
             <div class="card-body p-0">
                 <!-- History Filters -->
-                <div class="p-4 border-b border-base-200 bg-base-200/30 flex flex-col md:flex-row gap-4 items-end">
+                <div class="p-4 border-b border-base-200 bg-base-50/30 flex flex-col md:flex-row gap-3 items-end">
                     <div class="form-control w-full md:w-auto">
-                        <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase">Platform</span></label>
-                        <select [ngModel]="filterHistoryPlatform()" (ngModelChange)="filterHistoryPlatform.set($event); historyPage.set(1)" class="select select-bordered select-sm w-full md:w-48">
+                        <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Platform') }}</span></label>
+                        <select [ngModel]="filterHistoryPlatform()" (ngModelChange)="filterHistoryPlatform.set($event); historyPage.set(1)" class="select select-bordered select-sm w-full md:w-40 bg-base-100">
                             <option value="All">All Platforms</option>
                             <option value="Google Meet">Google Meet</option>
                             <option value="Zoom">Zoom</option>
@@ -135,8 +121,8 @@
                         </select>
                     </div>
                     <div class="form-control w-full md:w-auto">
-                        <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase">Client</span></label>
-                        <select [ngModel]="filterHistoryClientId()" (ngModelChange)="filterHistoryClientId.set($any($event)); historyPage.set(1)" class="select select-bordered select-sm w-full md:w-48">
+                        <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Client') }}</span></label>
+                        <select [ngModel]="filterHistoryClientId()" (ngModelChange)="filterHistoryClientId.set($any($event)); historyPage.set(1)" class="select select-bordered select-sm w-full md:w-40 bg-base-100">
                             <option [ngValue]="null">All Clients</option>
                             @for(client of clients(); track client.id) {
                                 <option [ngValue]="client.id">{{ client.name }}</option>
@@ -144,50 +130,50 @@
                         </select>
                     </div>
                     <div class="form-control w-full md:w-auto">
-                        <label class="label py-1"><span class="label-text text-xs font-bold opacity-60 uppercase">Date</span></label>
-                        <input type="date" [ngModel]="filterHistoryDate()" (ngModelChange)="filterHistoryDate.set($event); historyPage.set(1)" class="input input-bordered input-sm w-full md:w-auto">
+                        <label class="label py-1"><span class="label-text text-xs opacity-60 uppercase">{{ translationService.translate('Date') }}</span></label>
+                        <input type="date" [ngModel]="filterHistoryDate()" (ngModelChange)="filterHistoryDate.set($event); historyPage.set(1)" class="input input-bordered input-sm w-full md:w-auto bg-base-100">
                     </div>
-                    <button class="btn btn-ghost btn-sm" (click)="resetHistoryFilters()">Reset</button>
+                    <button class="btn btn-ghost btn-sm" (click)="resetHistoryFilters()">{{ translationService.translate('Reset') }}</button>
                 </div>
 
                 <!-- History List -->
                 <div class="overflow-x-auto">
                     <table class="table w-full table-sm">
-                        <thead>
+                        <thead class="bg-base-50/50 text-xs uppercase opacity-60">
                             <tr>
-                                <th class="pl-6">Date</th>
-                                <th>Title</th>
-                                <th>Client / Guest</th>
-                                <th>Platform</th>
-                                <th class="text-right pr-6">Actions</th>
+                                <th class="pl-6">{{ translationService.translate('Date') }}</th>
+                                <th>{{ translationService.translate('Title') }}</th>
+                                <th>{{ translationService.translate('Client') }} / {{ translationService.translate('Guest Name') }}</th>
+                                <th>{{ translationService.translate('Platform') }}</th>
+                                <th class="text-right pr-6">{{ translationService.translate('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @for(meeting of paginatedHistory(); track meeting.id) {
-                                <tr class="hover:bg-base-100">
+                                <tr class="hover:bg-base-50">
                                     <td class="pl-6 font-mono text-xs opacity-70">{{ meeting.startTime | date:'mediumDate' }}</td>
                                     <td>
-                                        <div class="font-bold text-sm">{{ meeting.title }}</div>
+                                        <div class="font-medium text-sm">{{ meeting.title }}</div>
                                         <div class="text-[10px] opacity-50">{{ meeting.startTime | date:'shortTime' }}</div>
                                     </td>
                                     <td>
                                         <div class="text-xs font-medium">{{ meeting.clientName }}</div>
                                         <div class="text-[10px] opacity-50">{{ meeting.guestEmail }}</div>
                                     </td>
-                                    <td><span class="badge badge-xs badge-ghost">{{ meeting.platform }}</span></td>
+                                    <td><span class="badge badge-xs badge-ghost font-normal">{{ meeting.platform }}</span></td>
                                     <td class="text-right pr-6">
-                                        <button (click)="deleteMeeting(meeting.id)" class="btn btn-ghost btn-xs text-error">Delete</button>
+                                        <button (click)="deleteMeeting(meeting.id)" class="btn btn-ghost btn-xs text-error">{{ translationService.translate('Delete') }}</button>
                                     </td>
                                 </tr>
                             } @empty {
-                                <tr><td colspan="5" class="text-center py-12 opacity-50 italic">No past meetings found.</td></tr>
+                                <tr><td colspan="5" class="text-center py-12 opacity-50 italic text-sm">No past meetings found.</td></tr>
                             }
                         </tbody>
                     </table>
                 </div>
 
                 @if(historyMeetings().length > historyPerPage()) {
-                    <div class="p-4 flex justify-center border-t border-base-200 mt-auto">
+                    <div class="p-4 flex justify-center border-t border-base-200">
                         <app-pagination 
                             [currentPage]="historyPage()" 
                             [totalItems]="historyMeetings().length" 
@@ -204,32 +190,32 @@
 <!-- Schedule Modal -->
 @if(isModalOpen()) {
     <dialog class="modal modal-open">
-        <div class="modal-box shadow-2xl border border-base-200">
+        <div class="modal-box shadow-2xl border border-base-200 rounded-xl">
             <button (click)="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            <h3 class="font-bold text-xl mb-6">Schedule New Meeting</h3>
+            <h3 class="font-bold text-lg mb-6 pb-2 border-b border-base-200">{{ translationService.translate('Schedule New Meeting') }}</h3>
             
             <div class="form-control mb-4">
-                <label class="label"><span class="label-text font-medium">Meeting Title</span></label>
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Meeting Title') }}</span></label>
                 <input type="text" [ngModel]="meetTitle()" (ngModelChange)="meetTitle.set($event)" class="input input-bordered w-full focus:input-primary" placeholder="e.g. Project Sync">
             </div>
             
             <!-- Attendee Type Selector -->
-            <div class="flex gap-4 mb-4 bg-base-200/50 p-3 rounded-lg">
-                <label class="label cursor-pointer gap-2">
-                    <input type="radio" name="attendeeType" class="radio radio-primary radio-sm" [value]="'client'" [ngModel]="attendeeType()" (ngModelChange)="attendeeType.set($event)">
-                    <span class="label-text font-medium">Existing Client</span>
+            <div class="flex gap-6 mb-4 p-2">
+                <label class="label cursor-pointer gap-2 p-0">
+                    <input type="radio" name="attendeeType" class="radio radio-xs radio-primary" [value]="'client'" [ngModel]="attendeeType()" (ngModelChange)="attendeeType.set($event)">
+                    <span class="label-text text-sm">{{ translationService.translate('Existing Client') }}</span>
                 </label>
-                 <label class="label cursor-pointer gap-2">
-                    <input type="radio" name="attendeeType" class="radio radio-primary radio-sm" [value]="'guest'" [ngModel]="attendeeType()" (ngModelChange)="attendeeType.set($event)">
-                    <span class="label-text font-medium">External Guest</span>
+                 <label class="label cursor-pointer gap-2 p-0">
+                    <input type="radio" name="attendeeType" class="radio radio-xs radio-primary" [value]="'guest'" [ngModel]="attendeeType()" (ngModelChange)="attendeeType.set($event)">
+                    <span class="label-text text-sm">{{ translationService.translate('External Guest') }}</span>
                 </label>
             </div>
 
             @if(attendeeType() === 'client') {
                 <div class="form-control mb-4">
-                    <label class="label"><span class="label-text font-medium">Select Client</span></label>
-                    <select [ngModel]="meetClientId()" (ngModelChange)="meetClientId.set(+$event)" class="select select-bordered w-full">
-                        <option [ngValue]="null" disabled>Choose...</option>
+                    <label class="label"><span class="label-text font-medium">{{ translationService.translate('Select Client') }}</span></label>
+                    <select [ngModel]="meetClientId()" (ngModelChange)="meetClientId.set(+$event)" class="select select-bordered w-full bg-base-100">
+                        <option [ngValue]="null" disabled>{{ translationService.translate('Choose...') }}</option>
                         @for(client of clients(); track client.id) {
                             <option [value]="client.id">{{ client.name }}</option>
                         }
@@ -238,11 +224,11 @@
             } @else {
                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div class="form-control">
-                        <label class="label"><span class="label-text font-medium">Guest Name</span></label>
+                        <label class="label"><span class="label-text font-medium">{{ translationService.translate('Guest Name') }}</span></label>
                         <input type="text" [ngModel]="meetGuestName()" (ngModelChange)="meetGuestName.set($event)" class="input input-bordered w-full">
                     </div>
                      <div class="form-control">
-                        <label class="label"><span class="label-text font-medium">Guest Email</span></label>
+                        <label class="label"><span class="label-text font-medium">{{ translationService.translate('Guest Email') }}</span></label>
                         <input type="email" [ngModel]="meetGuestEmail()" (ngModelChange)="meetGuestEmail.set($event)" class="input input-bordered w-full">
                     </div>
                  </div>
@@ -250,12 +236,12 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div class="form-control">
-                    <label class="label"><span class="label-text font-medium">Date & Time</span></label>
+                    <label class="label"><span class="label-text font-medium">{{ translationService.translate('Date & Time') }}</span></label>
                     <input type="datetime-local" [ngModel]="meetDate()" (ngModelChange)="meetDate.set($event)" class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text font-medium">Platform</span></label>
-                    <select [ngModel]="meetPlatform()" (ngModelChange)="meetPlatform.set($event)" class="select select-bordered w-full">
+                    <label class="label"><span class="label-text font-medium">{{ translationService.translate('Platform') }}</span></label>
+                    <select [ngModel]="meetPlatform()" (ngModelChange)="meetPlatform.set($event)" class="select select-bordered w-full bg-base-100">
                         <option value="Google Meet">Google Meet</option>
                         <option value="Zoom">Zoom</option>
                         <option value="Phone">Phone Call</option>
@@ -265,20 +251,13 @@
             </div>
 
             <div class="form-control mb-6">
-                <label class="label"><span class="label-text font-medium">Description (Optional)</span></label>
-                <textarea [ngModel]="meetDescription()" (ngModelChange)="meetDescription.set($event)" class="textarea textarea-bordered h-24 resize-none" placeholder="Agenda notes..."></textarea>
+                <label class="label"><span class="label-text font-medium">{{ translationService.translate('Description (Optional)') }}</span></label>
+                <textarea [ngModel]="meetDescription()" (ngModelChange)="meetDescription.set($event)" class="textarea textarea-bordered h-20 resize-none focus:textarea-primary" placeholder="Agenda notes..."></textarea>
             </div>
             
-            @if(meetPlatform() === 'Google Meet' || meetPlatform() === 'Zoom'){
-                <div class="alert alert-info text-xs mb-6 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>A {{ meetPlatform() }} link will be automatically generated.</span>
-                </div>
-            }
-
             <div class="modal-action">
-                <button (click)="closeModal()" class="btn btn-ghost">Cancel</button>
-                <button (click)="saveMeeting()" class="btn btn-primary px-6" [disabled]="!meetTitle() || !meetDate() || (attendeeType() === 'client' && !meetClientId()) || (attendeeType() === 'guest' && !meetGuestName())">Schedule Meeting</button>
+                <button (click)="closeModal()" class="btn btn-ghost">{{ translationService.translate('Cancel') }}</button>
+                <button (click)="saveMeeting()" class="btn btn-neutral px-6" [disabled]="!meetTitle() || !meetDate() || (attendeeType() === 'client' && !meetClientId()) || (attendeeType() === 'guest' && !meetGuestName())">{{ translationService.translate('Schedule Meeting') }}</button>
             </div>
         </div>
     </dialog>

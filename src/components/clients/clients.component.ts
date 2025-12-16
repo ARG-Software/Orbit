@@ -5,6 +5,7 @@ import { MockDataService, Client } from '../../services/mock-data.service';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
 import { NgOptimizedImage, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { TranslationService } from '../../services/translation.service';
 
 @Component({
   selector: 'app-clients',
@@ -14,58 +15,100 @@ import { NgOptimizedImage, CurrencyPipe, DecimalPipe } from '@angular/common';
 })
 export class ClientsComponent {
   private dataService = inject(MockDataService);
-  private router = inject(Router);
+  private router: Router = inject(Router);
+  public translationService = inject(TranslationService);
 
   clients = this.dataService.getClients();
   invoices = this.dataService.getInvoices();
   projects = this.dataService.getProjects();
   
+  // Filters
+  searchTerm = signal('');
+  filterStatus = signal<'All' | 'Active' | 'Paused'>('All');
+  sortBy = signal<'Name' | 'Revenue'>('Name');
+  minRevenue = signal<number | null>(null);
+
   // Pagination
   currentPage = signal(1);
-  itemsPerPage = signal(12); // Increased for higher density
+  itemsPerPage = signal(12);
+
+  // Helper to get total revenue for a client
+  private getRevenue(clientId: number): number {
+      return this.invoices()
+          .filter(i => i.clientId === clientId && i.status === 'Paid')
+          .reduce((sum, inv) => sum + inv.total, 0);
+  }
+
+  filteredClients = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    const status = this.filterStatus();
+    const sort = this.sortBy();
+    const minRev = this.minRevenue();
+    
+    // 1. Filter
+    let result = this.clients().filter(client => {
+      const matchesSearch = 
+        client.name.toLowerCase().includes(term) || 
+        client.contact.toLowerCase().includes(term) ||
+        client.taxNumber.toLowerCase().includes(term);
+      
+      const matchesStatus = status === 'All' || client.status === status;
+      
+      let matchesRevenue = true;
+      if (minRev !== null) {
+          matchesRevenue = this.getRevenue(client.id) >= minRev;
+      }
+
+      return matchesSearch && matchesStatus && matchesRevenue;
+    });
+
+    // 2. Sort
+    if (sort === 'Name') {
+        result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === 'Revenue') {
+        result.sort((a, b) => this.getRevenue(b.id) - this.getRevenue(a.id)); // Descending
+    }
+
+    return result;
+  });
 
   paginatedClients = computed(() => {
-    const clients = this.clients();
+    const clients = this.filteredClients();
     const startIndex = (this.currentPage() - 1) * this.itemsPerPage();
     const endIndex = startIndex + this.itemsPerPage();
-    return clients.slice(startIndex, endIndex);
+    return clients.slice(startIndex, startIndex + this.itemsPerPage());
   });
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
   }
+  
+  onFilterChange(): void {
+    this.currentPage.set(1);
+  }
 
-  // Helper to get stats per client for the card
   getClientStats(clientId: number) {
-      const clientInvoices = this.invoices().filter(i => i.clientId === clientId && i.status === 'Paid');
-      const totalRevenue = clientInvoices.reduce((sum, inv) => sum + inv.total, 0);
-      
+      const totalRevenue = this.getRevenue(clientId);
       const activeProjects = this.projects().filter(p => p.clientId === clientId && p.status === 'Active').length;
-      
       return { totalRevenue, activeProjects };
   }
 
-  // --- Add Client Modal State ---
   isModalOpen = signal(false);
 
-  // Form fields for adding a client
   clientName = signal('');
   clientContact = signal('');
   clientPhone = signal('');
   clientAddress = signal('');
   clientTaxNumber = signal('');
-  clientLogoUrl = signal(''); // Will hold data URL or string
-  clientColor = signal('#6366f1'); // Default color
+  clientLogoUrl = signal('');
   clientTaxRate = signal<number>(0);
   clientNotes = signal('');
 
-  // --- Email Modal State ---
   isEmailModalOpen = signal(false);
   selectedClientForEmail = signal<Client | null>(null);
   emailSubject = signal('');
   emailBody = signal('');
   
-  // Notification State
   showSuccessToast = signal(false);
   toastMessage = signal('');
 
@@ -76,7 +119,6 @@ export class ClientsComponent {
     this.clientAddress.set('');
     this.clientTaxNumber.set('');
     this.clientLogoUrl.set('');
-    this.clientColor.set('#6366f1');
     this.clientTaxRate.set(0);
     this.clientNotes.set('');
   }
@@ -117,7 +159,6 @@ export class ClientsComponent {
         address: this.clientAddress(),
         taxNumber: this.clientTaxNumber(),
         logoUrl: this.clientLogoUrl(),
-        color: this.clientColor(),
         defaultTaxRate: this.clientTaxRate(),
         notes: this.clientNotes(),
     };
@@ -144,8 +185,6 @@ export class ClientsComponent {
     this.router.navigate(['/app/clients', clientId]);
   }
 
-  // --- Email Logic ---
-
   openEmailModal(client: Client): void {
     this.selectedClientForEmail.set(client);
     this.emailSubject.set('');
@@ -162,7 +201,6 @@ export class ClientsComponent {
     const client = this.selectedClientForEmail();
     if (!client || !this.emailSubject() || !this.emailBody()) return;
 
-    // Simulation of sending email
     console.log(`Sending email to ${client.contact}`, {
       subject: this.emailSubject(),
       body: this.emailBody()
