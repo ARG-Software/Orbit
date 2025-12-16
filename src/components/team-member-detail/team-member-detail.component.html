@@ -63,4 +63,224 @@
                     </div>
                     <div class="form-control">
                         <label class="label py-1 text-xs opacity-60">Role</label>
-                        <input type="text" class="input input-bordered input
+                        <input type="text" class="input input-bordered input-sm bg-base-100" [ngModel]="memberRole()" (ngModelChange)="memberRole.set($event)">
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-1 text-xs opacity-60">Email</label>
+                        <input type="email" class="input input-bordered input-sm bg-base-100" [ngModel]="memberEmail()" (ngModelChange)="memberEmail.set($event)">
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-1 text-xs opacity-60">Rate ($/hr)</label>
+                        <input type="number" class="input input-bordered input-sm bg-base-100" [ngModel]="memberDefaultRate()" (ngModelChange)="memberDefaultRate.set(+$event)">
+                    </div>
+                    <div class="form-control">
+                        <label class="label py-1 text-xs opacity-60">Avatar</label>
+                        <input type="file" (change)="onAvatarFileSelected($event)" class="file-input file-input-bordered file-input-sm w-full bg-base-100" accept="image/*">
+                    </div>
+                    <button class="btn btn-neutral btn-sm w-full mt-2" (click)="saveMemberDetails()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Activity & Assignments -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Assigned Projects -->
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-0">
+                <div class="p-4 border-b border-base-200 bg-base-50/50 flex justify-between items-center">
+                    <h3 class="font-bold text-sm uppercase tracking-wider opacity-60">Assigned Projects</h3>
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="Search..." [ngModel]="projectSearch()" (ngModelChange)="projectSearch.set($event); projectsPage.set(1)" class="input input-xs input-bordered bg-base-100">
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead class="text-xs uppercase opacity-60">
+                            <tr>
+                                <th class="pl-6">Project</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                                <th class="text-right pr-6">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(p of paginatedProjects(); track p.id) {
+                                <tr class="hover:bg-base-50 cursor-pointer" [routerLink]="['/app/projects', p.id]">
+                                    <td class="pl-6 font-bold text-sm">{{ p.name }}</td>
+                                    <td class="text-xs opacity-70">{{ p.clientId }}</td> <!-- Simplified, would need lookup -->
+                                    <td>
+                                        <div class="badge badge-xs border-base-300 font-normal" [class.badge-neutral]="p.status === 'Active'">{{ p.status }}</div>
+                                    </td>
+                                    <td class="text-right pr-6 font-mono text-xs opacity-60">
+                                        {{ p.billingType === 'fixed' ? (p.fixedPrice | currency) : (p.defaultRate | currency) + '/hr' }}
+                                    </td>
+                                </tr>
+                            } @empty {
+                                <tr><td colspan="4" class="text-center py-8 opacity-50 text-sm">No active projects assigned.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                @if(filteredProjects().length > projectsPerPage()) {
+                    <div class="p-2 flex justify-center border-t border-base-200">
+                        <app-pagination 
+                            [currentPage]="projectsPage()" 
+                            [totalItems]="filteredProjects().length" 
+                            [itemsPerPage]="projectsPerPage()" 
+                            (pageChange)="onProjectsPageChange($event)">
+                        </app-pagination>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Active Tasks -->
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-0">
+                <div class="p-4 border-b border-base-200 bg-base-50/50 flex justify-between items-center">
+                    <h3 class="font-bold text-sm uppercase tracking-wider opacity-60">Pending Tasks</h3>
+                    <input type="text" placeholder="Search tasks..." [ngModel]="taskSearch()" (ngModelChange)="taskSearch.set($event); tasksPage.set(1)" class="input input-xs input-bordered bg-base-100">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead class="text-xs uppercase opacity-60">
+                            <tr>
+                                <th class="pl-6">Task</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th class="text-right pr-6">Est. Days</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(t of paginatedTasks(); track t.id) {
+                                <tr class="hover:bg-base-50">
+                                    <td class="pl-6 font-medium text-sm">{{ t.title }}</td>
+                                    <td><span class="badge badge-sm badge-ghost text-xs">{{ t.status }}</span></td>
+                                    <td>
+                                        <span class="text-xs font-bold" 
+                                            [class.text-error]="t.priority === 'High'" 
+                                            [class.text-warning]="t.priority === 'Medium'" 
+                                            [class.text-info]="t.priority === 'Low'">
+                                            {{ t.priority }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right pr-6 font-mono text-xs opacity-60">{{ t.estimatedDays || '-' }}</td>
+                                </tr>
+                            } @empty {
+                                <tr><td colspan="4" class="text-center py-8 opacity-50 text-sm">No pending tasks.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if(filteredTasks().length > tasksPerPage()) {
+                    <div class="p-2 flex justify-center border-t border-base-200">
+                        <app-pagination 
+                            [currentPage]="tasksPage()" 
+                            [totalItems]="filteredTasks().length" 
+                            [itemsPerPage]="tasksPerPage()" 
+                            (pageChange)="onTasksPageChange($event)">
+                        </app-pagination>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- History Log -->
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-0">
+                <div class="p-4 border-b border-base-200 bg-base-50/50 flex justify-between items-center">
+                    <h3 class="font-bold text-sm uppercase tracking-wider opacity-60">Work History</h3>
+                    <input type="text" placeholder="Search logs..." [ngModel]="historySearch()" (ngModelChange)="historySearch.set($event); historyPage.set(1)" class="input input-xs input-bordered bg-base-100">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead class="text-xs uppercase opacity-60">
+                            <tr>
+                                <th class="pl-6">Date</th>
+                                <th>Project</th>
+                                <th>Description</th>
+                                <th class="text-right pr-6">Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(h of paginatedHistory(); track $index) {
+                                <tr class="hover:bg-base-50">
+                                    <td class="pl-6 text-xs font-mono opacity-60">{{ h.date | date:'shortDate' }}</td>
+                                    <td class="font-bold text-xs">{{ h.project }}</td>
+                                    <td class="text-xs opacity-70 max-w-xs truncate">{{ h.description }}</td>
+                                    <td class="text-right pr-6 font-mono font-bold text-sm">{{ h.hours }}</td>
+                                </tr>
+                            } @empty {
+                                <tr><td colspan="4" class="text-center py-8 opacity-50 text-sm">No work logged yet.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if(filteredHistory().length > historyPerPage()) {
+                    <div class="p-2 flex justify-center border-t border-base-200">
+                        <app-pagination 
+                            [currentPage]="historyPage()" 
+                            [totalItems]="filteredHistory().length" 
+                            [itemsPerPage]="historyPerPage()" 
+                            (pageChange)="onHistoryPageChange($event)">
+                        </app-pagination>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+  </div>
+</div>
+} @else {
+    <div class="flex justify-center items-center h-96">
+        <span class="loading loading-spinner loading-lg opacity-20"></span>
+    </div>
+}
+
+<!-- Email Modal -->
+@if(isEmailModalOpen()){
+  <dialog class="modal modal-open">
+    <div class="modal-box shadow-2xl border border-base-200 rounded-xl">
+      <button (click)="closeEmailModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 class="font-bold text-lg mb-1">Send Email</h3>
+      <p class="text-sm opacity-70 mb-6">To: <span class="font-semibold">{{ member()?.name }}</span> ({{ member()?.email }})</p>
+      
+      <form (ngSubmit)="sendEmail()" class="space-y-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Subject</span></label>
+          <input type="text" [ngModel]="emailSubject()" (ngModelChange)="emailSubject.set($event)" name="subject" required class="input input-bordered w-full focus:input-primary" placeholder="e.g. Check-in">
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-medium">Message</span></label>
+          <textarea [ngModel]="emailBody()" (ngModelChange)="emailBody.set($event)" name="body" required class="textarea textarea-bordered h-32 focus:textarea-primary" placeholder="Write your message here..."></textarea>
+        </div>
+        <div class="modal-action mt-6">
+          <button type="button" (click)="closeEmailModal()" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-neutral px-6">
+            Send Message
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+}
+
+<!-- Success Toast -->
+@if(showSuccessToast()){
+<div class="toast toast-top toast-center z-50">
+  <div class="alert alert-success shadow-sm border border-success/20">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span>{{ toastMessage() }}</span>
+  </div>
+</div>
+}
+
